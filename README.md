@@ -33,7 +33,13 @@ Whether you're following ongoing manga series, webtoons, comic archives, or read
 - **Physical Book Stacks**: Manga and book covers arranged in miniature physical stacks with realistic depth and layering.
 - **Curated Typography**: Elegant Didone/Bodoni editorial serif headings paired with clean, compact sans-serif metadata.
 - **Warm Ivory Palette**: Minimalist `#FFFDF4` background that lets cover artwork remain the primary visual element.
-- **Floating Pill Navigation**: Minimal, distraction-free bottom navigation bar featuring Home and Settings.
+- **Floating Pill Navigation**: Minimal, distraction-free bottom navigation bar featuring Home, Explore, and Settings.
+
+### 🧭 Cross-Extension Explore Feed
+- **Curated Discoveries**: Discover new releases across all installed extensions in one unified feed.
+- **Strict Deduplication**: Intelligent title normalization eliminates duplicate listings across sources.
+- **Preferred Extension Priority**: Titles from preferred (pinned) extensions are prioritized and highlighted with a dedicated shelf.
+- **Quick Source Filtering**: Instant filter chips to view releases by individual extensions or all combined.
 
 ### 🔍 Unified Behind-the-Scenes Search
 - **Instant Library Search**: Queries your local library instantly as you type.

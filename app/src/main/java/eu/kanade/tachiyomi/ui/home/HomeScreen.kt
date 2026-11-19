@@ -48,6 +48,7 @@ import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseShowExtensionsEvent
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
+import eu.kanade.tachiyomi.ui.explore.ExploreTab
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.LibrarySearchEvent
 import eu.kanade.tachiyomi.ui.library.LibraryTab
@@ -88,6 +89,19 @@ sealed interface TopLevelRoute : NavKey {
             return TabOptions(
                 title = stringResource(MR.strings.label_library),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
+            )
+        }
+    }
+
+    @Serializable
+    data object Explore : TopLevelRoute {
+        @Composable
+        override fun options(isSelected: Boolean): TabOptions {
+            val enter = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_enter)
+            val exit = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_exit)
+            return TabOptions(
+                title = "Explore",
+                icon = rememberAnimatedVectorPainter(enter, exit, isSelected),
             )
         }
     }
@@ -197,6 +211,10 @@ fun HomeScreen() {
                         LibraryTab()
                     }
 
+                    entry<TopLevelRoute.Explore> {
+                        ExploreTab()
+                    }
+
                     entry<TopLevelRoute.Updates> {
                         UpdatesTab()
                     }
@@ -232,6 +250,7 @@ fun HomeScreen() {
                 if (it.query != null) resultEventBus.sendResult(LibrarySearchEvent(it.query))
                 TopLevelRoute.Library
             }
+            TabEvent.Explore -> TopLevelRoute.Explore
             TabEvent.Updates -> TopLevelRoute.Updates
             TabEvent.History -> TopLevelRoute.History
             is TabEvent.Browse -> {
@@ -358,6 +377,7 @@ private fun tabBadge(tab: TopLevelRoute): (@Composable () -> Unit)? {
 
 sealed interface TabEvent {
     data class Library(val mangaIdToOpen: Long? = null, val query: String? = null) : TabEvent
+    data object Explore : TabEvent
     data object Updates : TabEvent
     data object History : TabEvent
     data class Browse(val toExtensions: Boolean = false) : TabEvent
@@ -381,5 +401,6 @@ private val spec = materialFadeThroughIn(
 
 private val TABS: List<TopLevelRoute> = listOf(
     TopLevelRoute.Library,
+    TopLevelRoute.Explore,
     TopLevelRoute.More,
 )
