@@ -9,9 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.browse.GlobalSearchScreen
-import mihon.core.navigation.BrowseSourceRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MangaRoute
+import niaromi.core.navigation.BrowseSourceRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaRoute
 import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable

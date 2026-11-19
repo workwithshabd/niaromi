@@ -9,7 +9,7 @@ import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
 import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
-import mihon.core.navigation.LocalNavigator
+import niaromi.core.navigation.LocalNavigator
 import tachiyomi.i18n.MR
 
 @Composable

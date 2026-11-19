@@ -52,10 +52,10 @@ import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.explore.ExploreItem
 import eu.kanade.tachiyomi.ui.explore.ExploreState
 import eu.kanade.tachiyomi.ui.explore.SourceFilterItem
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.rounded.Explore
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.icons.materialsymbols.rounded.Search
+import niaromi.icons.materialsymbols.rounded.Close
+import niaromi.icons.materialsymbols.rounded.Explore
+import niaromi.icons.materialsymbols.rounded.Refresh
+import niaromi.icons.materialsymbols.rounded.Search
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.asMangaCover
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -273,7 +273,7 @@ private fun ExploreHeader(
                 )
             } else {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Refresh,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Refresh,
                     contentDescription = "Refresh explore feed",
                     tint = NearBlack,
                     modifier = Modifier.size(20.dp),
@@ -304,7 +304,7 @@ private fun ExploreSearchBar(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Search,
+                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Search,
                 contentDescription = null,
                 tint = MutedGray,
                 modifier = Modifier.size(18.dp),
@@ -340,7 +340,7 @@ private fun ExploreSearchBar(
                     modifier = Modifier.size(28.dp),
                 ) {
                     Icon(
-                        imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Close,
+                        imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Close,
                         contentDescription = "Clear search",
                         tint = MutedGray,
                         modifier = Modifier.size(16.dp),
@@ -697,7 +697,7 @@ private fun ExploreEmptyState(
             verticalArrangement = Arrangement.Center,
         ) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Explore,
+                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Explore,
                 contentDescription = null,
                 tint = MutedGray,
                 modifier = Modifier.size(48.dp),

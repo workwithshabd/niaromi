@@ -10,10 +10,10 @@ import androidx.fragment.app.FragmentActivity
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import kotlinx.serialization.Serializable
-import mihon.app.di.appGraph
-import mihon.core.navigation.ExtensionStoresRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.domain.extension.model.ContentWarning
+import niaromi.app.di.appGraph
+import niaromi.core.navigation.ExtensionStoresRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.domain.extension.model.ContentWarning
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource

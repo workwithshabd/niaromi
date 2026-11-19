@@ -52,9 +52,9 @@ import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.KeyboardArrowLeft
-import mihon.icons.materialsymbols.rounded.KeyboardArrowRight
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.KeyboardArrowLeft
+import niaromi.icons.materialsymbols.rounded.KeyboardArrowRight
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.asMangaCover

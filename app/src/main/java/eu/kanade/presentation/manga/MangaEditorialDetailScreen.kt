@@ -60,10 +60,10 @@ import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
-import mihon.icons.materialsymbols.rounded.MoreVert
-import mihon.icons.materialsymbols.roundedfilled.Bookmark
+import niaromi.app.di.appGraph
+import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
+import niaromi.icons.materialsymbols.rounded.MoreVert
+import niaromi.icons.materialsymbols.roundedfilled.Bookmark
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.asMangaCover
@@ -614,7 +614,7 @@ fun MangaEditorialChapterRow(
         ) {
             if (chapter.bookmark) {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.RoundedFilled.Bookmark,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.RoundedFilled.Bookmark,
                     contentDescription = "Bookmarked",
                     tint = NearBlackText,
                     modifier = Modifier.size(16.dp),
@@ -658,7 +658,7 @@ fun DetailTopBar(
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     contentDescription = "Back",
                     tint = NearBlackText,
                     modifier = Modifier.size(22.dp),
@@ -702,7 +702,7 @@ fun DetailTopBar(
 
             IconButton(onClick = onMenuClick) {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
                     contentDescription = "More",
                     tint = NearBlackText,
                     modifier = Modifier.size(22.dp),

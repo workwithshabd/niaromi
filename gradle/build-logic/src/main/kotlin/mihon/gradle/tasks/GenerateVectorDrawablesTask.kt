@@ -1,4 +1,4 @@
-package mihon.gradle.tasks
+package niaromi.gradle.tasks
 
 import com.android.ide.common.vectordrawable.Svg2Vector
 import org.gradle.api.DefaultTask

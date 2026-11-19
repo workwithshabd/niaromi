@@ -1,4 +1,4 @@
-package mihon.gradle
+package niaromi.gradle
 
 import org.gradle.api.Project
 

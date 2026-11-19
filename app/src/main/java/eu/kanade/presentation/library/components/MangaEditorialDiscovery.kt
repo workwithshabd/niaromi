@@ -54,8 +54,8 @@ import eu.kanade.tachiyomi.ui.library.ExtensionSearchState
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.Search
+import niaromi.icons.materialsymbols.rounded.FilterList
+import niaromi.icons.materialsymbols.rounded.Search
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.manga.model.asMangaCover
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -368,7 +368,7 @@ fun EditorialSearchBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Search,
+                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Search,
                 contentDescription = "Search",
                 tint = Color(0xFF888888),
                 modifier = Modifier.size(18.dp),
@@ -404,7 +404,7 @@ fun EditorialSearchBar(
                 )
             }
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.FilterList,
+                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.FilterList,
                 contentDescription = "Filter",
                 tint = Color(0xFF888888),
                 modifier = Modifier

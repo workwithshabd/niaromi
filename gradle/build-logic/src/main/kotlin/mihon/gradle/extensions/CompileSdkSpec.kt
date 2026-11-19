@@ -1,4 +1,4 @@
-package mihon.gradle.extensions
+package niaromi.gradle.extensions
 
 import com.android.build.api.dsl.CompileSdkSpec
 import com.android.build.api.dsl.CompileSdkVersion

@@ -25,13 +25,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import mihon.core.navigation.AboutRoute
-import mihon.core.navigation.CategoryRoute
-import mihon.core.navigation.DownloadQueueRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.StatsRoute
-import mihon.core.navigation.SupportUsRoute
-import mihon.presentation.core.util.isTabletUi
+import niaromi.core.navigation.AboutRoute
+import niaromi.core.navigation.CategoryRoute
+import niaromi.core.navigation.DownloadQueueRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.StatsRoute
+import niaromi.core.navigation.SupportUsRoute
+import niaromi.presentation.core.util.isTabletUi
 
 @Composable
 fun MoreTab() {

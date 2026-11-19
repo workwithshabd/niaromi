@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.icons.custommaterialsymbols"
+    namespace = "niaromi.icons.custommaterialsymbols"
 }
 
 spotless {
@@ -20,7 +20,7 @@ spotless {
 }
 
 valkyrie {
-    packageName = "mihon.icons.custommaterialsymbols"
+    packageName = "niaromi.icons.custommaterialsymbols"
     generateAtSync = true
 
     imageVector {

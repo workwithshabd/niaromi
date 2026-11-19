@@ -14,11 +14,11 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
-import mihon.core.navigation.ExtensionDetailsRoute
-import mihon.core.navigation.ExtensionFilterRoute
-import mihon.core.navigation.ExtensionStoresRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.WebViewRoute
+import niaromi.core.navigation.ExtensionDetailsRoute
+import niaromi.core.navigation.ExtensionFilterRoute
+import niaromi.core.navigation.ExtensionStoresRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.WebViewRoute
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

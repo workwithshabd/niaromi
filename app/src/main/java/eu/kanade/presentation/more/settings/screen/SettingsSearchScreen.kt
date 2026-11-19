@@ -48,10 +48,10 @@ import androidx.navigation3.runtime.NavKey
 import eu.kanade.presentation.components.UpIcon
 import eu.kanade.presentation.more.settings.Preference
 import kotlinx.coroutines.flow.collectLatest
-import mihon.core.navigation.LocalBackButtonVisibility
-import mihon.core.navigation.LocalNavigator
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
+import niaromi.core.navigation.LocalBackButtonVisibility
+import niaromi.core.navigation.LocalNavigator
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.Close
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource

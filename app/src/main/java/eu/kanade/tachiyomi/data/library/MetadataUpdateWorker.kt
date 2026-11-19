@@ -23,9 +23,9 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.app.di.AppGraph
-import mihon.core.metro.metroGraph
-import mihon.domain.source.interactor.UpdateMangaFromRemote
+import niaromi.app.di.AppGraph
+import niaromi.core.metro.metroGraph
+import niaromi.domain.source.interactor.UpdateMangaFromRemote
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.interactor.GetLibraryManga

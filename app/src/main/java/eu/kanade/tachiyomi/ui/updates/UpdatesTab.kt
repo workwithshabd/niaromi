@@ -18,10 +18,10 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel.Event
 import kotlinx.coroutines.flow.collectLatest
-import mihon.core.navigation.DownloadQueueRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MangaRoute
-import mihon.core.navigation.UpcomingRoute
+import niaromi.core.navigation.DownloadQueueRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaRoute
+import niaromi.core.navigation.UpcomingRoute
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 

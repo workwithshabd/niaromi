@@ -8,10 +8,10 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.browse.MigrateSourceScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MigrateMangaRoute
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.Help
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MigrateMangaRoute
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.automirroredrounded.Help
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

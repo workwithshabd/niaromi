@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.core.metro"
+    namespace = "niaromi.core.metro"
 }
 
 dependencies {

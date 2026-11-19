@@ -1,4 +1,4 @@
-import mihon.gradle.tasks.GenerateLocalesConfigTask
+import niaromi.gradle.tasks.GenerateLocalesConfigTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {

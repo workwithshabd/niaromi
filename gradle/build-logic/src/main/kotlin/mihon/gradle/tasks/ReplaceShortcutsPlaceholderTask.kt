@@ -1,4 +1,4 @@
-package mihon.gradle.tasks
+package niaromi.gradle.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty

@@ -18,10 +18,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.app.di.appGraph
-import mihon.data.dalvik.DelegateLastClassLoaderCompat
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
+import niaromi.app.di.appGraph
+import niaromi.data.dalvik.DelegateLastClassLoaderCompat
+import niaromi.domain.extension.model.ContentWarning
+import niaromi.domain.extension.model.ExtensionStore
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException

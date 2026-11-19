@@ -4,7 +4,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import mihon.core.archive.EpubReader
+import niaromi.core.archive.EpubReader
 
 /**
  * Loader used to load a chapter from a .epub file.

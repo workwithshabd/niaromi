@@ -18,9 +18,9 @@ import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import mihon.app.di.appGraph
-import mihon.core.navigation.CategoryRoute
-import mihon.core.navigation.LocalNavigator
+import niaromi.app.di.appGraph
+import niaromi.core.navigation.CategoryRoute
+import niaromi.core.navigation.LocalNavigator
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING

@@ -1,4 +1,4 @@
-import mihon.gradle.Config
+import niaromi.gradle.Config
 
 plugins {
     alias(mihonx.plugins.android.library)
@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.telemetry"
+    namespace = "niaromi.telemetry"
 
     sourceSets {
         getByName("main") {

@@ -48,11 +48,11 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.FloatingBottomNavigationBar
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.home.TopLevelRoute
-import mihon.app.di.appGraph
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MangaRoute
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
-import mihon.icons.materialsymbols.rounded.MoreVert
+import niaromi.app.di.appGraph
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaRoute
+import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
+import niaromi.icons.materialsymbols.rounded.MoreVert
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.asMangaCover
 
@@ -174,7 +174,7 @@ fun CategoryListingTopBar(
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     contentDescription = "Back",
                     tint = NearBlackText,
                     modifier = Modifier.size(22.dp),
@@ -212,7 +212,7 @@ fun CategoryListingTopBar(
 
             IconButton(onClick = onMenuClick) {
                 Icon(
-                    imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
+                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
                     contentDescription = "More",
                     tint = NearBlackText,
                     modifier = Modifier.size(22.dp),

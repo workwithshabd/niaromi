@@ -1,8 +1,8 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CollectionsBookmark
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.CollectionsBookmark
 import tachiyomi.presentation.core.components.Badge
 
 @Composable

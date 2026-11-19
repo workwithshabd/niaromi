@@ -1,4 +1,4 @@
-package mihon.gradle.extensions
+package niaromi.gradle.extensions
 
 import org.gradle.api.plugins.PluginManager
 import org.gradle.api.provider.Provider

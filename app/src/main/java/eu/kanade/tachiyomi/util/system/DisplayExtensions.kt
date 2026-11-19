@@ -7,7 +7,7 @@ import android.os.Build
 import android.view.View
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.TabletUiMode
-import mihon.presentation.core.util.isTabletUi
+import niaromi.presentation.core.util.isTabletUi
 
 private const val TABLET_UI_REQUIRED_SCREEN_WIDTH_DP = 720
 

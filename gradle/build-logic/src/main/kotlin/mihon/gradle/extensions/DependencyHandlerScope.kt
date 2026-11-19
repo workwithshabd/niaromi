@@ -1,4 +1,4 @@
-package mihon.gradle.extensions
+package niaromi.gradle.extensions
 
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependencyBundle

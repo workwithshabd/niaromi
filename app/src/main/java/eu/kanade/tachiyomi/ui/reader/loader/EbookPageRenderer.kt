@@ -17,8 +17,8 @@ import android.text.TextPaint
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
-import mihon.app.di.appGraph
-import mihon.core.archive.EpubReader
+import niaromi.app.di.appGraph
+import niaromi.core.archive.EpubReader
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode

@@ -44,10 +44,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.SkipNext
-import mihon.icons.materialsymbols.rounded.SkipPrevious
-import mihon.presentation.core.util.isTabletUi
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.SkipNext
+import niaromi.icons.materialsymbols.rounded.SkipPrevious
+import niaromi.presentation.core.util.isTabletUi
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt

@@ -12,8 +12,8 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.browse.ExtensionDetailsScreen
 import eu.kanade.presentation.browse.PrivateExtensionUninstallDialog
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.SourcePreferencesRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.SourcePreferencesRoute
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen

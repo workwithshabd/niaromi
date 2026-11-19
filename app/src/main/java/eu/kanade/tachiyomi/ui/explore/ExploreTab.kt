@@ -5,8 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.explore.ExploreScreen
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MangaRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaRoute
 
 @Composable
 fun ExploreTab() {

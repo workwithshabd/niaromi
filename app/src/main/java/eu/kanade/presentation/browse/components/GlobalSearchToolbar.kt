@@ -25,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.DoneAll
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.Keep
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.DoneAll
+import niaromi.icons.materialsymbols.rounded.FilterList
+import niaromi.icons.materialsymbols.rounded.Keep
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

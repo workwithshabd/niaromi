@@ -21,10 +21,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.metro.AppCoroutineScope
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.MangaNotesRoute
-import mihon.core.navigation.MangaRoute
+import niaromi.core.metro.AppCoroutineScope
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaNotesRoute
+import niaromi.core.navigation.MangaRoute
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.UpdateMangaNotes
 import tachiyomi.domain.manga.model.Manga

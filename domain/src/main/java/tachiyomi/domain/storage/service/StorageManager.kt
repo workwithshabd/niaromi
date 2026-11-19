@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
-import mihon.core.metro.AppCoroutineScope
+import niaromi.core.metro.AppCoroutineScope
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 

@@ -34,10 +34,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.core.metro.AppCoroutineScope
-import mihon.domain.extension.interactor.UpdateExtensionStores
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.repository.ExtensionStoreRepository
+import niaromi.core.metro.AppCoroutineScope
+import niaromi.domain.extension.interactor.UpdateExtensionStores
+import niaromi.domain.extension.model.ExtensionStore
+import niaromi.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR

@@ -22,13 +22,13 @@ import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
-import mihon.core.common.FeatureFlags
-import mihon.core.navigation.BackupSchemaRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.WorkerInfoRoute
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Autorenew
+import niaromi.app.di.appGraph
+import niaromi.core.common.FeatureFlags
+import niaromi.core.navigation.BackupSchemaRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.WorkerInfoRoute
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.Autorenew
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.util.collectAsState
 

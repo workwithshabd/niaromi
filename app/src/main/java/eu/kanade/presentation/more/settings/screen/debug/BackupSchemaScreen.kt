@@ -15,10 +15,10 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.serialization.protobuf.schema.ProtoBufSchemaGenerator
-import mihon.core.navigation.BackupSchemaRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ContentCopy
+import niaromi.core.navigation.BackupSchemaRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.ContentCopy
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource

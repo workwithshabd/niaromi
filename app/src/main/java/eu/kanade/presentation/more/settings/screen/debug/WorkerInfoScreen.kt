@@ -40,11 +40,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import mihon.app.di.appGraph
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.WorkerInfoRoute
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ContentCopy
+import niaromi.app.di.appGraph
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.WorkerInfoRoute
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.ContentCopy
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource

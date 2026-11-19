@@ -35,11 +35,11 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.download.DownloadQueueList
-import mihon.core.navigation.LocalNavigator
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.Sort
-import mihon.icons.materialsymbols.roundedfilled.Pause
-import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import niaromi.core.navigation.LocalNavigator
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.automirroredrounded.Sort
+import niaromi.icons.materialsymbols.roundedfilled.Pause
+import niaromi.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold

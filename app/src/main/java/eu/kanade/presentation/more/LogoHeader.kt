@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mihon.icons.materialsymbols.rounded.Book
+import niaromi.icons.materialsymbols.rounded.Book
 
 @Composable
 fun LogoHeader(
@@ -41,7 +41,7 @@ fun LogoHeader(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Book,
+                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Book,
                 contentDescription = null,
                 tint = Color(0xFFFFFDF4),
                 modifier = Modifier.size(34.dp),

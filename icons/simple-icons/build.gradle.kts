@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.icons.simpleicons"
+    namespace = "niaromi.icons.simpleicons"
 }
 
 spotless {
@@ -20,7 +20,7 @@ spotless {
 }
 
 valkyrie {
-    packageName = "mihon.icons.simpleicons"
+    packageName = "niaromi.icons.simpleicons"
     generateAtSync = true
 
     imageVector {

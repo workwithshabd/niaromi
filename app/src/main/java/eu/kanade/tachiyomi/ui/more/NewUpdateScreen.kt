@@ -7,7 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.more.NewUpdateScreen
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import mihon.core.navigation.LocalNavigator
+import niaromi.core.navigation.LocalNavigator
 
 @Composable
 fun NewUpdateScreen(

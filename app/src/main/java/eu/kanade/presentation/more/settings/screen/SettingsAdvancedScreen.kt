@@ -47,11 +47,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import logcat.LogPriority
-import mihon.app.di.appGraph
-import mihon.core.navigation.ClearDatabaseRoute
-import mihon.core.navigation.DebugInfoRoute
-import mihon.core.navigation.LocalNavigator
-import mihon.core.navigation.OnboardingRoute
+import niaromi.app.di.appGraph
+import niaromi.core.navigation.ClearDatabaseRoute
+import niaromi.core.navigation.DebugInfoRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.OnboardingRoute
 import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences

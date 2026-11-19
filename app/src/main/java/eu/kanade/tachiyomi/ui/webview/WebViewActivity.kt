@@ -11,8 +11,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.serialization.json.Json
-import mihon.core.navigation.LocalAssistUrl
-import mihon.core.navigation.WebViewRoute
+import niaromi.core.navigation.LocalAssistUrl
+import niaromi.core.navigation.WebViewRoute
 
 class WebViewActivity : BaseActivity() {
 

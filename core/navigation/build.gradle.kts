@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.core.navigation"
+    namespace = "niaromi.core.navigation"
 }
 
 dependencies {

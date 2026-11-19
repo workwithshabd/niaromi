@@ -1,7 +1,7 @@
-import mihon.gradle.extensions.alias
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.mihonx
-import mihon.gradle.extensions.plugins
+import niaromi.gradle.extensions.alias
+import niaromi.gradle.extensions.libs
+import niaromi.gradle.extensions.mihonx
+import niaromi.gradle.extensions.plugins
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

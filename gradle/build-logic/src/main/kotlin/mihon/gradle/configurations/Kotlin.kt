@@ -1,7 +1,7 @@
-package mihon.gradle.configurations
+package niaromi.gradle.configurations
 
 import com.gradleup.tapmoc.configureJavaCompatibility
-import mihon.gradle.extensions.mihonx
+import niaromi.gradle.extensions.mihonx
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.HasConfigurableKotlinCompilerOptions

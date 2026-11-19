@@ -31,9 +31,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.tachiyomi.ui.home.TopLevelRoute
-import mihon.icons.materialsymbols.rounded.Book
-import mihon.icons.materialsymbols.rounded.Explore
-import mihon.icons.materialsymbols.rounded.Settings
+import niaromi.icons.materialsymbols.rounded.Book
+import niaromi.icons.materialsymbols.rounded.Explore
+import niaromi.icons.materialsymbols.rounded.Settings
 
 private val NavContainerBg = Color(0xFFFAF8F0).copy(alpha = 0.96f)
 private val NavContainerBorder = Color(0xFFE8E5DA)
@@ -51,19 +51,19 @@ val NAV_TAB_ITEMS = listOf(
     NavTabItem(
         route = TopLevelRoute.Library,
         label = "Home",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Book,
+        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Book,
         matches = { it is TopLevelRoute.Library },
     ),
     NavTabItem(
         route = TopLevelRoute.Explore,
         label = "Explore",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Explore,
+        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Explore,
         matches = { it is TopLevelRoute.Explore },
     ),
     NavTabItem(
         route = TopLevelRoute.More,
         label = "Settings",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Settings,
+        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Settings,
         matches = { it is TopLevelRoute.More },
     ),
 )
