@@ -135,41 +135,17 @@ fun MangaScreen(
     }
 
     if (!isTabletUi) {
-        MangaScreenSmallImpl(
+        MangaEditorialDetailScreen(
             state = state,
-            snackbarHostState = snackbarHostState,
-            nextUpdate = nextUpdate,
-            chapterSwipeStartAction = chapterSwipeStartAction,
-            chapterSwipeEndAction = chapterSwipeEndAction,
             navigateUp = navigateUp,
-            onChapterClicked = onChapterClicked,
-            onDownloadChapter = onDownloadChapter,
-            downloadProgressProvider = downloadProgressProvider,
-            onAddToLibraryClicked = onAddToLibraryClicked,
-            onWebViewClicked = onWebViewClicked,
-            onWebViewLongClicked = onWebViewLongClicked,
-            onTrackingClicked = onTrackingClicked,
-            onTagSearch = onTagSearch,
-            onCopyTagToClipboard = onCopyTagToClipboard,
-            onFilterClicked = onFilterButtonClicked,
-            onRefresh = onRefresh,
             onContinueReading = onContinueReading,
-            onSearch = onSearch,
-            onCoverClicked = onCoverClicked,
+            onChapterClicked = onChapterClicked,
+            onAddToLibraryClicked = onAddToLibraryClicked,
             onShareClicked = onShareClicked,
-            onDownloadActionClicked = onDownloadActionClicked,
-            onEditCategoryClicked = onEditCategoryClicked,
-            onEditIntervalClicked = onEditFetchIntervalClicked,
+            onWebViewClicked = onWebViewClicked,
             onMigrateClicked = onMigrateClicked,
-            onEditNotesClicked = onEditNotesClicked,
-            onMultiBookmarkClicked = onMultiBookmarkClicked,
-            onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
-            onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
-            onMultiDeleteClicked = onMultiDeleteClicked,
-            onChapterSwipe = onChapterSwipe,
-            onChapterSelected = onChapterSelected,
-            onAllChapterSelected = onAllChapterSelected,
-            onInvertSelection = onInvertSelection,
+            onEditCategoryClicked = onEditCategoryClicked,
+            onSelectManga = {},
         )
     } else {
         MangaScreenLargeImpl(

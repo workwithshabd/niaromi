@@ -28,6 +28,7 @@ import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.MangaBookshelfLibrary
+import eu.kanade.presentation.library.components.MangaEditorialDiscovery
 import eu.kanade.presentation.manga.components.LibraryBottomActionMenu
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
@@ -38,6 +39,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.launch
+import mihon.core.navigation.CategoryListingRoute
 import mihon.core.navigation.CategoryRoute
 import mihon.core.navigation.GlobalSearchRoute
 import mihon.core.navigation.LocalNavigator
@@ -137,7 +139,7 @@ fun LibraryTab() {
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = Color(0xFFF7F6F4),
+        containerColor = Color(0xFFFFFDF4),
     ) { contentPadding ->
         when {
             state.isLoading -> {
@@ -158,22 +160,17 @@ fun LibraryTab() {
                 )
             }
             else -> {
-                MangaBookshelfLibrary(
+                MangaEditorialDiscovery(
                     categories = state.displayedCategories,
                     favorites = state.libraryData.favorites,
                     searchQuery = state.searchQuery,
-                    selection = state.selection,
                     contentPadding = contentPadding,
                     getItemsForCategory = { state.getItemsForCategory(it) },
                     onClickManga = { navigator.push(MangaRoute(it)) },
-                    onToggleSelection = { category, manga ->
-                        viewModel.toggleSelection(category, manga)
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    },
+                    onViewAll = { id, name -> navigator.push(CategoryListingRoute(id, name)) },
+                    onSearchQueryChange = viewModel::search,
+                    onFilterClick = viewModel::showSettingsDialog,
                     onRefresh = { onClickRefresh(state.activeCategory) },
-                    onAddManga = {
-                        resultBus.sendResult<TabEvent>(TabEvent.Browse())
-                    },
                 )
             }
         }
@@ -225,7 +222,7 @@ fun LibraryTab() {
     LaunchedEffect(state.isLoading, state.selectionMode) {
         if (!state.isLoading) {
             resultBus.sendResult(
-                result = ShowBottomNavEvent(false),
+                result = ShowBottomNavEvent(!state.selectionMode),
             )
             (context as? MainActivity)?.ready = true
         }

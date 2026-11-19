@@ -20,6 +20,12 @@ data class WebViewRoute(
 data class MangaNotesRoute(val mangaId: Long) : NavKey
 
 @Serializable
+data class CategoryListingRoute(
+    val categoryId: Long,
+    val categoryName: String,
+) : NavKey
+
+@Serializable
 data class MangaRoute(
     val mangaId: Long,
     val fromSource: Boolean = false,

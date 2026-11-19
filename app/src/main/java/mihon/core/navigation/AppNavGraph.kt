@@ -2,6 +2,7 @@ package mihon.core.navigation
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import eu.kanade.presentation.category.CategoryListingScreen
 import eu.kanade.presentation.more.settings.screen.SettingsAdvancedScreen
 import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
 import eu.kanade.presentation.more.settings.screen.SettingsBrowseScreen
@@ -82,6 +83,10 @@ fun EntryProviderScope<NavKey>.appEntries() {
 
     entry<GlobalSearchRoute> { route ->
         GlobalSearchScreen(route.searchQuery, route.extensionFilter)
+    }
+
+    entry<CategoryListingRoute> { route ->
+        CategoryListingScreen(route.categoryId, route.categoryName)
     }
 
     entry<UpcomingRoute> {

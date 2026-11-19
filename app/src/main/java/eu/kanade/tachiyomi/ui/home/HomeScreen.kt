@@ -5,6 +5,10 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +23,13 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +43,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.ResultEffect
+import eu.kanade.presentation.components.FloatingBottomNavigationBar
 import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseShowExtensionsEvent
@@ -147,11 +155,14 @@ fun HomeScreen() {
         NavigationSuiteType.NavigationBar
     }
     val navigationSuiteState = rememberNavigationSuiteScaffoldState()
+    var showBottomNav by remember { mutableStateOf(true) }
+    LaunchedEffect(tabletUi) {
+        if (!tabletUi) navigationSuiteState.hide()
+    }
     ResultEffect<ShowBottomNavEvent> {
-        if (tabletUi || it.visible) {
-            navigationSuiteState.show()
-        } else {
-            navigationSuiteState.hide()
+        showBottomNav = it.visible
+        if (tabletUi) {
+            if (it.visible) navigationSuiteState.show() else navigationSuiteState.hide()
         }
     }
 
@@ -168,40 +179,55 @@ fun HomeScreen() {
         },
     ) {
         val tabStateHolder = rememberSaveableStateHolder()
-        NavigatorDisplay(
-            navigator = tabNavigator,
-            entryDecorators = listOf(
-                remember(tabStateHolder) {
-                    NavEntryDecorator { entry ->
-                        tabStateHolder.SaveableStateProvider(entry.contentKey) { entry.Content() }
+        Box(modifier = Modifier.fillMaxSize()) {
+            NavigatorDisplay(
+                navigator = tabNavigator,
+                entryDecorators = listOf(
+                    remember(tabStateHolder) {
+                        NavEntryDecorator { entry ->
+                            tabStateHolder.SaveableStateProvider(entry.contentKey) { entry.Content() }
+                        }
+                    },
+                ),
+                transitionSpec = { spec },
+                popTransitionSpec = { spec },
+                predictivePopTransitionSpec = { spec },
+                entryProvider = entryProvider {
+                    entry<TopLevelRoute.Library> {
+                        LibraryTab()
+                    }
+
+                    entry<TopLevelRoute.Updates> {
+                        UpdatesTab()
+                    }
+
+                    entry<TopLevelRoute.History> {
+                        HistoryTab()
+                    }
+
+                    entry<TopLevelRoute.Browse> {
+                        BrowseTab()
+                    }
+
+                    entry<TopLevelRoute.More> {
+                        MoreTab()
                     }
                 },
-            ),
-            transitionSpec = { spec },
-            popTransitionSpec = { spec },
-            predictivePopTransitionSpec = { spec },
-            entryProvider = entryProvider {
-                entry<TopLevelRoute.Library> {
-                    LibraryTab()
-                }
+            )
 
-                entry<TopLevelRoute.Updates> {
-                    UpdatesTab()
-                }
-
-                entry<TopLevelRoute.History> {
-                    HistoryTab()
-                }
-
-                entry<TopLevelRoute.Browse> {
-                    BrowseTab()
-                }
-
-                entry<TopLevelRoute.More> {
-                    MoreTab()
-                }
-            },
-        )
+            if (!tabletUi && showBottomNav) {
+                FloatingBottomNavigationBar(
+                    currentRoute = tabNavigator.current as? TopLevelRoute ?: TopLevelRoute.Library,
+                    onSelectRoute = { route ->
+                        tabNavigator.replaceAll(route)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = 16.dp),
+                )
+            }
+        }
     }
 
     ResultEffect<TabEvent> {
