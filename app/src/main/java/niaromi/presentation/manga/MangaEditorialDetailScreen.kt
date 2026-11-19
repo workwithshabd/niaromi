@@ -1,5 +1,6 @@
 package niaromi.presentation.manga
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -57,12 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import niaromi.app.di.appGraph
+import niaromi.domain.category.model.Category
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.manga.model.asMangaCover
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
+import niaromi.icons.materialsymbols.rounded.BookmarkAdd
+import niaromi.icons.materialsymbols.rounded.Edit
 import niaromi.icons.materialsymbols.rounded.MoreVert
 import niaromi.icons.materialsymbols.roundedfilled.Bookmark
+import niaromi.presentation.category.visualName
 import niaromi.presentation.components.relativeDateText
 import niaromi.presentation.manga.components.MangaCover
 import niaromi.ui.manga.MangaViewModel
@@ -380,37 +385,115 @@ fun MangaEditorialDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
 
-                        Surface(
-                            onClick = onReadButtonClick,
-                            shape = CircleShape,
-                            color = ButtonBlack,
-                            shadowElevation = 4.dp,
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .widthIn(min = 125.dp, max = 150.dp)
-                                .height(46.dp),
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(horizontal = 16.dp),
+                            Surface(
+                                onClick = onReadButtonClick,
+                                shape = CircleShape,
+                                color = ButtonBlack,
+                                shadowElevation = 3.dp,
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp)
+                                    .height(44.dp),
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.padding(horizontal = 20.dp),
+                                ) {
+                                    Text(
+                                        text = if (hasReadAny) "Continue Reading" else "Read Now",
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.SansSerif,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 13.sp,
+                                            color = Color.White,
+                                        ),
+                                        maxLines = 1,
+                                        softWrap = false,
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = onAddToLibraryClicked,
+                                shape = CircleShape,
+                                color = if (currentManga.favorite) Color(0xFFF3EEDF) else ButtonBlack,
+                                border = if (currentManga.favorite) BorderStroke(1.dp, Color(0xFFD6CDBA)) else null,
+                                shadowElevation = 2.dp,
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp)
+                                    .height(44.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = if (currentManga.favorite) {
+                                            niaromi.icons.materialsymbols.MaterialSymbols.RoundedFilled.Bookmark
+                                        } else {
+                                            niaromi.icons.materialsymbols.MaterialSymbols.Rounded.BookmarkAdd
+                                        },
+                                        contentDescription = null,
+                                        tint = if (currentManga.favorite) NearBlackText else Color.White,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (currentManga.favorite) "In Library" else "Add to Library",
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.SansSerif,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 13.sp,
+                                            color = if (currentManga.favorite) NearBlackText else Color.White,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+
+                        if (currentManga.favorite && onEditCategoryClicked != null) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val currentCategories by produceState(
+                                initialValue = emptyList<Category>(),
+                                key1 = currentManga.id,
+                            ) {
+                                value = context.appGraph.getCategories.await(currentManga.id)
+                            }
+                            val categoryName = currentCategories.firstOrNull()?.visualName ?: "Default"
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFF0ECE0))
+                                    .clickable(onClick = onEditCategoryClicked)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
                                 Text(
-                                    text = if (hasReadAny) "Continue Reading" else "Read Now",
+                                    text = "Category: $categoryName",
                                     style = TextStyle(
                                         fontFamily = FontFamily.SansSerif,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
-                                        fontSize = 14.sp,
-                                        color = Color.White,
+                                        color = NearBlackText,
                                     ),
-                                    maxLines = 1,
-                                    softWrap = false,
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Edit,
+                                    contentDescription = "Change Category",
+                                    tint = MutedGrayText,
+                                    modifier = Modifier.size(14.dp),
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(28.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
 

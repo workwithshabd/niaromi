@@ -254,35 +254,13 @@ class BrowseSourceViewModel(
     fun addFavorite(manga: Manga) {
         viewModelScope.launch {
             val categories = getCategories()
-            val defaultCategoryId = libraryPreferences.defaultCategory.get()
-            val defaultCategory = categories.find { it.id == defaultCategoryId.toLong() }
-
-            when {
-                // Default category set
-                defaultCategory != null -> {
-                    moveMangaToCategories(manga, defaultCategory)
-
-                    changeMangaFavorite(manga)
-                }
-
-                // Automatic 'Default' or no categories
-                defaultCategoryId == 0 || categories.isEmpty() -> {
-                    moveMangaToCategories(manga)
-
-                    changeMangaFavorite(manga)
-                }
-
-                // Choose a category
-                else -> {
-                    val preselectedIds = getCategories.await(manga.id).map { it.id }
-                    setDialog(
-                        Dialog.ChangeMangaCategory(
-                            manga,
-                            categories.mapAsCheckboxState { it.id in preselectedIds },
-                        ),
-                    )
-                }
-            }
+            val preselectedIds = getCategories.await(manga.id).map { it.id }
+            setDialog(
+                Dialog.ChangeMangaCategory(
+                    manga,
+                    categories.mapAsCheckboxState { it.id in preselectedIds },
+                ),
+            )
         }
     }
 

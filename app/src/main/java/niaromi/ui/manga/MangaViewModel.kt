@@ -438,31 +438,8 @@ class MangaViewModel(
                     }
                 }
 
-                // Now check if user previously set categories, when available
-                val categories = getCategories()
-                val defaultCategoryId = libraryPreferences.defaultCategory.get().toLong()
-                val defaultCategory = categories.find { it.id == defaultCategoryId }
-                when {
-                    // Default category set
-                    defaultCategory != null -> {
-                        val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                        if (!result) return@launch
-                        moveMangaToCategory(defaultCategory)
-                    }
-
-                    // Automatic 'Default' or no categories
-                    defaultCategoryId == 0L || categories.isEmpty() -> {
-                        val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                        if (!result) return@launch
-                        moveMangaToCategory(null)
-                    }
-
-                    // Choose a category
-                    else -> showChangeCategoryDialog()
-                }
-
-                // Finally match with enhanced tracking when available
-                appScope.launch { addTracks.bindEnhancedTrackers(manga, state.source) }
+                // Prompt category selection with recommendations
+                showChangeCategoryDialog()
             }
         }
     }
@@ -538,7 +515,12 @@ class MangaViewModel(
         if (manga.favorite) return
 
         viewModelScope.launch {
-            updateManga.awaitUpdateFavorite(manga.id, true)
+            val result = updateManga.awaitUpdateFavorite(manga.id, true)
+            if (result) {
+                successState?.source?.let { source ->
+                    appScope.launch { addTracks.bindEnhancedTrackers(manga, source) }
+                }
+            }
         }
     }
 

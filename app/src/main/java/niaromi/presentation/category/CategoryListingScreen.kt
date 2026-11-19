@@ -68,19 +68,27 @@ fun CategoryListingScreen(
 ) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val allManga by produceState(initialValue = emptyList<Manga>()) {
-        value = context.appGraph.getFavorites.await()
+    val libraryMangaList by produceState(initialValue = emptyList<niaromi.domain.library.model.LibraryManga>()) {
+        value = context.appGraph.getLibraryManga.await()
     }
 
-    val filteredManga = remember(allManga, categoryId, categoryName) {
+    val filteredManga = remember(libraryMangaList, categoryId, categoryName) {
         when {
-            categoryId >= 100L -> {
-                allManga.filter { item ->
-                    item.genre?.any { it.equals(categoryName, ignoreCase = true) } == true
-                }
+            categoryId in 1000L..9998L -> {
+                libraryMangaList.filter { item ->
+                    val primary = item.manga.genre?.firstOrNull { it.isNotBlank() }
+                        ?.trim()?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    primary.equals(categoryName, ignoreCase = true) ||
+                        item.manga.genre?.any { it.equals(categoryName, ignoreCase = true) } == true
+                }.map { it.manga }
             }
-            else -> allManga
-        }.ifEmpty { allManga }
+            categoryId in 1L..999L -> {
+                libraryMangaList.filter { item ->
+                    categoryId in item.categories
+                }.map { it.manga }
+            }
+            else -> libraryMangaList.map { it.manga }
+        }.ifEmpty { libraryMangaList.map { it.manga } }
     }
 
     var showMenu by remember { mutableStateOf(false) }

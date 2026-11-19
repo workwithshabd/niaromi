@@ -279,6 +279,7 @@ fun BrowseSourceScreen(
                     viewModel.changeMangaFavorite(dialog.manga)
                     viewModel.moveMangaToCategories(dialog.manga, include)
                 },
+                manga = dialog.manga,
             )
         }
         else -> {}

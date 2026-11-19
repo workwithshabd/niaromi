@@ -123,6 +123,9 @@ interface AppGraph : ViewModelGraph {
     val googleDriveSyncHelper: GoogleDriveSyncHelper
 
     val getFavorites: GetFavorites
+    val getLibraryManga: niaromi.domain.manga.interactor.GetLibraryManga
+    val createCategoryWithName: niaromi.domain.category.interactor.CreateCategoryWithName
+    val setMangaCategories: niaromi.domain.category.interactor.SetMangaCategories
     val getCategories: GetCategories
     val getChaptersByMangaId: GetChaptersByMangaId
     val networkToLocalManga: NetworkToLocalManga

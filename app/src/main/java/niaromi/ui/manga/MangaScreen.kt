@@ -199,6 +199,7 @@ fun MangaScreen(
                 onConfirm = { include, _ ->
                     viewModel.moveMangaToCategoriesAndAddToLibrary(dialog.manga, include)
                 },
+                manga = dialog.manga,
             )
         }
         is MangaViewModel.Dialog.DeleteChapters -> {

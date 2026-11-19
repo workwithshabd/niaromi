@@ -91,12 +91,15 @@ fun buildDiscoverySections(
 
     val result = mutableListOf<DiscoveryCategorySection>()
     val seenSectionNames = mutableSetOf<String>()
+    val assignedMangaIds = mutableSetOf<Long>()
 
     // 1. Custom categories (if user defined categories exist)
     val customCategories = categories.filterNot { it.isSystemCategory }
     if (customCategories.isNotEmpty()) {
         customCategories.forEach { category ->
-            val items = getItemsForCategory(category).filter(filterItem)
+            val items = getItemsForCategory(category)
+                .filter(filterItem)
+                .filter { it.id !in assignedMangaIds }
             if (items.isNotEmpty()) {
                 result.add(
                     DiscoveryCategorySection(
@@ -106,21 +109,23 @@ fun buildDiscoverySections(
                     ),
                 )
                 seenSectionNames.add(category.name.lowercase())
+                items.forEach { assignedMangaIds.add(it.id) }
             }
         }
     }
 
-    // 2. All Genres in the user's library (Action, Adventure, Comedy, Drama, etc.)
+    // 2. Unassigned titles grouped by their primary genre only (strictly one category/genre per title)
+    val unassignedTitles = filteredFavorites.filter { it.id !in assignedMangaIds }
     val genreMap = linkedMapOf<String, MutableList<LibraryItem>>()
-    filteredFavorites.forEach { item ->
+
+    unassignedTitles.forEach { item ->
         val genres = item.libraryManga.manga.genre
-        if (!genres.isNullOrEmpty()) {
-            genres.forEach { g ->
-                val clean = g.trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                if (clean.isNotBlank()) {
-                    genreMap.getOrPut(clean) { mutableListOf() }.add(item)
-                }
-            }
+        val primaryGenre = genres?.firstOrNull { it.isNotBlank() }
+            ?.trim()
+            ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+        if (!primaryGenre.isNullOrBlank()) {
+            genreMap.getOrPut(primaryGenre) { mutableListOf() }.add(item)
         }
     }
 
@@ -134,21 +139,21 @@ fun buildDiscoverySections(
 
     var genreSectionId = 1000L
     sortedGenres.forEach { (genreName, items) ->
-        if (genreName.lowercase() !in seenSectionNames) {
+        if (genreName.lowercase() !in seenSectionNames && items.isNotEmpty()) {
             result.add(
                 DiscoveryCategorySection(
                     id = genreSectionId++,
                     name = genreName,
-                    items = items.distinctBy { it.id },
+                    items = items,
                 ),
             )
             seenSectionNames.add(genreName.lowercase())
+            items.forEach { assignedMangaIds.add(it.id) }
         }
     }
 
     // 3. Any titles that don't have genres or didn't fall into the above sections
-    val titlesInSections = result.flatMap { it.items.map { item -> item.id } }.toSet()
-    val remainingTitles = filteredFavorites.filter { it.id !in titlesInSections }
+    val remainingTitles = filteredFavorites.filter { it.id !in assignedMangaIds }
     if (remainingTitles.isNotEmpty()) {
         result.add(
             DiscoveryCategorySection(
@@ -494,7 +499,7 @@ fun DiscoveryCategoryRow(
             modifier = Modifier.fillMaxWidth(),
         ) {
             items(
-                items = section.items,
+                items = section.items.take(5),
                 key = { "${section.id}_${it.id}" },
             ) { item ->
                 EditorialMangaCard(
