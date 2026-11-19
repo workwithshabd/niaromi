@@ -104,7 +104,11 @@ class ChapterLoader(
                 when (format) {
                     is Format.Directory -> DirectoryPageLoader(format.file)
                     is Format.Archive -> ArchivePageLoader(format.file.archiveReader(context))
-                    is Format.Epub -> EpubPageLoader(format.file.epubReader(context))
+                    is Format.Epub -> EpubPageLoader(
+                        context,
+                        format.file.epubReader(context),
+                        chapter.chapter.toSChapter(),
+                    )
                 }
             }
             source is HttpSource -> HttpPageLoader(chapter, source, chapterCache, appScope, canLoadAhead)

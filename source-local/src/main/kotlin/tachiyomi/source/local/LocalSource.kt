@@ -95,8 +95,11 @@ class LocalSource(
         }
 
         var mangaDirs = fileSystem.getFilesInBaseDirectory()
-            // Filter out files that are hidden and is not a folder
-            .filter { it.isDirectory && !it.name.orEmpty().startsWith('.') }
+            // Filter out files that are hidden and is not a folder or supported file
+            .filter {
+                (it.isDirectory || it.extension.equals("epub", true) || Archive.isSupported(it)) &&
+                    !it.name.orEmpty().startsWith('.')
+            }
             .distinctBy { it.name }
             .filter {
                 if (lastModifiedLimit == 0L && query.isBlank()) {
@@ -134,7 +137,11 @@ class LocalSource(
             .map { mangaDir ->
                 async {
                     SManga.create().apply {
-                        title = mangaDir.name.orEmpty()
+                        title = if (mangaDir.isDirectory) {
+                            mangaDir.name.orEmpty()
+                        } else {
+                            mangaDir.nameWithoutExtension.orEmpty()
+                        }
                         url = mangaDir.name.orEmpty()
 
                         // Try to find the cover
@@ -169,6 +176,23 @@ class LocalSource(
         // Augment manga details based on metadata files
         try {
             val mangaDir = fileSystem.getMangaDirectory(manga.url) ?: error("${manga.url} is not a valid directory")
+            if (!mangaDir.isDirectory) {
+                if (mangaDir.extension.equals("epub", true)) {
+                    mangaDir.epubReader(context).use { epub ->
+                        epub.fillMetadata(manga)
+                        val coverPath = epub.getCoverImage()
+                        if (coverPath != null && manga.thumbnail_url.isNullOrBlank()) {
+                            epub.getInputStream(coverPath)?.let { stream ->
+                                coverManager.update(manga, stream)
+                                coverManager.find(manga.url)?.let {
+                                    manga.thumbnail_url = it.uri.toString()
+                                }
+                            }
+                        }
+                    }
+                }
+                return@withContext manga
+            }
             val mangaDirFiles = mangaDir.listFiles().orEmpty()
 
             val comicInfoFile = mangaDirFiles
@@ -289,6 +313,36 @@ class LocalSource(
 
     // Chapters
     private suspend fun getChapterList(manga: SManga): List<SChapter> = withContext(Dispatchers.IO) {
+        val mangaFile = fileSystem.getMangaDirectory(manga.url)
+        if (mangaFile != null && !mangaFile.isDirectory && mangaFile.extension.equals("epub", true)) {
+            val chapters = mangaFile.epubReader(context).use { epub ->
+                val epubChapters = epub.getChapters()
+                if (epubChapters.isNotEmpty()) {
+                    epubChapters.mapIndexed { index, chapterInfo ->
+                        SChapter.create().apply {
+                            url = "${manga.url}#${chapterInfo.spineIndex}#${chapterInfo.href}"
+                            name = chapterInfo.title
+                            date_upload = mangaFile.lastModified()
+                            chapter_number = (index + 1).toFloat()
+                        }
+                    }
+                } else {
+                    listOf(
+                        SChapter.create().apply {
+                            url = "${manga.url}#0#"
+                            name = manga.title.ifBlank { mangaFile.nameWithoutExtension.orEmpty() }
+                            date_upload = mangaFile.lastModified()
+                            chapter_number = 1f
+                        },
+                    )
+                }
+            }
+            if (manga.thumbnail_url.isNullOrBlank()) {
+                chapters.firstOrNull()?.let { updateCover(it, manga) }
+            }
+            return@withContext chapters
+        }
+
         val chapters = fileSystem.getFilesInMangaDirectory(manga.url)
             // Only keep supported formats
             .filterNot { it.name.orEmpty().startsWith('.') }
@@ -346,11 +400,18 @@ class LocalSource(
 
     fun getFormat(chapter: SChapter): Format {
         try {
-            val (mangaDirName, chapterName) = chapter.url.split('/', limit = 2)
-            return fileSystem.getBaseDirectory()
-                ?.findFile(mangaDirName)
-                ?.findFile(chapterName)
-                ?.let(Format.Companion::valueOf)
+            val url = chapter.url.substringBefore('#')
+            val parts = url.split('/', limit = 2)
+            val baseDir = fileSystem.getBaseDirectory()
+            val file = if (parts.size == 2) {
+                val (mangaDirName, chapterName) = parts
+                baseDir?.findFile(mangaDirName)?.let { parent ->
+                    if (parent.isDirectory) parent.findFile(chapterName) else parent
+                } ?: baseDir?.findFile(url)
+            } else {
+                baseDir?.findFile(url)
+            }
+            return file?.let(Format.Companion::valueOf)
                 ?: throw Exception(context.stringResource(MR.strings.chapter_not_found))
         } catch (e: Format.UnknownFormatException) {
             throw Exception(context.stringResource(MR.strings.local_invalid_format))
@@ -388,7 +449,7 @@ class LocalSource(
                 }
                 is Format.Epub -> {
                     format.file.epubReader(context).use { epub ->
-                        val entry = epub.getImagesFromPages().firstOrNull()
+                        val entry = epub.getCoverImage() ?: epub.getImagesFromPages().firstOrNull()
 
                         entry?.let { coverManager.update(manga, epub.getInputStream(it)!!) }
                     }

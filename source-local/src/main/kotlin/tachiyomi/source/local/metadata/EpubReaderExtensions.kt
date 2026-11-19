@@ -8,6 +8,26 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
+ * Fills manga metadata using this epub file's metadata.
+ */
+fun EpubReader.fillMetadata(manga: SManga) {
+    val ref = getPackageHref()
+    val doc = getPackageDocument(ref)
+
+    val title = doc.getElementsByTag("dc:title").first()
+    val creator = doc.getElementsByTag("dc:creator").first()
+    val description = doc.getElementsByTag("dc:description").first()
+    val subjects = doc.getElementsByTag("dc:subject").mapNotNull { it.text().takeIf(String::isNotBlank) }
+
+    title?.text()?.takeIf(String::isNotBlank)?.let { manga.title = it }
+    creator?.text()?.takeIf(String::isNotBlank)?.let { manga.author = it }
+    description?.text()?.takeIf(String::isNotBlank)?.let { manga.description = it }
+    if (subjects.isNotEmpty()) {
+        manga.genre = subjects.joinToString(", ")
+    }
+}
+
+/**
  * Fills manga and chapter metadata using this epub file's metadata.
  */
 fun EpubReader.fillMetadata(manga: SManga, chapter: SChapter) {

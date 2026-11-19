@@ -190,6 +190,7 @@ class WebtoonPageHolder(
                 val isAnimated = ImageUtil.isAnimatedAndSupported(source)
                 Pair(source, isAnimated)
             }
+            val isEbook = page?.chapter?.chapter?.url?.contains(".epub", ignoreCase = true) == true
             withContext(Dispatchers.Main) {
                 frame.setImage(
                     source,
@@ -197,7 +198,7 @@ class WebtoonPageHolder(
                     ReaderPageImageView.Config(
                         zoomDuration = viewer.general.doubleTapAnimDuration,
                         minimumScaleType = SubsamplingScaleImageView.SCALE_TYPE_FIT_WIDTH,
-                        cropBorders = viewer.longStrip.cropBorders,
+                        cropBorders = if (isEbook) false else viewer.longStrip.cropBorders,
                     ),
                 )
                 removeErrorLayout()

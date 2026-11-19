@@ -157,6 +157,7 @@ class PagerPageHolder(
                 }
                 Triple(source, isAnimated, background)
             }
+            val isEbook = item.chapter.chapter.url.contains(".epub", ignoreCase = true)
             withContext(Dispatchers.Main) {
                 setImage(
                     source,
@@ -164,7 +165,7 @@ class PagerPageHolder(
                     Config(
                         zoomDuration = viewer.general.doubleTapAnimDuration,
                         minimumScaleType = viewer.paged.page.imageScaleType.value,
-                        cropBorders = viewer.paged.page.cropBorders,
+                        cropBorders = if (isEbook) false else viewer.paged.page.cropBorders,
                         zoomStartPosition = viewer.imageZoomType,
                         landscapeZoom = viewer.paged.page.landscapeZoom,
                     ),
