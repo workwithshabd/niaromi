@@ -230,7 +230,9 @@ class TtlDiskCache(
         try {
             indexFile.useLines { lines ->
                 val iterator = lines.iterator()
-                if (!iterator.hasNext() || iterator.next() != HEADER) return indexed
+                if (!iterator.hasNext()) return indexed
+                val header = iterator.next()
+                if (header != HEADER && header != "mihon.TtlDiskCache 1") return indexed
                 iterator.forEach { line ->
                     val parts = line.split(' ')
                     if (parts.size != 3) return@forEach
@@ -309,7 +311,7 @@ class TtlDiskCache(
     private fun fileName(key: String) = key.encodeUtf8().sha256().hex()
 
     private companion object {
-        const val HEADER = "mihon.TtlDiskCache 1"
+        const val HEADER = "niaromi.TtlDiskCache 1"
         const val TEMP_INFIX = "tmp-"
     }
 }

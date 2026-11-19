@@ -22,7 +22,7 @@ class GoogleDriveModelsTest {
     fun `serialize and deserialize GoogleDriveFile`() {
         val file = GoogleDriveFile(
             id = "drive-file-id-123",
-            name = "app.mihon_2026-11-19_13-00.tachibk",
+            name = "app.niaromi_2026-11-19_13-00.tachibk",
             size = 1048576L,
             modifiedTime = "2026-11-19T07:30:00.000Z",
         )
@@ -43,7 +43,7 @@ class GoogleDriveModelsTest {
                 {
                   "kind": "drive#file",
                   "id": "file-1",
-                  "name": "app.mihon_2026-11-19_12-00.tachibk",
+                  "name": "app.niaromi_2026-11-19_12-00.tachibk",
                   "mimeType": "application/octet-stream",
                   "size": "2048",
                   "modifiedTime": "2026-11-19T06:30:00.000Z"
@@ -51,7 +51,7 @@ class GoogleDriveModelsTest {
                 {
                   "kind": "drive#file",
                   "id": "file-2",
-                  "name": "app.mihon_2026-11-18_10-00.tachibk",
+                  "name": "app.niaromi_2026-11-18_10-00.tachibk",
                   "mimeType": "application/octet-stream"
                 }
               ]
@@ -61,12 +61,12 @@ class GoogleDriveModelsTest {
         val result = json.decodeFromString(GoogleDriveFileList.serializer(), apiResponse)
         result.files shouldHaveSize 2
         result.files[0].id shouldBe "file-1"
-        result.files[0].name shouldBe "app.mihon_2026-11-19_12-00.tachibk"
+        result.files[0].name shouldBe "app.niaromi_2026-11-19_12-00.tachibk"
         result.files[0].size shouldBe 2048L
         result.files[0].modifiedTime shouldBe "2026-11-19T06:30:00.000Z"
 
         result.files[1].id shouldBe "file-2"
-        result.files[1].name shouldBe "app.mihon_2026-11-18_10-00.tachibk"
+        result.files[1].name shouldBe "app.niaromi_2026-11-18_10-00.tachibk"
         result.files[1].size shouldBe null
     }
 

@@ -49,7 +49,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseShowExtensionsEvent
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.explore.ExploreTab
-import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.LibrarySearchEvent
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
@@ -113,18 +112,6 @@ sealed interface TopLevelRoute : NavKey {
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_updates)
             return TabOptions(
                 title = stringResource(MR.strings.label_recent_updates),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
-    }
-
-    @Serializable
-    data object History : TopLevelRoute {
-        @Composable
-        override fun options(isSelected: Boolean): TabOptions {
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_history)
-            return TabOptions(
-                title = stringResource(MR.strings.label_recent_manga),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -252,7 +239,6 @@ fun HomeScreen() {
             }
             TabEvent.Explore -> TopLevelRoute.Explore
             TabEvent.Updates -> TopLevelRoute.Updates
-            TabEvent.History -> TopLevelRoute.History
             is TabEvent.Browse -> {
                 if (it.toExtensions) resultEventBus.sendResult(BrowseShowExtensionsEvent)
                 TopLevelRoute.Browse
@@ -379,7 +365,6 @@ sealed interface TabEvent {
     data class Library(val mangaIdToOpen: Long? = null, val query: String? = null) : TabEvent
     data object Explore : TabEvent
     data object Updates : TabEvent
-    data object History : TabEvent
     data class Browse(val toExtensions: Boolean = false) : TabEvent
     data class More(val toDownloads: Boolean) : TabEvent
 }

@@ -27,6 +27,20 @@ import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
 import mihon.app.di.appGraph
 
 @Composable
+fun NiaromiTheme(
+    appTheme: AppTheme? = null,
+    amoled: Boolean? = null,
+    content: @Composable () -> Unit,
+) = TachiyomiTheme(appTheme, amoled, content)
+
+@Composable
+fun NiaromiPreviewTheme(
+    appTheme: AppTheme = AppTheme.DEFAULT,
+    isAmoled: Boolean = false,
+    content: @Composable () -> Unit,
+) = TachiyomiPreviewTheme(appTheme, isAmoled, content)
+
+@Composable
 fun TachiyomiTheme(
     appTheme: AppTheme? = null,
     amoled: Boolean? = null,

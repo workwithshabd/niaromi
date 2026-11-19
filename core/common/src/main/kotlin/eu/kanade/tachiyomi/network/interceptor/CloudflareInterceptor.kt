@@ -49,7 +49,7 @@ class CloudflareInterceptor(
     private val listenerScript = """
         addEventListener("message", ({data}) => {
             if (data?.source === "cloudflare-challenge") {
-                mihon?.postMessage(data.event);
+                niaromi?.postMessage(data.event);
             }
         })
     """.trimIndent()
@@ -158,9 +158,15 @@ class CloudflareInterceptor(
 
             if (useIsolatedWorld) {
                 // An isolated world keeps the bridge out of the page's reach
-                val world = WebViewCompat.getExecutionWorld(webview, "mihon")
+                val world = WebViewCompat.getExecutionWorld(webview, "niaromi")
                 val origins = setOf(originalRequest.url.origin())
-                WebViewCompat.addWebMessageListener(webview, "mihon", origins, world) { _, message, _, isMainFrame, _ ->
+                WebViewCompat.addWebMessageListener(webview, "niaromi", origins, world) {
+                        _,
+                        message,
+                        _,
+                        isMainFrame,
+                        _,
+                    ->
                     if (isMainFrame) message.data?.let(::onChallengeEvent)
                 }
                 listenerScriptHandler = WebViewCompat.addJavaScriptOnEvent(
@@ -177,7 +183,7 @@ class CloudflareInterceptor(
                         @JavascriptInterface
                         fun postMessage(event: String) = onChallengeEvent(event)
                     },
-                    "mihon",
+                    "niaromi",
                 )
             }
 
@@ -242,11 +248,11 @@ class CloudflareInterceptor(
                     if (useIsolatedWorld) {
                         WebViewCompat.removeWebMessageListener(
                             this,
-                            WebViewCompat.getExecutionWorld(this, "mihon"),
-                            "mihon",
+                            WebViewCompat.getExecutionWorld(this, "niaromi"),
+                            "niaromi",
                         )
                     } else {
-                        removeJavascriptInterface("mihon")
+                        removeJavascriptInterface("niaromi")
                     }
                     listenerScriptHandler?.remove()
                     stopLoading()

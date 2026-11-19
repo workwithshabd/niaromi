@@ -568,13 +568,16 @@
 
     <!--== Splash Theme ==-->
     <style name="Theme.Tachiyomi.SplashScreen" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_mihon_splash</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_niaromi_splash</item>
         <item name="windowSplashScreenBackground">@color/splash</item>
-        <item name="postSplashScreenTheme">@style/Theme.Tachiyomi</item>
+        <item name="postSplashScreenTheme">@style/Theme.Niaromi</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
+
+    <style name="Theme.Niaromi" parent="Theme.Tachiyomi" />
+    <style name="Theme.Niaromi.SplashScreen" parent="Theme.Tachiyomi.SplashScreen" />
 
 </resources>

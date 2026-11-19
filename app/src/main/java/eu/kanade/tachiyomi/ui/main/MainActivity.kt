@@ -674,7 +674,7 @@ class MainActivity : BaseActivity() {
                 TabEvent.Library(idToOpen)
             }
             Constants.SHORTCUT_UPDATES -> TabEvent.Updates
-            Constants.SHORTCUT_HISTORY -> TabEvent.History
+            Constants.SHORTCUT_HISTORY -> TabEvent.Explore
             Constants.SHORTCUT_SOURCES -> TabEvent.Browse(false)
             Constants.SHORTCUT_EXTENSIONS -> TabEvent.Browse(true)
             Constants.SHORTCUT_DOWNLOADS -> {
