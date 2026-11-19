@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation3.runtime.result.LocalResultEventBus
 import niaromi.app.di.appGraph
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
@@ -55,10 +57,16 @@ import niaromi.icons.materialsymbols.rounded.MoreVert
 import niaromi.presentation.components.FloatingBottomNavigationBar
 import niaromi.presentation.manga.components.MangaCover
 import niaromi.ui.home.TopLevelRoute
+import niaromi.ui.library.LibrarySearchEvent
 
-private val WarmIvoryBg = Color(0xFFFFFDF4)
-private val NearBlackText = Color(0xFF171717)
-private val MutedGrayText = Color(0xFF929292)
+private val ListingBg: Color
+    @Composable get() = MaterialTheme.colorScheme.background
+
+private val ListingText: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val ListingMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 
 @Composable
 fun CategoryListingScreen(
@@ -68,6 +76,7 @@ fun CategoryListingScreen(
 ) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
+    val resultEventBus = LocalResultEventBus.current
     val libraryMangaList by produceState(initialValue = emptyList<niaromi.domain.library.model.LibraryManga>()) {
         value = context.appGraph.getLibraryManga.await()
     }
@@ -96,7 +105,7 @@ fun CategoryListingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmIvoryBg),
+            .background(ListingBg),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -149,6 +158,15 @@ fun CategoryListingScreen(
         FloatingBottomNavigationBar(
             currentRoute = TopLevelRoute.Library,
             onSelectRoute = { route ->
+                if (route == TopLevelRoute.Library) {
+                    resultEventBus.sendResult(LibrarySearchEvent(""))
+                }
+                navigator.pop()
+            },
+            onReselectRoute = { route ->
+                if (route == TopLevelRoute.Library) {
+                    resultEventBus.sendResult(LibrarySearchEvent(""))
+                }
                 navigator.pop()
             },
             modifier = Modifier
@@ -184,7 +202,7 @@ fun CategoryListingTopBar(
                 Icon(
                     imageVector = niaromi.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     contentDescription = "Back",
-                    tint = NearBlackText,
+                    tint = ListingText,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -200,7 +218,7 @@ fun CategoryListingTopBar(
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.sp,
                         letterSpacing = 1.5.sp,
-                        color = MutedGrayText,
+                        color = ListingMuted,
                     ),
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -210,7 +228,7 @@ fun CategoryListingTopBar(
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 26.sp,
-                        color = NearBlackText,
+                        color = ListingText,
                         textAlign = TextAlign.Center,
                     ),
                     maxLines = 1,
@@ -222,7 +240,7 @@ fun CategoryListingTopBar(
                 Icon(
                     imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
                     contentDescription = "More",
-                    tint = NearBlackText,
+                    tint = ListingText,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -239,11 +257,7 @@ fun CategoryMangaGridItem(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
+            .clickable(onClick = onClick),
     ) {
         Box(
             modifier = Modifier
@@ -256,11 +270,12 @@ fun CategoryMangaGridItem(
                     spotColor = Color(0x30000000),
                 )
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color(0xFFEDE9DF)),
+                .background(MaterialTheme.colorScheme.surfaceContainer),
         ) {
             MangaCover.Book(
                 data = item.asMangaCover(),
                 modifier = Modifier.fillMaxSize(),
+                onClick = onClick,
             )
         }
 
@@ -272,7 +287,7 @@ fun CategoryMangaGridItem(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = NearBlackText,
+                color = ListingText,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -287,7 +302,7 @@ fun CategoryMangaGridItem(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Normal,
                 fontSize = 12.sp,
-                color = MutedGrayText,
+                color = ListingMuted,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

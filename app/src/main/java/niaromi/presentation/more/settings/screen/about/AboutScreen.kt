@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +74,7 @@ fun AboutScreen() {
     var isCheckingUpdates by remember { mutableStateOf(false) }
     val crashLogUtil = remember { context.appGraph.crashLogUtil }
     val is24HourSystem = rememberIs24HourSystem()
+    val bgColor = MaterialTheme.colorScheme.background
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -82,11 +84,11 @@ fun AboutScreen() {
                     navigator.pop()
                     Unit
                 }.takeIf { backVisibility },
-                backgroundColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
+                backgroundColor = bgColor,
                 scrollBehavior = scrollBehavior,
             )
         },
-        containerColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
+        containerColor = bgColor,
     ) { contentPadding ->
         ScrollbarLazyColumn(
             contentPadding = contentPadding,

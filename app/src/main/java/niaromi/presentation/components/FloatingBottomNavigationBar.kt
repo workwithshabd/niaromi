@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -34,11 +35,6 @@ import niaromi.icons.materialsymbols.rounded.Book
 import niaromi.icons.materialsymbols.rounded.Explore
 import niaromi.icons.materialsymbols.rounded.Settings
 import niaromi.ui.home.TopLevelRoute
-
-private val NavContainerBg = Color(0xFFFAF8F0).copy(alpha = 0.96f)
-private val NavContainerBorder = Color(0xFFE8E5DA)
-private val ActivePillBg = Color(0xFF1D1D1D)
-private val InactiveText = Color(0xFF929292)
 
 data class NavTabItem(
     val route: TopLevelRoute,
@@ -75,6 +71,12 @@ fun FloatingBottomNavigationBar(
     modifier: Modifier = Modifier,
     onReselectRoute: (TopLevelRoute) -> Unit = onSelectRoute,
 ) {
+    val navContainerBg = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f)
+    val navContainerBorder = MaterialTheme.colorScheme.outlineVariant
+    val activePillBg = MaterialTheme.colorScheme.primary
+    val activePillText = MaterialTheme.colorScheme.onPrimary
+    val inactiveText = MaterialTheme.colorScheme.onSurfaceVariant
+
     Box(
         modifier = modifier
             .shadow(
@@ -83,8 +85,8 @@ fun FloatingBottomNavigationBar(
                 ambientColor = Color(0x18000000),
                 spotColor = Color(0x28000000),
             )
-            .background(NavContainerBg, RoundedCornerShape(32.dp))
-            .border(0.5.dp, NavContainerBorder, RoundedCornerShape(32.dp))
+            .background(navContainerBg, RoundedCornerShape(32.dp))
+            .border(0.5.dp, navContainerBorder, RoundedCornerShape(32.dp))
             .padding(horizontal = 6.dp, vertical = 5.dp),
     ) {
         Row(
@@ -96,7 +98,7 @@ fun FloatingBottomNavigationBar(
                 val interactionSource = remember { MutableInteractionSource() }
 
                 val animatedBg = animateColorAsState(
-                    targetValue = if (isSelected) ActivePillBg else Color.Transparent,
+                    targetValue = if (isSelected) activePillBg else Color.Transparent,
                     animationSpec = tween(durationMillis = 200),
                     label = "tab_bg",
                 )
@@ -132,7 +134,7 @@ fun FloatingBottomNavigationBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            tint = Color.White,
+                            tint = activePillText,
                             modifier = Modifier.size(17.dp),
                         )
                         Text(
@@ -141,7 +143,7 @@ fun FloatingBottomNavigationBar(
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp,
-                                color = Color.White,
+                                color = activePillText,
                             ),
                         )
                     } else {
@@ -151,7 +153,7 @@ fun FloatingBottomNavigationBar(
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 13.sp,
-                                color = InactiveText,
+                                color = inactiveText,
                             ),
                         )
                     }

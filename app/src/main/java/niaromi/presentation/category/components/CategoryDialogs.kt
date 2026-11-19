@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -287,11 +288,12 @@ fun ChangeCategoryDialog(
             title = {
                 Column {
                     Text(
-                        text = if (manga.favorite) "Change Category" else "Add to Library",
+                        text = if (manga.favorite) "Change Genre / Collection" else "Add to Library",
                         style = TextStyle(
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
                         ),
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -301,7 +303,7 @@ fun ChangeCategoryDialog(
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Normal,
                             fontSize = 13.sp,
-                            color = Color(0xFF757575),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -314,16 +316,41 @@ fun ChangeCategoryDialog(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                 ) {
+                    if (mangaGenres.isNotEmpty()) {
+                        Text(
+                            text = "GENRES FOR THIS TITLE",
+                            style = TextStyle(
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
+
                     if (!recommendedCategoryName.isNullOrBlank()) {
                         val isRecommendedSelected = categories.find { it.id == selectedCategoryId }
                             ?.name?.equals(recommendedCategoryName, ignoreCase = true) == true
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = Color(0xFFFFFBEB),
-                            border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                            color = if (isRecommendedSelected) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                            border = BorderStroke(
+                                1.dp,
+                                if (isRecommendedSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 12.dp)
+                                .padding(bottom = 10.dp)
                                 .clickable {
                                     val matched = categories.find {
                                         it.name.equals(recommendedCategoryName, ignoreCase = true)
@@ -353,7 +380,7 @@ fun ChangeCategoryDialog(
                                 Text(
                                     text = "★",
                                     fontSize = 16.sp,
-                                    color = Color(0xFFD97706),
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f)) {
@@ -364,7 +391,7 @@ fun ChangeCategoryDialog(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 10.sp,
                                             letterSpacing = 1.sp,
-                                            color = Color(0xFFB45309),
+                                            color = MaterialTheme.colorScheme.primary,
                                         ),
                                     )
                                     Text(
@@ -373,7 +400,7 @@ fun ChangeCategoryDialog(
                                             fontFamily = FontFamily.SansSerif,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp,
-                                            color = Color(0xFF171717),
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         ),
                                     )
                                 }
@@ -381,7 +408,7 @@ fun ChangeCategoryDialog(
                                     Icon(
                                         imageVector = MaterialSymbols.Rounded.Check,
                                         contentDescription = null,
-                                        tint = Color(0xFFD97706),
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(18.dp),
                                     )
                                 }
@@ -390,17 +417,6 @@ fun ChangeCategoryDialog(
                     }
 
                     if (otherGenres.isNotEmpty()) {
-                        Text(
-                            text = "OTHER GENRES FOR THIS TITLE",
-                            style = TextStyle(
-                                fontFamily = FontFamily.SansSerif,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                letterSpacing = 1.sp,
-                                color = Color(0xFF757575),
-                            ),
-                            modifier = Modifier.padding(bottom = 6.dp),
-                        )
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -413,8 +429,19 @@ fun ChangeCategoryDialog(
                                 val isChosen = matchedCat != null && selectedCategoryId == matchedCat.id
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = if (isChosen) Color(0xFFE0E7FF) else Color(0xFFF3F4F6),
-                                    border = BorderStroke(1.dp, if (isChosen) Color(0xFF6366F1) else Color(0xFFE5E7EB)),
+                                    color = if (isChosen) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainer
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isChosen) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.outlineVariant
+                                        },
+                                    ),
                                     modifier = Modifier.clickable {
                                         if (matchedCat != null) {
                                             selectedCategoryId = matchedCat.id
@@ -440,7 +467,11 @@ fun ChangeCategoryDialog(
                                             fontFamily = FontFamily.SansSerif,
                                             fontSize = 12.sp,
                                             fontWeight = if (isChosen) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (isChosen) Color(0xFF4338CA) else Color(0xFF374151),
+                                            color = if (isChosen) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            },
                                         ),
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     )
@@ -448,6 +479,18 @@ fun ChangeCategoryDialog(
                             }
                         }
                     }
+
+                    Text(
+                        text = "CUSTOM COLLECTIONS",
+                        style = TextStyle(
+                            fontFamily = FontFamily.SansSerif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                        modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
+                    )
 
                     Row(
                         modifier = Modifier
@@ -462,11 +505,11 @@ fun ChangeCategoryDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Default (No Category)",
+                            text = "Default (No Collection)",
                             style = TextStyle(
                                 fontFamily = FontFamily.SansSerif,
                                 fontSize = 14.sp,
-                                color = Color(0xFF171717),
+                                color = MaterialTheme.colorScheme.onSurface,
                             ),
                         )
                     }
@@ -489,7 +532,7 @@ fun ChangeCategoryDialog(
                                 style = TextStyle(
                                     fontFamily = FontFamily.SansSerif,
                                     fontSize = 14.sp,
-                                    color = Color(0xFF171717),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 ),
                             )
                         }
@@ -507,7 +550,7 @@ fun ChangeCategoryDialog(
                             OutlinedTextField(
                                 value = newCategoryName,
                                 onValueChange = { newCategoryName = it },
-                                label = { Text("Category name") },
+                                label = { Text("Collection name") },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
                             )
@@ -537,8 +580,8 @@ fun ChangeCategoryDialog(
                             ) {
                                 Icon(
                                     imageVector = MaterialSymbols.Rounded.Check,
-                                    contentDescription = "Save category",
-                                    tint = Color(0xFF171717),
+                                    contentDescription = "Save collection",
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }
@@ -553,17 +596,17 @@ fun ChangeCategoryDialog(
                             Icon(
                                 imageVector = MaterialSymbols.Rounded.Add,
                                 contentDescription = null,
-                                tint = Color(0xFFD97706),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Create new category",
+                                text = "Create a new collection",
                                 style = TextStyle(
                                     fontFamily = FontFamily.SansSerif,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 13.sp,
-                                    color = Color(0xFFD97706),
+                                    color = MaterialTheme.colorScheme.primary,
                                 ),
                             )
                         }

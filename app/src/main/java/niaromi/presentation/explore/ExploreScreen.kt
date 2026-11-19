@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -64,13 +66,34 @@ import niaromi.ui.explore.ExploreItem
 import niaromi.ui.explore.ExploreState
 import niaromi.ui.explore.SourceFilterItem
 
-private val WarmIvoryBg = Color(0xFFFFFDF4)
-private val OffWhiteCard = Color(0xFFFAF8F0)
-private val BorderColor = Color(0xFFE8E5DA)
-private val NearBlack = Color(0xFF171717)
-private val MutedGray = Color(0xFF929292)
-private val AmberGold = Color(0xFFD97706)
-private val AmberBg = Color(0xFFFEF3C7)
+private val ExploreBg: Color
+    @Composable get() = MaterialTheme.colorScheme.background
+
+private val ExploreCardBg: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+
+private val ExploreBorder: Color
+    @Composable get() = MaterialTheme.colorScheme.outlineVariant
+
+private val ExploreText: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val ExploreMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val AmberGold: Color
+    @Composable get() = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
+        Color(0xFFFBBF24)
+    } else {
+        Color(0xFFD97706)
+    }
+
+private val AmberBg: Color
+    @Composable get() = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
+        Color(0xFF38230B)
+    } else {
+        Color(0xFFFEF3C7)
+    }
 
 @Composable
 fun ExploreScreen(
@@ -102,7 +125,7 @@ fun ExploreScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmIvoryBg),
+            .background(ExploreBg),
     ) {
         PullRefresh(
             refreshing = state.isRefreshing,
@@ -210,7 +233,7 @@ fun ExploreScreen(
                                     style = TextStyle(
                                         fontFamily = FontFamily.SansSerif,
                                         fontSize = 14.sp,
-                                        color = MutedGray,
+                                        color = ExploreMuted,
                                     ),
                                 )
                             }
@@ -240,7 +263,7 @@ fun ExploreScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
                                     strokeWidth = 2.5.dp,
-                                    color = NearBlack,
+                                    color = ExploreText,
                                 )
                             }
                         }
@@ -273,7 +296,7 @@ private fun ExploreHeader(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.sp,
                     letterSpacing = 1.5.sp,
-                    color = MutedGray,
+                    color = ExploreMuted,
                 ),
             )
             Spacer(modifier = Modifier.height(2.dp))
@@ -284,7 +307,7 @@ private fun ExploreHeader(
                     fontWeight = FontWeight.Bold,
                     fontSize = 36.sp,
                     letterSpacing = 1.sp,
-                    color = NearBlack,
+                    color = ExploreText,
                 ),
             )
             Spacer(modifier = Modifier.height(2.dp))
@@ -294,7 +317,7 @@ private fun ExploreHeader(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
-                    color = MutedGray,
+                    color = ExploreMuted,
                 ),
             )
         }
@@ -308,14 +331,14 @@ private fun ExploreHeader(
             if (isRefreshing) {
                 CircularProgressIndicator(
                     strokeWidth = 2.dp,
-                    color = NearBlack,
+                    color = ExploreText,
                     modifier = Modifier.size(18.dp),
                 )
             } else {
                 Icon(
                     imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Refresh,
                     contentDescription = "Refresh explore feed",
-                    tint = NearBlack,
+                    tint = ExploreText,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -334,8 +357,8 @@ private fun ExploreSearchBar(
             .fillMaxWidth()
             .height(44.dp)
             .shadow(2.dp, RoundedCornerShape(16.dp), ambientColor = Color(0x0A000000))
-            .background(OffWhiteCard, RoundedCornerShape(16.dp))
-            .border(0.5.dp, BorderColor, RoundedCornerShape(16.dp))
+            .background(ExploreCardBg, RoundedCornerShape(16.dp))
+            .border(0.5.dp, ExploreBorder, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -346,7 +369,7 @@ private fun ExploreSearchBar(
             Icon(
                 imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Search,
                 contentDescription = null,
-                tint = MutedGray,
+                tint = ExploreMuted,
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -357,7 +380,7 @@ private fun ExploreSearchBar(
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 13.sp,
-                            color = MutedGray,
+                            color = ExploreMuted,
                         ),
                     )
                 }
@@ -368,9 +391,9 @@ private fun ExploreSearchBar(
                     textStyle = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 13.sp,
-                        color = NearBlack,
+                        color = ExploreText,
                     ),
-                    cursorBrush = SolidColor(NearBlack),
+                    cursorBrush = SolidColor(ExploreText),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -382,7 +405,7 @@ private fun ExploreSearchBar(
                     Icon(
                         imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Close,
                         contentDescription = "Clear search",
-                        tint = MutedGray,
+                        tint = ExploreMuted,
                         modifier = Modifier.size(16.dp),
                     )
                 }
@@ -440,19 +463,19 @@ private fun SourceChip(
     onClick: () -> Unit,
 ) {
     val bg = when {
-        isSelected -> NearBlack
+        isSelected -> ExploreText
         isPreferred -> AmberBg
-        else -> OffWhiteCard
+        else -> ExploreCardBg
     }
     val textColor = when {
-        isSelected -> Color.White
+        isSelected -> MaterialTheme.colorScheme.background
         isPreferred -> AmberGold
-        else -> NearBlack
+        else -> ExploreText
     }
     val borderCol = when {
         isSelected -> Color.Transparent
         isPreferred -> AmberGold.copy(alpha = 0.4f)
-        else -> BorderColor
+        else -> ExploreBorder
     }
 
     Box(
@@ -503,7 +526,7 @@ private fun ExploreSectionHeading(
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                     letterSpacing = 1.sp,
-                    color = NearBlack,
+                    color = ExploreText,
                 ),
             )
         }
@@ -512,7 +535,7 @@ private fun ExploreSectionHeading(
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 11.sp,
-                color = MutedGray,
+                color = ExploreMuted,
             ),
         )
     }
@@ -589,7 +612,7 @@ private fun ExploreHorizontalShelf(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = NearBlack,
+                            color = ExploreText,
                         ),
                     )
                 }
@@ -685,7 +708,7 @@ private fun ExploreGridCard(
                 fontSize = 11.5.sp,
                 fontWeight = FontWeight.Medium,
                 lineHeight = 15.sp,
-                color = NearBlack,
+                color = ExploreText,
             ),
         )
     }
@@ -704,7 +727,7 @@ private fun ExploreLoadingIndicator(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(
                 strokeWidth = 2.dp,
-                color = NearBlack,
+                color = ExploreText,
                 modifier = Modifier.size(32.dp),
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -713,7 +736,7 @@ private fun ExploreLoadingIndicator(
                 style = TextStyle(
                     fontFamily = FontFamily.SansSerif,
                     fontSize = 13.sp,
-                    color = MutedGray,
+                    color = ExploreMuted,
                 ),
             )
         }
@@ -739,7 +762,7 @@ private fun ExploreEmptyState(
             Icon(
                 imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Explore,
                 contentDescription = null,
-                tint = MutedGray,
+                tint = ExploreMuted,
                 modifier = Modifier.size(48.dp),
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -750,14 +773,14 @@ private fun ExploreEmptyState(
                     fontFamily = FontFamily.SansSerif,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
-                    color = MutedGray,
+                    color = ExploreMuted,
                 ),
             )
             Spacer(modifier = Modifier.height(20.dp))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(NearBlack)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable(onClick = onRetry)
                     .padding(horizontal = 20.dp, vertical = 10.dp),
             ) {
@@ -767,7 +790,7 @@ private fun ExploreEmptyState(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     ),
                 )
             }

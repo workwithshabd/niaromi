@@ -65,6 +65,10 @@ class GoogleDriveSyncHelper(
         return googleDriveService.listBackups()
     }
 
+    suspend fun pruneOldBackups(maxKeep: Int = 2) {
+        googleDriveService.pruneOldBackups(maxKeep)
+    }
+
     suspend fun autoRestoreLatestBackup(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         if (!GoogleSignInHelper.isSignedIn(context)) {
             return@withContext false
@@ -105,6 +109,11 @@ class GoogleDriveSyncHelper(
                 options = RestoreOptions(),
                 sync = true,
             )
+            try {
+                pruneOldBackups(2)
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) { "Failed to prune old Google Drive backups during auto restore" }
+            }
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to auto-restore backup from Google Drive" }

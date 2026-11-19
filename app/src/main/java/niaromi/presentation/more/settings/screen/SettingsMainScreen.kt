@@ -99,15 +99,32 @@ import niaromi.presentation.more.settings.screen.about.getVersionName
 import niaromi.ui.home.TopLevelRoute
 import tachiyomi.i18n.MR
 
-private val WarmIvoryBg = Color(0xFFFFFDF4)
-private val NearBlackText = Color(0xFF171717)
-private val MutedGrayText = Color(0xFF929292)
-private val CardBg = Color(0xFFFBF9F1)
-private val CardBorder = Color(0xFFE9E5D8)
-private val SearchBarBg = Color(0xFFF4F1E6)
-private val SearchBarBorder = Color(0xFFE9E5D8)
-private val IconBg = Color(0xFFECE7DA)
-private val DividerColor = Color(0xFFEFECE2)
+private val SettingsBg: Color
+    @Composable get() = MaterialTheme.colorScheme.background
+
+private val SettingsText: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val SettingsMutedText: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val SettingsCardBg: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+
+private val SettingsCardBorder: Color
+    @Composable get() = MaterialTheme.colorScheme.outlineVariant
+
+private val SettingsSearchBarBg: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh
+
+private val SettingsSearchBarBorder: Color
+    @Composable get() = MaterialTheme.colorScheme.outlineVariant
+
+private val SettingsIconBg: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainerHighest
+
+private val SettingsDividerColor: Color
+    @Composable get() = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
 
 @Serializable
 data object SettingsMainScreen : NavKey {
@@ -132,7 +149,7 @@ data object SettingsMainScreen : NavKey {
     fun Content(navigateUp: (() -> Unit)? = null) {
         val navigator = LocalNavigator.current
         val twoPane = isTabletUi()
-        val containerColor = if (twoPane) getPalerSurface() else WarmIvoryBg
+        val containerColor = if (twoPane) getPalerSurface() else SettingsBg
         val topBarState = rememberTopAppBarState()
 
         val canNavigateUp = navigateUp != null || (!twoPane && navigator.routes.size > 1)
@@ -208,7 +225,7 @@ data object SettingsMainScreen : NavKey {
                                     Icon(
                                         imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                                         contentDescription = stringResource(MR.strings.action_bar_up_description),
-                                        tint = NearBlackText,
+                                        tint = SettingsText,
                                     )
                                 }
                             } else {
@@ -226,7 +243,7 @@ data object SettingsMainScreen : NavKey {
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 11.sp,
                                         letterSpacing = 1.5.sp,
-                                        color = MutedGrayText,
+                                        color = SettingsMutedText,
                                     ),
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -236,7 +253,7 @@ data object SettingsMainScreen : NavKey {
                                         fontFamily = FontFamily.Serif,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 28.sp,
-                                        color = NearBlackText,
+                                        color = SettingsText,
                                         textAlign = TextAlign.Center,
                                     ),
                                 )
@@ -252,8 +269,8 @@ data object SettingsMainScreen : NavKey {
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 6.dp)
                                 .height(44.dp)
-                                .background(SearchBarBg, RoundedCornerShape(14.dp))
-                                .border(0.5.dp, SearchBarBorder, RoundedCornerShape(14.dp))
+                                .background(SettingsSearchBarBg, RoundedCornerShape(14.dp))
+                                .border(0.5.dp, SettingsSearchBarBorder, RoundedCornerShape(14.dp))
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null,
@@ -269,7 +286,7 @@ data object SettingsMainScreen : NavKey {
                                 Icon(
                                     imageVector = MaterialSymbols.Rounded.Search,
                                     contentDescription = stringResource(MR.strings.action_search),
-                                    tint = Color(0xFF888888),
+                                    tint = SettingsMutedText,
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -278,7 +295,7 @@ data object SettingsMainScreen : NavKey {
                                     style = TextStyle(
                                         fontFamily = FontFamily.SansSerif,
                                         fontSize = 14.sp,
-                                        color = Color(0xFF999999),
+                                        color = SettingsMutedText,
                                     ),
                                     modifier = Modifier.weight(1f),
                                 )
@@ -300,7 +317,7 @@ data object SettingsMainScreen : NavKey {
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 12.sp,
                                     letterSpacing = 1.2.sp,
-                                    color = MutedGrayText,
+                                    color = SettingsMutedText,
                                 ),
                                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
                             )
@@ -309,8 +326,8 @@ data object SettingsMainScreen : NavKey {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(CardBg)
-                                    .border(0.5.dp, CardBorder, RoundedCornerShape(18.dp)),
+                                    .background(SettingsCardBg)
+                                    .border(0.5.dp, SettingsCardBorder, RoundedCornerShape(18.dp)),
                             ) {
                                 QuickToggleRow(
                                     title = "Downloaded only",
@@ -323,7 +340,7 @@ data object SettingsMainScreen : NavKey {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(start = 68.dp, end = 16.dp),
                                     thickness = 0.5.dp,
-                                    color = DividerColor,
+                                    color = SettingsDividerColor,
                                 )
 
                                 QuickToggleRow(
@@ -337,7 +354,7 @@ data object SettingsMainScreen : NavKey {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(start = 68.dp, end = 16.dp),
                                     thickness = 0.5.dp,
-                                    color = DividerColor,
+                                    color = SettingsDividerColor,
                                 )
 
                                 QuickToolRow(
@@ -350,7 +367,7 @@ data object SettingsMainScreen : NavKey {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(start = 68.dp, end = 16.dp),
                                     thickness = 0.5.dp,
-                                    color = DividerColor,
+                                    color = SettingsDividerColor,
                                 )
 
                                 QuickToolRow(
@@ -363,7 +380,7 @@ data object SettingsMainScreen : NavKey {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(start = 68.dp, end = 16.dp),
                                     thickness = 0.5.dp,
-                                    color = DividerColor,
+                                    color = SettingsDividerColor,
                                 )
 
                                 QuickToolRow(
@@ -391,7 +408,7 @@ data object SettingsMainScreen : NavKey {
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp,
                                         letterSpacing = 1.2.sp,
-                                        color = MutedGrayText,
+                                        color = SettingsMutedText,
                                     ),
                                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
                                 )
@@ -399,8 +416,8 @@ data object SettingsMainScreen : NavKey {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(18.dp))
-                                        .background(CardBg)
-                                        .border(0.5.dp, CardBorder, RoundedCornerShape(18.dp)),
+                                        .background(SettingsCardBg)
+                                        .border(0.5.dp, SettingsCardBorder, RoundedCornerShape(18.dp)),
                                 ) {
                                     section.items.forEachIndexed { itemIndex, item ->
                                         val isSelected = twoPane && (selectedScreen == item.screen)
@@ -419,7 +436,7 @@ data object SettingsMainScreen : NavKey {
                                             HorizontalDivider(
                                                 modifier = Modifier.padding(start = 68.dp, end = 16.dp),
                                                 thickness = 0.5.dp,
-                                                color = DividerColor,
+                                                color = SettingsDividerColor,
                                             )
                                         }
                                     }
@@ -572,7 +589,7 @@ private fun SettingsItemRow(
             .fillMaxWidth()
             .then(
                 if (isSelected) {
-                    Modifier.background(Color(0xFFEAE5D8))
+                    Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
                 } else {
                     Modifier
                 },
@@ -588,13 +605,13 @@ private fun SettingsItemRow(
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .background(IconBg, RoundedCornerShape(10.dp)),
+                .background(SettingsIconBg, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                tint = NearBlackText,
+                tint = SettingsText,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -609,7 +626,7 @@ private fun SettingsItemRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
-                    color = NearBlackText,
+                    color = SettingsText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -623,7 +640,7 @@ private fun SettingsItemRow(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.5.sp,
-                        color = MutedGrayText,
+                        color = SettingsMutedText,
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -634,7 +651,7 @@ private fun SettingsItemRow(
         Icon(
             imageVector = MaterialSymbols.Rounded.KeyboardArrowRight,
             contentDescription = null,
-            tint = Color(0xFFB0AAA0),
+            tint = MaterialTheme.colorScheme.outline,
             modifier = Modifier.size(20.dp),
         )
     }
@@ -658,13 +675,13 @@ private fun QuickToggleRow(
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .background(IconBg, RoundedCornerShape(10.dp)),
+                .background(SettingsIconBg, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = NearBlackText,
+                tint = SettingsText,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -679,7 +696,7 @@ private fun QuickToggleRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
-                    color = NearBlackText,
+                    color = SettingsText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -691,7 +708,7 @@ private fun QuickToggleRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.5.sp,
-                    color = MutedGrayText,
+                    color = SettingsMutedText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -702,10 +719,10 @@ private fun QuickToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = androidx.compose.material3.SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = NearBlackText,
-                uncheckedThumbColor = Color(0xFF888888),
-                uncheckedTrackColor = Color(0xFFE5E0D0),
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ),
         )
     }
@@ -728,13 +745,13 @@ private fun QuickToolRow(
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .background(IconBg, RoundedCornerShape(10.dp)),
+                .background(SettingsIconBg, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = NearBlackText,
+                tint = SettingsText,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -749,7 +766,7 @@ private fun QuickToolRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
-                    color = NearBlackText,
+                    color = SettingsText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -761,7 +778,7 @@ private fun QuickToolRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.5.sp,
-                    color = MutedGrayText,
+                    color = SettingsMutedText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -771,7 +788,7 @@ private fun QuickToolRow(
         Icon(
             imageVector = MaterialSymbols.Rounded.KeyboardArrowRight,
             contentDescription = null,
-            tint = Color(0xFFB0AAA0),
+            tint = MaterialTheme.colorScheme.outline,
             modifier = Modifier.size(20.dp),
         )
     }
@@ -878,7 +895,7 @@ fun GitHubUpdateDialog(
                 Text(
                     text = "Repository: $GITHUB_REPO",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedGrayText,
+                    color = SettingsMutedText,
                 )
                 Spacer(modifier = Modifier.height(14.dp))
                 if (isChecking) {

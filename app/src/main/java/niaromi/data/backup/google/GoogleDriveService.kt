@@ -176,10 +176,10 @@ class GoogleDriveService(
         }
     }
 
-    private suspend fun pruneOldBackups() {
+    suspend fun pruneOldBackups(maxKeep: Int = MAX_KEEP_BACKUPS) {
         val backups = listBackups()
-        if (backups.size > MAX_KEEP_BACKUPS) {
-            val toDelete = backups.drop(MAX_KEEP_BACKUPS)
+        if (backups.size > maxKeep) {
+            val toDelete = backups.drop(maxKeep)
             for (file in toDelete) {
                 try {
                     deleteBackup(file.id)
@@ -191,6 +191,6 @@ class GoogleDriveService(
     }
 
     companion object {
-        private const val MAX_KEEP_BACKUPS = 5
+        private const val MAX_KEEP_BACKUPS = 2
     }
 }

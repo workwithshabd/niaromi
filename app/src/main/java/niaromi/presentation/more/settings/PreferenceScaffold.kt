@@ -1,6 +1,7 @@
 package niaromi.presentation.more.settings
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import dev.icerock.moko.resources.StringResource
 import niaromi.presentation.components.AppBar
@@ -14,17 +15,18 @@ fun PreferenceScaffold(
     onBackPressed: (() -> Unit)? = null,
     itemsProvider: @Composable () -> List<Preference>,
 ) {
+    val bgColor = MaterialTheme.colorScheme.background
     Scaffold(
         topBar = {
             AppBar(
                 title = stringResource(titleRes),
                 navigateUp = onBackPressed,
                 actions = actions,
-                backgroundColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
+                backgroundColor = bgColor,
                 scrollBehavior = it,
             )
         },
-        containerColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
+        containerColor = bgColor,
         content = { contentPadding ->
             PreferenceScreen(
                 items = itemsProvider(),

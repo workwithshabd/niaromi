@@ -36,6 +36,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,6 +70,7 @@ import niaromi.app.di.appGraph
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.manga.model.asMangaCover
+import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
 import niaromi.icons.materialsymbols.rounded.BookmarkAdd
 import niaromi.icons.materialsymbols.rounded.Check
@@ -90,10 +92,17 @@ import niaromi.ui.manga.MangaViewModel
 import niaromi.util.system.toast
 import kotlin.math.absoluteValue
 
-private val WarmIvoryBg = Color(0xFFFFFDF4)
-private val NearBlackText = Color(0xFF171717)
-private val MutedGrayText = Color(0xFF929292)
-private val ButtonBlack = Color(0xFF1D1D1D)
+private val DetailBg: Color
+    @Composable get() = MaterialTheme.colorScheme.background
+
+private val DetailText: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val DetailMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val ButtonPrimary: Color
+    @Composable get() = MaterialTheme.colorScheme.primary
 
 @Composable
 fun MangaEditorialDetailScreen(
@@ -122,25 +131,42 @@ fun MangaEditorialDetailScreen(
         value = context.appGraph.getFavorites.await()
     }
 
-    val currentGenres = remember(state.manga) {
-        state.manga.genre?.map { it.trim().lowercase() }?.toSet().orEmpty()
+    val initialManga = remember { state.manga }
+
+    val currentGenres = remember(initialManga) {
+        initialManga.genre?.map { it.trim().lowercase() }?.toSet().orEmpty()
     }
 
-    val carouselMangaList = remember(allFavorites, state.manga, currentGenres, fromSearch) {
+    val (carouselMangaList, initialPageIndex) = remember(allFavorites, initialManga, currentGenres, fromSearch) {
         if (fromSearch) {
-            listOf(state.manga)
+            listOf(initialManga) to 0
         } else {
-            val otherFavorites = allFavorites.filter { it.id != state.manga.id }
-            val (sameGenre, differentGenre) = otherFavorites.partition { fav ->
+            val sameGenreFavorites = allFavorites.filter { fav ->
                 fav.genre?.any { it.trim().lowercase() in currentGenres } == true
             }
-            // state.manga is ALWAYS at index 0! Same-genre titles come immediately after!
-            listOf(state.manga) + sameGenre + differentGenre
+            val targetList = if (sameGenreFavorites.isNotEmpty()) {
+                sameGenreFavorites
+            } else {
+                allFavorites
+            }
+
+            val targetIndex = targetList.indexOfFirst { it.id == initialManga.id }
+            if (targetIndex >= 0) {
+                // Slice up to 5 previous and up to 5 next titles around target
+                val start = maxOf(0, targetIndex - 5)
+                val end = minOf(targetList.size, targetIndex + 6)
+                val slice = targetList.subList(start, end)
+                val pageIndex = targetIndex - start
+                slice to pageIndex
+            } else {
+                val remaining = targetList.filter { it.id != initialManga.id }.take(5)
+                (listOf(initialManga) + remaining) to 0
+            }
         }
     }
 
     val pagerState = rememberPagerState(
-        initialPage = 0,
+        initialPage = initialPageIndex,
         pageCount = { carouselMangaList.size },
     )
 
@@ -244,7 +270,7 @@ fun MangaEditorialDetailScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmIvoryBg),
+            .background(DetailBg),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -254,6 +280,77 @@ fun MangaEditorialDetailScreen(
                 onBack = navigateUp,
                 onMenuClick = { showMenu = true },
                 onTitleClick = scrollToChapters,
+                menu = {
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Info") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.Rounded.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                showInfoDialog = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(if (currentManga.favorite) "In library" else "Add to library") },
+                            onClick = {
+                                showMenu = false
+                                onAddToLibraryClicked()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("View all chapters") },
+                            onClick = {
+                                showMenu = false
+                                scrollToChapters()
+                            },
+                        )
+                        if (onShareClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text("Share") },
+                                onClick = {
+                                    showMenu = false
+                                    onShareClicked()
+                                },
+                            )
+                        }
+                        if (onWebViewClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text("Open in WebView") },
+                                onClick = {
+                                    showMenu = false
+                                    onWebViewClicked()
+                                },
+                            )
+                        }
+                        if (onEditCategoryClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text("Change genre / collection") },
+                                onClick = {
+                                    showMenu = false
+                                    onEditCategoryClicked()
+                                },
+                            )
+                        }
+                        if (onMigrateClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text("Migrate") },
+                                onClick = {
+                                    showMenu = false
+                                    onMigrateClicked()
+                                },
+                            )
+                        }
+                    }
+                },
             )
 
             LazyColumn(
@@ -309,7 +406,7 @@ fun MangaEditorialDetailScreen(
                                             spotColor = Color(0x40000000),
                                         )
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFFEDE9DF))
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                         .clickable {
                                             if (pagerState.currentPage != page) {
                                                 coroutineScope.launch {
@@ -340,7 +437,7 @@ fun MangaEditorialDetailScreen(
                                     fontFamily = FontFamily.Serif,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
-                                    color = NearBlackText,
+                                    color = DetailText,
                                     textAlign = TextAlign.Center,
                                 ),
                                 maxLines = 2,
@@ -369,7 +466,7 @@ fun MangaEditorialDetailScreen(
                                         fontFamily = FontFamily.SansSerif,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 13.sp,
-                                        color = MutedGrayText,
+                                        color = DetailMuted,
                                         textAlign = TextAlign.Center,
                                     ),
                                     maxLines = 1,
@@ -384,115 +481,188 @@ fun MangaEditorialDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Surface(
-                                onClick = onReadButtonClick,
-                                shape = CircleShape,
-                                color = ButtonBlack,
-                                shadowElevation = 3.dp,
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .height(44.dp),
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.padding(horizontal = 18.dp),
+                            if (currentManga.favorite) {
+                                // Once in library: strictly 2 options (Continue & Download)
+                                Surface(
+                                    onClick = onReadButtonClick,
+                                    shape = CircleShape,
+                                    color = ButtonPrimary,
+                                    shadowElevation = 3.dp,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .height(44.dp),
                                 ) {
-                                    Text(
-                                        text = if (hasReadAny) "Continue" else "Read Now",
-                                        style = TextStyle(
-                                            fontFamily = FontFamily.SansSerif,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 13.sp,
-                                            color = Color.White,
-                                        ),
-                                        maxLines = 1,
-                                        softWrap = false,
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                onClick = {
-                                    if (currentManga.id == state.manga.id) {
-                                        if (onDownloadActionClicked != null) {
-                                            onDownloadActionClicked(DownloadAction.ALL_CHAPTERS)
-                                        } else if (onDownloadChapter != null) {
-                                            val items = state.processedChapters.filter { !it.isDownloaded }
-                                            if (items.isNotEmpty()) {
-                                                onDownloadChapter(items, ChapterDownloadAction.START)
-                                            }
-                                        }
-                                    } else {
-                                        onSelectManga(currentManga.id)
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.padding(horizontal = 22.dp),
+                                    ) {
+                                        Text(
+                                            text = "Continue",
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                            ),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                        )
                                     }
-                                },
-                                shape = CircleShape,
-                                color = Color(0xFFF3EEDF),
-                                border = BorderStroke(1.dp, Color(0xFFD6CDBA)),
-                                shadowElevation = 2.dp,
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .height(44.dp),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = Modifier.padding(horizontal = 14.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Download,
-                                        contentDescription = "Download All Chapters",
-                                        tint = NearBlackText,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Download",
-                                        style = TextStyle(
-                                            fontFamily = FontFamily.SansSerif,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 13.sp,
-                                            color = NearBlackText,
-                                        ),
-                                    )
                                 }
-                            }
 
-                            Surface(
-                                onClick = onAddToLibraryClicked,
-                                shape = CircleShape,
-                                color = if (currentManga.favorite) Color(0xFFF3EEDF) else ButtonBlack,
-                                border = if (currentManga.favorite) BorderStroke(1.dp, Color(0xFFD6CDBA)) else null,
-                                shadowElevation = 2.dp,
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .height(44.dp),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = Modifier.padding(horizontal = 14.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = if (currentManga.favorite) {
-                                            niaromi.icons.materialsymbols.MaterialSymbols.RoundedFilled.Bookmark
+                                Surface(
+                                    onClick = {
+                                        if (currentManga.id == state.manga.id) {
+                                            if (onDownloadActionClicked != null) {
+                                                onDownloadActionClicked(DownloadAction.ALL_CHAPTERS)
+                                            } else if (onDownloadChapter != null) {
+                                                val items = state.processedChapters.filter { !it.isDownloaded }
+                                                if (items.isNotEmpty()) {
+                                                    onDownloadChapter(items, ChapterDownloadAction.START)
+                                                }
+                                            }
                                         } else {
-                                            niaromi.icons.materialsymbols.MaterialSymbols.Rounded.BookmarkAdd
-                                        },
-                                        contentDescription = null,
-                                        tint = if (currentManga.favorite) NearBlackText else Color.White,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (currentManga.favorite) "In Library" else "Add to Library",
-                                        style = TextStyle(
-                                            fontFamily = FontFamily.SansSerif,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 13.sp,
-                                            color = if (currentManga.favorite) NearBlackText else Color.White,
-                                        ),
-                                    )
+                                            onSelectManga(currentManga.id)
+                                        }
+                                    },
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    shadowElevation = 2.dp,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .height(44.dp),
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = MaterialSymbols.Rounded.Download,
+                                            contentDescription = "Download All Chapters",
+                                            tint = DetailText,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Download",
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = DetailText,
+                                            ),
+                                        )
+                                    }
+                                }
+                            } else {
+                                // Not in library: Read Now / Continue, Download, Add to Library
+                                Surface(
+                                    onClick = onReadButtonClick,
+                                    shape = CircleShape,
+                                    color = ButtonPrimary,
+                                    shadowElevation = 3.dp,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .height(44.dp),
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.padding(horizontal = 18.dp),
+                                    ) {
+                                        Text(
+                                            text = if (hasReadAny) "Continue" else "Read Now",
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                            ),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = {
+                                        if (currentManga.id == state.manga.id) {
+                                            if (onDownloadActionClicked != null) {
+                                                onDownloadActionClicked(DownloadAction.ALL_CHAPTERS)
+                                            } else if (onDownloadChapter != null) {
+                                                val items = state.processedChapters.filter { !it.isDownloaded }
+                                                if (items.isNotEmpty()) {
+                                                    onDownloadChapter(items, ChapterDownloadAction.START)
+                                                }
+                                            }
+                                        } else {
+                                            onSelectManga(currentManga.id)
+                                        }
+                                    },
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    shadowElevation = 2.dp,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .height(44.dp),
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(horizontal = 14.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = MaterialSymbols.Rounded.Download,
+                                            contentDescription = "Download All Chapters",
+                                            tint = DetailText,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Download",
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = DetailText,
+                                            ),
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = onAddToLibraryClicked,
+                                    shape = CircleShape,
+                                    color = ButtonPrimary,
+                                    shadowElevation = 2.dp,
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .height(44.dp),
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(horizontal = 14.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = MaterialSymbols.Rounded.BookmarkAdd,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Add to Library",
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -518,7 +688,7 @@ fun MangaEditorialDetailScreen(
                                     fontFamily = FontFamily.SansSerif,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
-                                    color = NearBlackText,
+                                    color = DetailText,
                                 ),
                             )
                             if (activeChapters.any { it.read }) {
@@ -528,14 +698,14 @@ fun MangaEditorialDetailScreen(
                                     style = TextStyle(
                                         fontFamily = FontFamily.SansSerif,
                                         fontSize = 12.sp,
-                                        color = MutedGrayText,
+                                        color = DetailMuted,
                                     ),
                                 )
                             }
                         }
 
                         HorizontalDivider(
-                            color = Color(0x14000000),
+                            color = MaterialTheme.colorScheme.outlineVariant,
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
                         )
@@ -555,7 +725,7 @@ fun MangaEditorialDetailScreen(
                                 style = TextStyle(
                                     fontFamily = FontFamily.SansSerif,
                                     fontSize = 14.sp,
-                                    color = MutedGrayText,
+                                    color = DetailMuted,
                                 ),
                             )
                         }
@@ -593,7 +763,7 @@ fun MangaEditorialDetailScreen(
                             },
                         )
                         HorizontalDivider(
-                            color = Color(0x0C000000),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(horizontal = 24.dp),
                         )
@@ -607,76 +777,6 @@ fun MangaEditorialDetailScreen(
                             .height(36.dp),
                     )
                 }
-            }
-        }
-
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-        ) {
-            DropdownMenuItem(
-                text = { Text("Info") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                onClick = {
-                    showMenu = false
-                    showInfoDialog = true
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(if (currentManga.favorite) "In library" else "Add to library") },
-                onClick = {
-                    showMenu = false
-                    onAddToLibraryClicked()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("View all chapters") },
-                onClick = {
-                    showMenu = false
-                    scrollToChapters()
-                },
-            )
-            if (onShareClicked != null) {
-                DropdownMenuItem(
-                    text = { Text("Share") },
-                    onClick = {
-                        showMenu = false
-                        onShareClicked()
-                    },
-                )
-            }
-            if (onWebViewClicked != null) {
-                DropdownMenuItem(
-                    text = { Text("Open in WebView") },
-                    onClick = {
-                        showMenu = false
-                        onWebViewClicked()
-                    },
-                )
-            }
-            if (onEditCategoryClicked != null) {
-                DropdownMenuItem(
-                    text = { Text("Edit category") },
-                    onClick = {
-                        showMenu = false
-                        onEditCategoryClicked()
-                    },
-                )
-            }
-            if (onMigrateClicked != null) {
-                DropdownMenuItem(
-                    text = { Text("Migrate") },
-                    onClick = {
-                        showMenu = false
-                        onMigrateClicked()
-                    },
-                )
             }
         }
 
@@ -764,7 +864,7 @@ fun MangaEditorialChapterRow(
                 style = TextStyle(
                     fontFamily = FontFamily.SansSerif,
                     fontSize = 14.sp,
-                    color = if (chapter.read) MutedGrayText else NearBlackText,
+                    color = if (chapter.read) DetailMuted else DetailText,
                     fontWeight = if (chapter.read) FontWeight.Normal else FontWeight.Medium,
                 ),
                 maxLines = 1,
@@ -777,7 +877,7 @@ fun MangaEditorialChapterRow(
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
-                        color = MutedGrayText,
+                        color = DetailMuted,
                     ),
                     maxLines = 1,
                 )
@@ -790,9 +890,9 @@ fun MangaEditorialChapterRow(
         ) {
             if (chapter.bookmark) {
                 Icon(
-                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.RoundedFilled.Bookmark,
+                    imageVector = MaterialSymbols.RoundedFilled.Bookmark,
                     contentDescription = "Bookmarked",
-                    tint = NearBlackText,
+                    tint = DetailText,
                     modifier = Modifier.size(16.dp),
                 )
             }
@@ -802,7 +902,7 @@ fun MangaEditorialChapterRow(
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 12.sp,
-                        color = MutedGrayText,
+                        color = DetailMuted,
                     ),
                 )
             }
@@ -813,7 +913,7 @@ fun MangaEditorialChapterRow(
                         modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
-                            imageVector = niaromi.icons.materialsymbols.MaterialSymbols.RoundedFilled.CheckCircle,
+                            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
                             contentDescription = "Downloaded - Click to delete",
                             tint = Color(0xFF2E7D32),
                             modifier = Modifier.size(18.dp),
@@ -825,9 +925,9 @@ fun MangaEditorialChapterRow(
                         modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
-                            imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Download,
+                            imageVector = MaterialSymbols.Rounded.Download,
                             contentDescription = "Download chapter",
-                            tint = NearBlackText,
+                            tint = DetailText,
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -851,7 +951,7 @@ fun ChapterActionMenuDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         shape = RoundedCornerShape(20.dp),
-        containerColor = WarmIvoryBg,
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
                 text = chapter.name,
@@ -859,7 +959,7 @@ fun ChapterActionMenuDialog(
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = NearBlackText,
+                    color = DetailText,
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -873,33 +973,33 @@ fun ChapterActionMenuDialog(
                 if (!chapter.read) {
                     ChapterActionRow(
                         title = "Mark as read",
-                        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Check,
+                        icon = MaterialSymbols.Rounded.Check,
                         onClick = onMarkAsRead,
                     )
                 } else {
                     ChapterActionRow(
                         title = "Mark as unread",
-                        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Close,
+                        icon = MaterialSymbols.Rounded.Close,
                         onClick = onMarkAsUnread,
                     )
                 }
 
                 ChapterActionRow(
                     title = "Mark chapters below as read",
-                    icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.DoneAll,
+                    icon = MaterialSymbols.Rounded.DoneAll,
                     onClick = onMarkChaptersBelowAsRead,
                 )
 
                 if (isDownloaded) {
                     ChapterActionRow(
                         title = "Delete download",
-                        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Delete,
+                        icon = MaterialSymbols.Rounded.Delete,
                         onClick = onDeleteDownload,
                     )
                 } else {
                     ChapterActionRow(
                         title = "Download",
-                        icon = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Download,
+                        icon = MaterialSymbols.Rounded.Download,
                         onClick = onDownload,
                     )
                 }
@@ -911,7 +1011,7 @@ fun ChapterActionMenuDialog(
                     text = "Cancel",
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
-                        color = MutedGrayText,
+                        color = DetailMuted,
                     ),
                 )
             }
@@ -937,7 +1037,7 @@ private fun ChapterActionRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = NearBlackText,
+            tint = DetailText,
             modifier = Modifier.size(20.dp),
         )
         Text(
@@ -946,7 +1046,7 @@ private fun ChapterActionRow(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = NearBlackText,
+                color = DetailText,
             ),
         )
     }
@@ -971,9 +1071,9 @@ fun MangaInfoDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         shape = RoundedCornerShape(20.dp),
-        containerColor = WarmIvoryBg,
-        titleContentColor = NearBlackText,
-        textContentColor = NearBlackText,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = DetailText,
+        textContentColor = DetailText,
         title = {
             Text(
                 text = manga.title,
@@ -981,7 +1081,7 @@ fun MangaInfoDialog(
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = NearBlackText,
+                    color = DetailText,
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -1001,7 +1101,7 @@ fun MangaInfoDialog(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
-                            color = NearBlackText,
+                            color = DetailText,
                         ),
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -1016,31 +1116,31 @@ fun MangaInfoDialog(
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
-                            color = MutedGrayText,
+                            color = DetailMuted,
                         ),
                     )
                     Text(
                         text = "•",
-                        style = TextStyle(color = MutedGrayText),
+                        style = TextStyle(color = DetailMuted),
                     )
                     Text(
                         text = "$chapterCount Chapters",
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
-                            color = MutedGrayText,
+                            color = DetailMuted,
                         ),
                     )
                     Text(
                         text = "•",
-                        style = TextStyle(color = MutedGrayText),
+                        style = TextStyle(color = DetailMuted),
                     )
                     Text(
                         text = "★ 4.6",
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
-                            color = MutedGrayText,
+                            color = DetailMuted,
                         ),
                     )
                 }
@@ -1052,13 +1152,13 @@ fun MangaInfoDialog(
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
-                            color = MutedGrayText,
+                            color = DetailMuted,
                         ),
                     )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = Color(0x14000000), thickness = 0.5.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 val description = manga.description?.ifBlank { null } ?: "No description available."
@@ -1068,7 +1168,7 @@ fun MangaInfoDialog(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
-                        color = NearBlackText,
+                        color = DetailText,
                     ),
                 )
             }
@@ -1080,7 +1180,7 @@ fun MangaInfoDialog(
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.SemiBold,
-                        color = NearBlackText,
+                        color = DetailText,
                     ),
                 )
             }
@@ -1095,6 +1195,7 @@ fun DetailTopBar(
     onMenuClick: () -> Unit,
     onTitleClick: () -> Unit,
     modifier: Modifier = Modifier,
+    menu: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -1112,9 +1213,9 @@ fun DetailTopBar(
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                    imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     contentDescription = "Back",
-                    tint = NearBlackText,
+                    tint = DetailText,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -1136,7 +1237,7 @@ fun DetailTopBar(
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.sp,
                         letterSpacing = 1.5.sp,
-                        color = MutedGrayText,
+                        color = DetailMuted,
                     ),
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1146,7 +1247,7 @@ fun DetailTopBar(
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 24.sp,
-                        color = NearBlackText,
+                        color = DetailText,
                         textAlign = TextAlign.Center,
                     ),
                     maxLines = 1,
@@ -1154,13 +1255,16 @@ fun DetailTopBar(
                 )
             }
 
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.MoreVert,
-                    contentDescription = "More",
-                    tint = NearBlackText,
-                    modifier = Modifier.size(22.dp),
-                )
+            Box {
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        imageVector = MaterialSymbols.Rounded.MoreVert,
+                        contentDescription = "More",
+                        tint = DetailText,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                menu()
             }
         }
     }

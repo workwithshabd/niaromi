@@ -122,6 +122,8 @@ import niaromi.domain.database.repository.DatabaseRepository
 import niaromi.domain.library.service.LibraryPreferences
 import niaromi.domain.release.interactor.GetApplicationRelease
 import niaromi.domain.source.interactor.GetIncognitoState
+import niaromi.domain.ui.UiPreferences
+import niaromi.domain.ui.model.ThemeMode
 import niaromi.extension.ExtensionManager
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.OpenInNew
@@ -166,6 +168,8 @@ class MainActivity : BaseActivity() {
     @Inject private lateinit var libraryPreferences: LibraryPreferences
 
     @Inject private lateinit var preferences: BasePreferences
+
+    @Inject private lateinit var uiPreferences: UiPreferences
 
     @Inject private lateinit var downloadCache: DownloadCache
 
@@ -242,19 +246,25 @@ class MainActivity : BaseActivity() {
             val indexing by downloadCache.isInitializing.collectAsState()
 
             val isSystemInDarkTheme = isSystemInDarkTheme()
+            val themeMode by uiPreferences.themeMode.collectAsState()
+            val isDark = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+            }
             val statusBarBackgroundColor = when {
                 indexing -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
                 incognito -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
             }
-            LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
+            LaunchedEffect(isDark, statusBarBackgroundColor) {
                 // Draw edge-to-edge and set system bars color to transparent
                 val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
                 val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
                 enableEdgeToEdge(
                     statusBarStyle = if (statusBarBackgroundColor.luminance() > 0.5) lightStyle else darkStyle,
-                    navigationBarStyle = if (isSystemInDarkTheme) darkStyle else lightStyle,
+                    navigationBarStyle = if (isDark) darkStyle else lightStyle,
                 )
             }
 

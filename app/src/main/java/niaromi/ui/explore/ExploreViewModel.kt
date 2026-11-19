@@ -68,6 +68,7 @@ class ExploreViewModel(
     val state = _state.asStateFlow()
 
     private var currentPage: Int = 1
+    private var refreshCount: Int = 0
     private val seenTitles = mutableSetOf<String>()
 
     init {
@@ -102,7 +103,13 @@ class ExploreViewModel(
             }
 
             try {
-                currentPage = 1
+                if (isRefresh) {
+                    refreshCount++
+                } else {
+                    refreshCount = 0
+                }
+                val pageToFetch = if (isRefresh) ((refreshCount - 1) % 4) + 1 else 1
+                currentPage = pageToFetch
                 seenTitles.clear()
 
                 val enabledLanguages = sourcePreferences.enabledLanguages.get()
@@ -144,17 +151,17 @@ class ExploreViewModel(
                         .thenBy { it.name.lowercase() },
                 )
 
-                // Query sources concurrently for page 1
+                // Query sources concurrently
                 val rawResults = supervisorScope {
                     sortedSources.map { source ->
                         async(Dispatchers.IO) {
                             val isPreferred = source.id in preferredSourceIds || "${source.id}" in pinnedSources
                             try {
                                 val mangas = withTimeoutOrNull(15_000) {
-                                    if (source.supportsLatest) {
-                                        source.getLatestUpdates(1).mangas
+                                    if (source.supportsLatest && refreshCount % 2 == 0) {
+                                        source.getLatestUpdates(pageToFetch).mangas
                                     } else {
-                                        source.getPopularManga(1).mangas
+                                        source.getPopularManga(pageToFetch).mangas
                                     }
                                 } ?: emptyList()
                                 Triple(source, isPreferred, mangas)

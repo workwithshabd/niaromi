@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import niaromi.app.di.appGraph
 import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.RestoreBackupRoute
 import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.core.util.isTabletUi
@@ -37,10 +38,14 @@ fun OnboardingScreen() {
 
     OnboardingScreen(
         onComplete = finishOnboarding,
-        onRestoreBackup = {
+        onRestoreBackup = { uriString ->
             finishOnboarding()
-            SearchableSettings.highlightKey = restoreSettingKey
-            navigator.openSettings(SettingsDataScreen, isTabletUi)
+            if (uriString.isNotBlank()) {
+                navigator.push(RestoreBackupRoute(uriString))
+            } else {
+                SearchableSettings.highlightKey = restoreSettingKey
+                navigator.openSettings(SettingsDataScreen, isTabletUi)
+            }
         },
     )
 }

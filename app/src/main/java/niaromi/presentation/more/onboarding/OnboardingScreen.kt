@@ -15,6 +15,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import niaromi.app.di.appGraph
+import niaromi.domain.storage.service.autoResolveOrCreateDirectory
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.rounded.RocketLaunch
 import niaromi.presentation.core.components.material.padding
@@ -27,17 +30,26 @@ import tachiyomi.i18n.MR
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit,
-    onRestoreBackup: () -> Unit,
+    onRestoreBackup: (String) -> Unit,
 ) {
+    val context = LocalContext.current
     val slideDistance = rememberSlideDistance()
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val storagePref = context.appGraph.storagePreferences.baseStorageDirectory
+        if (!storagePref.isSet()) {
+            val autoDir = autoResolveOrCreateDirectory(context)
+            if (autoDir != null) {
+                storagePref.set(android.net.Uri.fromFile(autoDir).toString())
+            }
+        }
+    }
 
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     val steps = remember {
         listOf(
-            ThemeStep(),
-            StorageStep(),
             PermissionStep(),
-            GuidesStep(onRestoreBackup = onRestoreBackup),
+            RestoreStep(onRestoreLocal = onRestoreBackup),
         )
     }
     val isLastStep = currentStep == steps.lastIndex

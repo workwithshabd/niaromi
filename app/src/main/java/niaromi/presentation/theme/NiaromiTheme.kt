@@ -5,10 +5,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import niaromi.app.di.appGraph
 import niaromi.domain.ui.model.AppTheme
+import niaromi.domain.ui.model.ThemeMode
+import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.theme.colorscheme.BaseColorScheme
 import niaromi.presentation.theme.colorscheme.CatppuccinColorScheme
 import niaromi.presentation.theme.colorscheme.GreenAppleColorScheme
@@ -34,9 +37,21 @@ fun NiaromiTheme(
 ) {
     val context = LocalContext.current
     val uiPreferences = remember { context.appGraph.uiPreferences }
+    val themeMode by uiPreferences.themeMode.collectAsState()
+    val appThemePref by uiPreferences.appTheme.collectAsState()
+    val amoledPref by uiPreferences.themeDarkAmoled.collectAsState()
+
+    val isSystemDark = isSystemInDarkTheme()
+    val isDark = when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemDark
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+    }
+
     BaseNiaromiTheme(
-        appTheme = appTheme ?: uiPreferences.appTheme.get(),
-        isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
+        appTheme = appTheme ?: appThemePref,
+        isDark = isDark,
+        isAmoled = amoled ?: amoledPref,
         content = content,
     )
 }
@@ -46,7 +61,12 @@ fun NiaromiPreviewTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     isAmoled: Boolean = false,
     content: @Composable () -> Unit,
-) = BaseNiaromiTheme(appTheme, isAmoled, content)
+) = BaseNiaromiTheme(
+    appTheme = appTheme,
+    isDark = isSystemInDarkTheme(),
+    isAmoled = isAmoled,
+    content = content,
+)
 
 @Composable
 fun TachiyomiTheme(
@@ -65,11 +85,11 @@ fun TachiyomiPreviewTheme(
 @Composable
 private fun BaseNiaromiTheme(
     appTheme: AppTheme,
+    isDark: Boolean,
     isAmoled: Boolean,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
     MaterialExpressiveTheme(
         colorScheme = remember(appTheme, isDark, isAmoled) {
             getThemeColorScheme(

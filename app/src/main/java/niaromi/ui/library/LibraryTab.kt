@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -142,7 +143,7 @@ fun LibraryTab() {
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = Color(0xFFFFFDF4),
+        containerColor = MaterialTheme.colorScheme.background,
     ) { contentPadding ->
         when {
             state.isLoading -> {
@@ -244,6 +245,7 @@ fun LibraryTab() {
     }
 
     ResultEffect<Unit>(resultKey = TopLevelRoute.Library.reselectEventKey) {
+        viewModel.search(null)
         scope.launch { discoveryListState.animateScrollToItem(0) }
     }
 }

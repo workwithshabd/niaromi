@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,11 +62,20 @@ import niaromi.ui.library.ExtensionSearchState
 import niaromi.ui.library.LibraryItem
 import kotlin.time.Duration.Companion.seconds
 
-private val WarmIvoryBg = Color(0xFFFFFDF4)
-private val NearBlackText = Color(0xFF171717)
-private val MutedGrayText = Color(0xFF929292)
-private val SearchBarBg = Color(0xFFF4F1E6)
-private val SearchBarBorder = Color(0xFFE9E5D8)
+private val EditorialBg: Color
+    @Composable get() = MaterialTheme.colorScheme.background
+
+private val EditorialText: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val EditorialMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val EditorialCardBg: Color
+    @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+
+private val EditorialCardBorder: Color
+    @Composable get() = MaterialTheme.colorScheme.outlineVariant
 
 data class DiscoveryCategorySection(
     val id: Long,
@@ -225,7 +235,7 @@ fun MangaEditorialDiscovery(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(WarmIvoryBg),
+            .background(EditorialBg),
     ) {
         PullRefresh(
             refreshing = isRefreshing,
@@ -277,7 +287,7 @@ fun MangaEditorialDiscovery(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         letterSpacing = 1.sp,
-                                        color = NearBlackText,
+                                        color = EditorialText,
                                     ),
                                 )
                             }
@@ -387,8 +397,8 @@ fun EditorialSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .height(44.dp)
-            .background(SearchBarBg, RoundedCornerShape(14.dp))
-            .border(0.5.dp, SearchBarBorder, RoundedCornerShape(14.dp))
+            .background(EditorialCardBg, RoundedCornerShape(14.dp))
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(14.dp))
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -399,7 +409,7 @@ fun EditorialSearchBar(
             Icon(
                 imageVector = MaterialSymbols.Rounded.Search,
                 contentDescription = "Search",
-                tint = Color(0xFF888888),
+                tint = EditorialMuted,
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -413,7 +423,7 @@ fun EditorialSearchBar(
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 14.sp,
-                            color = Color(0xFF999999),
+                            color = EditorialMuted,
                         ),
                     )
                 }
@@ -424,9 +434,9 @@ fun EditorialSearchBar(
                     textStyle = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 14.sp,
-                        color = NearBlackText,
+                        color = EditorialText,
                     ),
-                    cursorBrush = SolidColor(NearBlackText),
+                    cursorBrush = SolidColor(EditorialText),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {}),
                     modifier = Modifier.fillMaxWidth(),
@@ -435,7 +445,7 @@ fun EditorialSearchBar(
             Icon(
                 imageVector = MaterialSymbols.Rounded.FilterList,
                 contentDescription = "Filter",
-                tint = Color(0xFF888888),
+                tint = EditorialMuted,
                 modifier = Modifier
                     .size(19.dp)
                     .clickable(
@@ -472,7 +482,7 @@ fun DiscoveryCategoryRow(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
-                        color = NearBlackText,
+                        color = EditorialText,
                     ),
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -481,7 +491,7 @@ fun DiscoveryCategoryRow(
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 12.sp,
-                        color = MutedGrayText,
+                        color = EditorialMuted,
                     ),
                 )
             }
@@ -491,7 +501,7 @@ fun DiscoveryCategoryRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
-                    color = MutedGrayText,
+                    color = EditorialMuted,
                 ),
                 modifier = Modifier.clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -531,11 +541,7 @@ fun EditorialMangaCard(
         horizontalAlignment = Alignment.Start,
         modifier = modifier
             .width(105.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
+            .clickable(onClick = onClick),
     ) {
         Box(
             modifier = Modifier
@@ -548,11 +554,12 @@ fun EditorialMangaCard(
                     spotColor = Color(0x30000000),
                 )
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFEDE9DF)),
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             MangaCover.Book(
                 data = item.libraryManga.manga.asMangaCover(),
                 modifier = Modifier.fillMaxSize(),
+                onClick = onClick,
             )
         }
 
@@ -564,7 +571,7 @@ fun EditorialMangaCard(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
-                color = NearBlackText,
+                color = EditorialText,
                 lineHeight = 16.sp,
             ),
             maxLines = 2,
@@ -583,7 +590,7 @@ fun EditorialMangaCard(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Normal,
                 fontSize = 11.sp,
-                color = MutedGrayText,
+                color = EditorialMuted,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -602,8 +609,8 @@ fun EditorialSearchResultItem(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 5.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFFFBF9F1))
-            .border(0.5.dp, Color(0xFFE9E5D8), RoundedCornerShape(14.dp))
+            .background(EditorialCardBg)
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -613,7 +620,7 @@ fun EditorialSearchResultItem(
                 .width(52.dp)
                 .height(74.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color(0xFFEDE9DF)),
+                .background(EditorialCardBorder),
         ) {
             MangaCover.Book(
                 data = item.libraryManga.manga.asMangaCover(),
@@ -628,7 +635,7 @@ fun EditorialSearchResultItem(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    color = NearBlackText,
+                    color = EditorialText,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -654,7 +661,7 @@ fun EditorialSearchResultItem(
                 style = TextStyle(
                     fontFamily = FontFamily.SansSerif,
                     fontSize = 12.sp,
-                    color = MutedGrayText,
+                    color = EditorialMuted,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -674,8 +681,8 @@ fun ExtensionFoundMangaCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF8F5EC))
-            .border(0.5.dp, Color(0xFFE5E0D0), RoundedCornerShape(16.dp))
+            .background(EditorialCardBg)
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(16.dp))
             .padding(16.dp),
     ) {
         Row(
@@ -690,13 +697,13 @@ fun ExtensionFoundMangaCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 10.sp,
                     letterSpacing = 0.8.sp,
-                    color = Color(0xFF888888),
+                    color = EditorialMuted,
                 ),
             )
             if (!result.latestChapterName.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFFE8E5DA), RoundedCornerShape(6.dp))
+                        .background(EditorialCardBorder, RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 2.dp),
                 ) {
                     Text(
@@ -705,7 +712,7 @@ fun ExtensionFoundMangaCard(
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
-                            color = Color(0xFF1D1D1D),
+                            color = EditorialText,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -732,7 +739,7 @@ fun ExtensionFoundMangaCard(
                     .height(86.dp)
                     .shadow(3.dp, RoundedCornerShape(6.dp))
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFFEBE6DA)),
+                    .background(EditorialCardBorder),
             ) {
                 MangaCover.Book(
                     data = result.manga.asMangaCover(),
@@ -749,7 +756,7 @@ fun ExtensionFoundMangaCard(
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
-                        color = Color(0xFF171717),
+                        color = EditorialText,
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -760,7 +767,7 @@ fun ExtensionFoundMangaCard(
                     style = TextStyle(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 12.sp,
-                        color = Color(0xFF777777),
+                        color = EditorialMuted,
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -769,7 +776,7 @@ fun ExtensionFoundMangaCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1D1D1D))
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable(onClick = onClick)
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
@@ -779,7 +786,7 @@ fun ExtensionFoundMangaCard(
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Medium,
                             fontSize = 12.sp,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         ),
                     )
                 }
@@ -802,7 +809,7 @@ fun ExtensionFoundMangaCard(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
-                    color = Color(0xFF666666),
+                    color = EditorialMuted,
                 ),
             )
         }
@@ -821,8 +828,8 @@ fun AddTitlePromptCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF8F5EC))
-            .border(0.5.dp, Color(0xFFE5E0D0), RoundedCornerShape(16.dp))
+            .background(EditorialCardBg)
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(16.dp))
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -832,7 +839,7 @@ fun AddTitlePromptCard(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = Color(0xFF171717),
+                color = EditorialText,
             ),
         )
         Spacer(modifier = Modifier.height(6.dp))
@@ -841,7 +848,7 @@ fun AddTitlePromptCard(
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 12.sp,
-                color = Color(0xFF888888),
+                color = EditorialMuted,
             ),
             textAlign = TextAlign.Center,
         )
@@ -849,7 +856,7 @@ fun AddTitlePromptCard(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF1D1D1D))
+                .background(MaterialTheme.colorScheme.primary)
                 .clickable(onClick = onAddTitle)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
         ) {
@@ -859,7 +866,7 @@ fun AddTitlePromptCard(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 ),
             )
         }
@@ -869,7 +876,7 @@ fun AddTitlePromptCard(
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 12.sp,
-                color = Color(0xFF666666),
+                color = EditorialMuted,
             ),
             modifier = Modifier
                 .clickable(onClick = onViewAllSources)
@@ -887,8 +894,8 @@ fun ExtensionSearchingCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFFF8F5EC))
-            .border(0.5.dp, Color(0xFFE5E0D0), RoundedCornerShape(14.dp))
+            .background(EditorialCardBg)
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(14.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -896,7 +903,7 @@ fun ExtensionSearchingCard(
         CircularProgressIndicator(
             modifier = Modifier.size(18.dp),
             strokeWidth = 2.dp,
-            color = Color(0xFF1D1D1D),
+            color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
@@ -904,7 +911,7 @@ fun ExtensionSearchingCard(
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 13.sp,
-                color = Color(0xFF555555),
+                color = EditorialMuted,
             ),
         )
     }
@@ -920,8 +927,8 @@ fun NoExtensionResultsCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF8F5EC))
-            .border(0.5.dp, Color(0xFFE5E0D0), RoundedCornerShape(16.dp))
+            .background(EditorialCardBg)
+            .border(0.5.dp, EditorialCardBorder, RoundedCornerShape(16.dp))
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -931,7 +938,7 @@ fun NoExtensionResultsCard(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = Color(0xFF171717),
+                color = EditorialText,
             ),
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -940,7 +947,7 @@ fun NoExtensionResultsCard(
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 12.sp,
-                color = Color(0xFF666666),
+                color = EditorialMuted,
             ),
             modifier = Modifier
                 .clickable(onClick = onViewAllSources)

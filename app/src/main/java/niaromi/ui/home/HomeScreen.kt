@@ -221,12 +221,15 @@ fun HomeScreen() {
                     currentRoute = tabNavigator.current as? TopLevelRoute ?: TopLevelRoute.Library,
                     onSelectRoute = { route ->
                         val current = tabNavigator.current as? TopLevelRoute
-                        if (current == TopLevelRoute.Library && route != TopLevelRoute.Library) {
+                        if (current == TopLevelRoute.Library || route == TopLevelRoute.Library) {
                             resultEventBus.sendResult(LibrarySearchEvent(""))
                         }
                         tabNavigator.replaceAll(route)
                     },
                     onReselectRoute = { route ->
+                        if (route == TopLevelRoute.Library) {
+                            resultEventBus.sendResult(LibrarySearchEvent(""))
+                        }
                         resultEventBus.sendResult(route.reselectEventKey, Unit)
                     },
                     modifier = Modifier
