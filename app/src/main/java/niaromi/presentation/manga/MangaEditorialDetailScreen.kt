@@ -66,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import niaromi.app.di.appGraph
-import niaromi.domain.category.model.Category
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.manga.model.asMangaCover
@@ -77,12 +76,10 @@ import niaromi.icons.materialsymbols.rounded.Close
 import niaromi.icons.materialsymbols.rounded.Delete
 import niaromi.icons.materialsymbols.rounded.DoneAll
 import niaromi.icons.materialsymbols.rounded.Download
-import niaromi.icons.materialsymbols.rounded.Edit
 import niaromi.icons.materialsymbols.rounded.Info
 import niaromi.icons.materialsymbols.rounded.MoreVert
 import niaromi.icons.materialsymbols.roundedfilled.Bookmark
 import niaromi.icons.materialsymbols.roundedfilled.CheckCircle
-import niaromi.presentation.category.visualName
 import niaromi.presentation.components.relativeDateText
 import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.manga.DownloadAction
@@ -497,42 +494,6 @@ fun MangaEditorialDetailScreen(
                                         ),
                                     )
                                 }
-                            }
-                        }
-
-                        if (currentManga.favorite && onEditCategoryClicked != null) {
-                            Spacer(modifier = Modifier.height(10.dp))
-                            val currentCategories by produceState(
-                                initialValue = emptyList<Category>(),
-                                key1 = currentManga.id,
-                            ) {
-                                value = context.appGraph.getCategories.await(currentManga.id)
-                            }
-                            val categoryName = currentCategories.firstOrNull()?.visualName ?: "Default"
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFF0ECE0))
-                                    .clickable(onClick = onEditCategoryClicked)
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                            ) {
-                                Text(
-                                    text = "Category: $categoryName",
-                                    style = TextStyle(
-                                        fontFamily = FontFamily.SansSerif,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = NearBlackText,
-                                    ),
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(
-                                    imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Edit,
-                                    contentDescription = "Change Category",
-                                    tint = MutedGrayText,
-                                    modifier = Modifier.size(14.dp),
-                                )
                             }
                         }
 

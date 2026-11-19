@@ -2,7 +2,9 @@ package niaromi.presentation.category.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -236,15 +238,19 @@ fun ChangeCategoryDialog(
         var isCreating by remember { mutableStateOf(false) }
 
         val mangaGenres = remember(manga) {
-            manga.genre?.map { it.trim() }?.filter { it.isNotBlank() }.orEmpty()
+            manga.genre?.map { it.trim() }?.filter { it.isNotBlank() }
+                ?.map { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
+                ?.distinct()
+                .orEmpty()
         }
-        val primaryGenre = remember(mangaGenres) {
-            mangaGenres.firstOrNull()?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        }
+        val primaryGenre = remember(mangaGenres) { mangaGenres.firstOrNull() }
         val matchingExistingCategory = remember(categories, mangaGenres) {
             categories.find { cat -> mangaGenres.any { g -> g.equals(cat.name, ignoreCase = true) } }
         }
         val recommendedCategoryName = matchingExistingCategory?.name ?: primaryGenre
+        val otherGenres = remember(mangaGenres, recommendedCategoryName) {
+            mangaGenres.filterNot { it.equals(recommendedCategoryName, ignoreCase = true) }
+        }
 
         AlertDialog(
             onDismissRequest = onDismissRequest,
@@ -267,7 +273,7 @@ fun ChangeCategoryDialog(
                         onClick = {
                             onDismissRequest()
                             val selected = selectedCategoryId
-                            if (selected == null || selected == 0L) {
+                            if (selected == 0L) {
                                 onConfirm(emptyList(), categories.map { it.id })
                             } else {
                                 onConfirm(listOf(selected), categories.filter { it.id != selected }.map { it.id })
@@ -309,6 +315,8 @@ fun ChangeCategoryDialog(
                         .verticalScroll(rememberScrollState()),
                 ) {
                     if (!recommendedCategoryName.isNullOrBlank()) {
+                        val isRecommendedSelected = categories.find { it.id == selectedCategoryId }
+                            ?.name?.equals(recommendedCategoryName, ignoreCase = true) == true
                         Surface(
                             shape = RoundedCornerShape(10.dp),
                             color = Color(0xFFFFFBEB),
@@ -317,8 +325,11 @@ fun ChangeCategoryDialog(
                                 .fillMaxWidth()
                                 .padding(bottom = 12.dp)
                                 .clickable {
-                                    if (matchingExistingCategory != null) {
-                                        selectedCategoryId = matchingExistingCategory.id
+                                    val matched = categories.find {
+                                        it.name.equals(recommendedCategoryName, ignoreCase = true)
+                                    }
+                                    if (matched != null) {
+                                        selectedCategoryId = matched.id
                                     } else if (!isCreating && primaryGenre != null) {
                                         isCreating = true
                                         coroutineScope.launch {
@@ -347,7 +358,7 @@ fun ChangeCategoryDialog(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "RECOMMENDED CATEGORY",
+                                        text = "RECOMMENDED GENRE",
                                         style = TextStyle(
                                             fontFamily = FontFamily.SansSerif,
                                             fontWeight = FontWeight.Bold,
@@ -366,14 +377,72 @@ fun ChangeCategoryDialog(
                                         ),
                                     )
                                 }
-                                if (matchingExistingCategory != null &&
-                                    selectedCategoryId == matchingExistingCategory.id
-                                ) {
+                                if (isRecommendedSelected) {
                                     Icon(
                                         imageVector = MaterialSymbols.Rounded.Check,
                                         contentDescription = null,
                                         tint = Color(0xFFD97706),
                                         modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (otherGenres.isNotEmpty()) {
+                        Text(
+                            text = "OTHER GENRES FOR THIS TITLE",
+                            style = TextStyle(
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF757575),
+                            ),
+                            modifier = Modifier.padding(bottom = 6.dp),
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                        ) {
+                            otherGenres.forEach { genreName ->
+                                val matchedCat = categories.find { it.name.equals(genreName, ignoreCase = true) }
+                                val isChosen = matchedCat != null && selectedCategoryId == matchedCat.id
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isChosen) Color(0xFFE0E7FF) else Color(0xFFF3F4F6),
+                                    border = BorderStroke(1.dp, if (isChosen) Color(0xFF6366F1) else Color(0xFFE5E7EB)),
+                                    modifier = Modifier.clickable {
+                                        if (matchedCat != null) {
+                                            selectedCategoryId = matchedCat.id
+                                        } else if (!isCreating) {
+                                            isCreating = true
+                                            coroutineScope.launch {
+                                                context.appGraph.createCategoryWithName.await(genreName)
+                                                val updated = context.appGraph.getCategories.await().filterNot {
+                                                    it.isSystemCategory
+                                                }
+                                                categories = updated
+                                                selectedCategoryId =
+                                                    updated.find { it.name.equals(genreName, ignoreCase = true) }?.id
+                                                        ?: 0L
+                                                isCreating = false
+                                            }
+                                        }
+                                    },
+                                ) {
+                                    Text(
+                                        text = genreName,
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.SansSerif,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isChosen) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (isChosen) Color(0xFF4338CA) else Color(0xFF374151),
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     )
                                 }
                             }
