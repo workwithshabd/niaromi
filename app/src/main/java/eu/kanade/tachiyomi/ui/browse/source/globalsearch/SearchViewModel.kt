@@ -52,7 +52,9 @@ abstract class SearchViewModel(
 
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
     private val disabledSources = sourcePreferences.disabledSources.get()
-    protected val pinnedSources = sourcePreferences.pinnedSources.get()
+    protected val pinnedSources = preferences.pinnedSources.get()
+    protected val preferredExtensions = preferences.preferredExtensions.get()
+    private var preferredSourceIds = emptySet<Long>()
 
     private var lastQuery: String? = null
     private var lastSourceFilter: SourceFilter? = null
@@ -62,6 +64,8 @@ abstract class SearchViewModel(
     open val sortComparator = { map: Map<Source, SearchItemResult> ->
         compareBy<Source>(
             { (map[it] as? SearchItemResult.Success)?.isEmpty ?: true },
+            { it.id !in preferredSourceIds && "${it.id}" !in pinnedSources },
+            { it.id !in preferredSourceIds },
             { "${it.id}" !in pinnedSources },
             { "${it.name.lowercase()} (${it.lang})" },
         )
@@ -87,10 +91,20 @@ abstract class SearchViewModel(
     }
 
     open suspend fun getEnabledSources(): List<Source> {
+        val preferredExts = preferences.preferredExtensions.get()
+        val loadedExts = extensionManager.getLoadedExtensions()
+        preferredSourceIds = loadedExts
+            .filter { it.pkgName in preferredExts }
+            .flatMap { it.sources }
+            .map { it.id }
+            .toSet()
+
         return sourceManager.getAll()
             .filter { (it.lang in enabledLanguages || it.isLocal()) && "${it.id}" !in disabledSources }
             .sortedWith(
                 compareBy(
+                    { it.id !in preferredSourceIds && "${it.id}" !in pinnedSources },
+                    { it.id !in preferredSourceIds },
                     { "${it.id}" !in pinnedSources },
                     { "${it.name.lowercase()} (${it.lang})" },
                 ),

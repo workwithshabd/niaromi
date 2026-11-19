@@ -38,6 +38,8 @@ class SourcePreferences(
 
     val pinnedSources: Preference<Set<String>> = preferenceStore.getStringSet("pinned_catalogues", emptySet())
 
+    val preferredExtensions: Preference<Set<String>> = preferenceStore.getStringSet("preferred_extensions", emptySet())
+
     val lastUsedSource: Preference<Long> = preferenceStore.getLong(
         Preference.appStateKey("last_catalogue_source"),
         -1,

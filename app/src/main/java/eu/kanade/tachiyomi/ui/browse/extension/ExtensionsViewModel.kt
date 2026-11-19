@@ -75,7 +75,8 @@ class ExtensionsViewModel(
             .map { searchQueryPredicate(it ?: "") },
         currentDownloads,
         getExtensions.subscribe(),
-    ) { predicate, downloads, (_updates, _loaded, _available, _notLoaded) ->
+        preferences.preferredExtensions.changes(),
+    ) { predicate, downloads, (_updates, _loaded, _available, _notLoaded), preferredExts ->
         buildMap {
             val updates = _updates.filter(predicate).map(extensionMapper(downloads))
             if (updates.isNotEmpty()) {
@@ -87,7 +88,13 @@ class ExtensionsViewModel(
                 put(ExtensionUiModel.Header.Resource(MR.strings.ext_not_loaded), notLoaded)
             }
 
-            val loaded = _loaded.filter(predicate).map(extensionMapper(downloads))
+            val loaded = _loaded
+                .filter(predicate)
+                .sortedWith(
+                    compareByDescending<Extension> { it.pkgName in preferredExts }
+                        .thenBy { it.name.lowercase() },
+                )
+                .map(extensionMapper(downloads))
             if (loaded.isNotEmpty()) {
                 put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), loaded)
             }
@@ -113,8 +120,12 @@ class ExtensionsViewModel(
         searchQuery,
         isRefreshing,
         preferences.extensionUpdatesCount.changes(),
-        basePreferences.extensionInstaller.changes(),
-    ) { items, searchQuery, isRefreshing, updates, installer ->
+        combine(
+            basePreferences.extensionInstaller.changes(),
+            preferences.preferredExtensions.changes(),
+            ::Pair,
+        ),
+    ) { items, searchQuery, isRefreshing, updates, (installer, preferredExtensions) ->
         State(
             isLoading = items == null,
             isRefreshing = isRefreshing,
@@ -122,6 +133,7 @@ class ExtensionsViewModel(
             updates = updates,
             installer = installer,
             searchQuery = searchQuery,
+            preferredExtensions = preferredExtensions,
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
@@ -208,7 +220,30 @@ class ExtensionsViewModel(
             .collect()
 
     fun uninstallExtension(extension: Extension.Installed) {
+        val preferred = preferences.preferredExtensions.get()
+        if (extension.pkgName in preferred) {
+            preferences.preferredExtensions.set(preferred - extension.pkgName)
+        }
         extensionManager.uninstallExtension(extension)
+    }
+
+    fun togglePreferredExtension(extension: Extension) {
+        val current = preferences.preferredExtensions.get()
+        val isPreferred = extension.pkgName in current
+        if (isPreferred) {
+            preferences.preferredExtensions.set(current - extension.pkgName)
+        } else {
+            preferences.preferredExtensions.set(current + extension.pkgName)
+        }
+        if (extension is Extension.Loaded) {
+            val currentPinned = preferences.pinnedSources.get()
+            val sourceIds = extension.sources.map { it.id.toString() }.toSet()
+            if (isPreferred) {
+                preferences.pinnedSources.set(currentPinned - sourceIds)
+            } else {
+                preferences.pinnedSources.set(currentPinned + sourceIds)
+            }
+        }
     }
 
     fun findAvailableExtensions() {
@@ -236,6 +271,7 @@ class ExtensionsViewModel(
         val updates: Int = 0,
         val installer: BasePreferences.ExtensionInstaller? = null,
         val searchQuery: String? = null,
+        val preferredExtensions: Set<String> = emptySet(),
     ) {
         val isEmpty = items.isEmpty()
     }

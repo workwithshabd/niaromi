@@ -341,6 +341,7 @@
     <string name="ext_downloading">Downloading</string>
     <string name="ext_installing">Installing</string>
     <string name="ext_installed">Installed</string>
+    <string name="ext_preferred">Preferred</string>
     <string name="ext_trust">Trust</string>
     <string name="ext_untrusted">Untrusted</string>
     <string name="ext_filtered">Filtered</string>

@@ -17,12 +17,15 @@ import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -105,6 +108,8 @@ class LibraryViewModel(
     private val trackerManager: TrackerManager,
     private val networkToLocalManga: NetworkToLocalManga,
     private val updateMangaFromRemote: UpdateMangaFromRemote,
+    private val sourcePreferences: SourcePreferences,
+    private val extensionManager: ExtensionManager,
 ) : ViewModel() {
 
     private val subscriberGate = SubscriberGate()
@@ -729,22 +734,49 @@ class LibraryViewModel(
         extensionSearchJob = viewModelScope.launch(Dispatchers.IO) {
             extensionSearchState.update { it.copy(isSearching = true, hasSearched = true, result = null) }
             try {
+                val preferredExts = sourcePreferences.preferredExtensions.get()
+                val pinnedSources = sourcePreferences.pinnedSources.get()
+                val loadedExts = extensionManager.getLoadedExtensions()
+                val preferredSourceIds = loadedExts
+                    .filter { it.pkgName in preferredExts }
+                    .flatMap { it.sources }
+                    .map { it.id }
+                    .toSet()
+
                 val sources = sourceManager.getOnlineSources()
-                val searchResults = sources.map { source ->
-                    async {
-                        try {
-                            val page = source.getSearchManga(1, trimmed, source.getFilterList())
-                            val first = page.mangas.firstOrNull()
-                            if (first != null) {
-                                source to first
-                            } else {
+                val (preferredSources, otherSources) = sources.partition {
+                    it.id in preferredSourceIds || "${it.id}" in pinnedSources
+                }
+
+                suspend fun searchSources(sourceList: List<Source>): List<Pair<Source, SManga>> {
+                    return sourceList.map { source ->
+                        async {
+                            try {
+                                val page = source.getSearchManga(1, trimmed, source.getFilterList())
+                                val first = page.mangas.firstOrNull()
+                                if (first != null) {
+                                    source to first
+                                } else {
+                                    null
+                                }
+                            } catch (_: Throwable) {
                                 null
                             }
-                        } catch (_: Throwable) {
-                            null
                         }
-                    }
-                }.awaitAll().filterNotNull()
+                    }.awaitAll().filterNotNull()
+                }
+
+                val preferredResults = if (preferredSources.isNotEmpty()) {
+                    searchSources(preferredSources)
+                } else {
+                    emptyList()
+                }
+
+                val searchResults = if (preferredResults.isNotEmpty()) {
+                    preferredResults
+                } else {
+                    searchSources(otherSources)
+                }
 
                 if (searchResults.isNotEmpty()) {
                     val best = searchResults.firstOrNull { (_, sManga) ->

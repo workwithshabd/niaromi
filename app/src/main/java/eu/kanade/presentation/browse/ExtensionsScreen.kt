@@ -60,10 +60,12 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.Keep
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.VerifiedUser
+import mihon.icons.materialsymbols.roundedfilled.Keep
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -92,6 +94,7 @@ fun ExtensionScreen(
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
+    onTogglePreferred: (Extension) -> Unit = {},
 ) {
     val navigator = LocalNavigator.current
 
@@ -133,6 +136,7 @@ fun ExtensionScreen(
                     onTrustExtension = onTrustExtension,
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
+                    onTogglePreferred = onTogglePreferred,
                 )
             }
         }
@@ -152,6 +156,7 @@ private fun ExtensionContent(
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onTogglePreferred: (Extension) -> Unit = {},
 ) {
     val context = LocalContext.current
     var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
@@ -219,9 +224,12 @@ private fun ExtensionContent(
                     }
                 },
             ) { item ->
+                val isPreferred = item.extension.pkgName in state.preferredExtensions
                 ExtensionItem(
                     modifier = Modifier.animateItem(),
                     item = item,
+                    isPreferred = isPreferred,
+                    onTogglePreferred = onTogglePreferred,
                     onClickItem = {
                         when (it) {
                             is Extension.Available -> onInstallExtension(it)
@@ -295,6 +303,8 @@ private fun ExtensionContent(
 @Composable
 private fun ExtensionItem(
     item: ExtensionUiModel.Item,
+    isPreferred: Boolean,
+    onTogglePreferred: (Extension) -> Unit,
     onClickItem: (Extension) -> Unit,
     onLongClickItem: (Extension) -> Unit,
     onClickItemCancel: (Extension) -> Unit,
@@ -319,6 +329,8 @@ private fun ExtensionItem(
             ExtensionItemActions(
                 extension = extension,
                 installStep = installStep,
+                isPreferred = isPreferred,
+                onTogglePreferred = onTogglePreferred,
                 onClickItemCancel = onClickItemCancel,
                 onClickItemAction = onClickItemAction,
                 onClickItemSecondaryAction = onClickItemSecondaryAction,
@@ -329,6 +341,7 @@ private fun ExtensionItem(
             extension = extension,
             installStep = installStep,
             store = store,
+            isPreferred = isPreferred,
             modifier = Modifier.weight(1f),
         )
     }
@@ -339,6 +352,7 @@ private fun ExtensionItemContent(
     extension: Extension,
     installStep: InstallStep,
     store: ExtensionStore?,
+    isPreferred: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -361,7 +375,11 @@ private fun ExtensionItemContent(
             )
         }
 
-        ExtensionItemMetadata(extension = extension, installStep = installStep)
+        ExtensionItemMetadata(
+            extension = extension,
+            installStep = installStep,
+            isPreferred = isPreferred,
+        )
     }
 }
 
@@ -404,6 +422,7 @@ private fun ExtensionItemIcon(
 private fun ExtensionItemMetadata(
     extension: Extension,
     installStep: InstallStep,
+    isPreferred: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     FlowRow(
@@ -412,6 +431,13 @@ private fun ExtensionItemMetadata(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall / 2),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
+        if (isPreferred) {
+            ExtensionPill(
+                text = stringResource(MR.strings.ext_preferred),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+
         val facts = listOfNotNull(
             (extension as? Extension.Loaded)
                 ?.lang
@@ -458,6 +484,8 @@ private fun ExtensionItemMetadata(
 private fun ExtensionItemActions(
     extension: Extension,
     installStep: InstallStep,
+    isPreferred: Boolean = false,
+    onTogglePreferred: (Extension) -> Unit = {},
     modifier: Modifier = Modifier,
     onClickItemCancel: (Extension) -> Unit = {},
     onClickItemAction: (Extension) -> Unit = {},
@@ -476,6 +504,27 @@ private fun ExtensionItemActions(
                 )
             }
             return@Row
+        }
+
+        if (extension is Extension.Loaded) {
+            val keepIcon = if (isPreferred) MaterialSymbols.RoundedFilled.Keep else MaterialSymbols.Rounded.Keep
+            val keepTint = if (isPreferred) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val keepDesc = if (isPreferred) {
+                stringResource(MR.strings.action_unpin)
+            } else {
+                stringResource(MR.strings.action_pin)
+            }
+            IconButton(onClick = { onTogglePreferred(extension) }) {
+                Icon(
+                    imageVector = keepIcon,
+                    contentDescription = keepDesc,
+                    tint = keepTint,
+                )
+            }
         }
 
         val secondaryAction = when (extension) {

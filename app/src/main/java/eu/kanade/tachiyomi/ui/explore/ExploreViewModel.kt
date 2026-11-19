@@ -8,6 +8,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.model.SManga
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +59,7 @@ class ExploreViewModel(
     private val sourcePreferences: SourcePreferences,
     private val sourceManager: SourceManager,
     private val networkToLocalManga: NetworkToLocalManga,
+    private val extensionManager: ExtensionManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreState())
@@ -98,6 +100,13 @@ class ExploreViewModel(
                 val enabledLanguages = sourcePreferences.enabledLanguages.get()
                 val disabledSources = sourcePreferences.disabledSources.get()
                 val pinnedSources = sourcePreferences.pinnedSources.get()
+                val preferredExts = sourcePreferences.preferredExtensions.get()
+                val loadedExts = extensionManager.getLoadedExtensions()
+                val preferredSourceIds = loadedExts
+                    .filter { it.pkgName in preferredExts }
+                    .flatMap { it.sources }
+                    .map { it.id }
+                    .toSet()
 
                 val onlineSources = sourceManager.getOnlineSources()
                     .filter { !it.isLocal() }
@@ -120,9 +129,10 @@ class ExploreViewModel(
                     return@launch
                 }
 
-                // Preferred (pinned) extensions come FIRST
+                // Preferred extensions and pinned sources come FIRST
                 val sortedSources = onlineSources.sortedWith(
-                    compareByDescending<CatalogueSource> { "${it.id}" in pinnedSources }
+                    compareByDescending<CatalogueSource> { it.id in preferredSourceIds || "${it.id}" in pinnedSources }
+                        .thenByDescending { it.id in preferredSourceIds }
                         .thenBy { it.name.lowercase() },
                 )
 
@@ -130,7 +140,7 @@ class ExploreViewModel(
                 val rawResults = supervisorScope {
                     sortedSources.map { source ->
                         async(Dispatchers.IO) {
-                            val isPreferred = "${source.id}" in pinnedSources
+                            val isPreferred = source.id in preferredSourceIds || "${source.id}" in pinnedSources
                             try {
                                 val mangas = withTimeoutOrNull(15_000) {
                                     if (source.supportsLatest) {
