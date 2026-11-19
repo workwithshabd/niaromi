@@ -644,6 +644,8 @@
     <string name="google_drive_restore_now">Restore from Google Drive</string>
     <string name="google_drive_auto_sync">Automatic Google Drive sync</string>
     <string name="google_drive_auto_sync_summary">Automatically upload a backup to Google Drive when automatic backup runs</string>
+    <string name="google_drive_auto_restore">Automatic Google Drive restore</string>
+    <string name="google_drive_auto_restore_summary">Automatically restore library, history, and settings when a newer cloud backup is found on Google Drive</string>
     <string name="google_drive_sync_success">Google Drive backup complete</string>
     <string name="google_drive_sync_error">Google Drive sync failed: %s</string>
     <string name="google_drive_restore_select_backup">Select cloud backup to restore</string>

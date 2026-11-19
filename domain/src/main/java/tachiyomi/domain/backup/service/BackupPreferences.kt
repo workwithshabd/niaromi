@@ -33,4 +33,11 @@ class BackupPreferences(
     )
 
     val googleDriveAutoSync: Preference<Boolean> = preferenceStore.getBoolean("google_drive_auto_sync", true)
+
+    val googleDriveAutoRestore: Preference<Boolean> = preferenceStore.getBoolean("google_drive_auto_restore", true)
+
+    val lastRestoredGoogleDriveBackupId: Preference<String> = preferenceStore.getString(
+        Preference.appStateKey("last_restored_google_drive_backup_id"),
+        "",
+    )
 }

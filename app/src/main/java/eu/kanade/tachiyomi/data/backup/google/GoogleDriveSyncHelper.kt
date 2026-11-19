@@ -8,6 +8,10 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.google.models.GoogleDriveFile
+import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
+import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
+import eu.kanade.tachiyomi.util.storage.getUriCompat
+import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
@@ -24,6 +28,8 @@ class GoogleDriveSyncHelper(
     private val backupPreferences: BackupPreferences,
 ) {
 
+    private var lastAutoRestoreCheck = 0L
+
     suspend fun createAndUploadBackup(options: BackupOptions = BackupOptions()): GoogleDriveFile =
         withContext(Dispatchers.IO) {
             val fileName = BackupCreator.getFilename()
@@ -36,7 +42,9 @@ class GoogleDriveSyncHelper(
             try {
                 val fileUri = Uri.fromFile(tempFile)
                 backupCreatorFactory.create(isAutoBackup = false).backup(fileUri, options)
-                googleDriveService.uploadBackup(tempFile, fileName)
+                val uploaded = googleDriveService.uploadBackup(tempFile, fileName)
+                backupPreferences.lastRestoredGoogleDriveBackupId.set(uploaded.id)
+                uploaded
             } finally {
                 if (tempFile.exists()) {
                     tempFile.delete()
@@ -55,5 +63,52 @@ class GoogleDriveSyncHelper(
 
     suspend fun listBackups(): List<GoogleDriveFile> {
         return googleDriveService.listBackups()
+    }
+
+    suspend fun autoRestoreLatestBackup(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
+        if (!GoogleSignInHelper.isSignedIn(context)) {
+            return@withContext false
+        }
+        if (!force && !backupPreferences.googleDriveAutoRestore.get()) {
+            return@withContext false
+        }
+        val now = System.currentTimeMillis()
+        if (!force && now - lastAutoRestoreCheck < 5 * 60 * 1000L) {
+            return@withContext false
+        }
+        lastAutoRestoreCheck = now
+
+        if (BackupRestoreWorker.isRunning(context.workManager)) {
+            logcat(LogPriority.INFO) { "Backup restore already in progress, skipping auto restore" }
+            return@withContext false
+        }
+
+        try {
+            val backups = googleDriveService.listBackups()
+            if (backups.isEmpty()) {
+                return@withContext false
+            }
+            val latest = backups.first()
+            val lastRestoredId = backupPreferences.lastRestoredGoogleDriveBackupId.get()
+            if (!force && latest.id == lastRestoredId) {
+                logcat(LogPriority.INFO) { "Google Drive backup ${latest.id} already restored, skipping" }
+                return@withContext false
+            }
+
+            logcat(LogPriority.INFO) { "Auto-restoring latest Google Drive backup: ${latest.name} (${latest.id})" }
+            val downloadedFile = downloadBackup(latest.id, latest.name)
+            val uri = downloadedFile.getUriCompat(context)
+            backupPreferences.lastRestoredGoogleDriveBackupId.set(latest.id)
+            BackupRestoreWorker.start(
+                workManager = context.workManager,
+                uri = uri,
+                options = RestoreOptions(),
+                sync = true,
+            )
+            true
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to auto-restore backup from Google Drive" }
+            false
+        }
     }
 }

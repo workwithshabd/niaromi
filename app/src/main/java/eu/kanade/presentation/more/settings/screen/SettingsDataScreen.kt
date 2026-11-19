@@ -310,6 +310,9 @@ data object SettingsDataScreen : SearchableSettings {
                 account.displayName?.let { backupPreferences.googleDriveAccountName.set(it) }
                 account.photoUrl?.toString()?.let { backupPreferences.googleDriveAccountPhoto.set(it) }
                 context.toast(context.stringResource(MR.strings.google_drive_signed_in_as, account.email ?: ""))
+                scope.launch {
+                    syncHelper.autoRestoreLatestBackup()
+                }
             } catch (e: ApiException) {
                 logcat(LogPriority.ERROR, e) { "Google Sign-In failed with status ${e.statusCode}" }
                 val errorMsg = when (e.statusCode) {
@@ -419,6 +422,13 @@ data object SettingsDataScreen : SearchableSettings {
                     preference = backupPreferences.googleDriveAutoSync,
                     title = stringResource(MR.strings.google_drive_auto_sync),
                     subtitle = stringResource(MR.strings.google_drive_auto_sync_summary),
+                ),
+            )
+            items.add(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = backupPreferences.googleDriveAutoRestore,
+                    title = stringResource(MR.strings.google_drive_auto_restore),
+                    subtitle = stringResource(MR.strings.google_drive_auto_restore_summary),
                 ),
             )
         }

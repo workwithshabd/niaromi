@@ -93,7 +93,8 @@ class BackupCreateWorker(private val context: Context, workerParams: WorkerParam
                                 input.copyTo(output)
                             }
                         }
-                        googleDriveService.uploadBackup(tempFile, tempFile.name)
+                        val uploaded = googleDriveService.uploadBackup(tempFile, tempFile.name)
+                        backupPreferences.lastRestoredGoogleDriveBackupId.set(uploaded.id)
                         tempFile.delete()
                     }
                 } catch (e: Exception) {
