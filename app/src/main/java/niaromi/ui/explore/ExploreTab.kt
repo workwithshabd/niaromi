@@ -22,5 +22,6 @@ fun ExploreTab() {
         onRefresh = viewModel::refresh,
         onSearchQueryChange = viewModel::setSearchQuery,
         onSelectSourceFilter = viewModel::selectSourceFilter,
+        onLoadMore = viewModel::loadNextPage,
     )
 }

@@ -7,7 +7,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,13 +26,21 @@ class ReleaseServiceImpl(
 
     override suspend fun latest(arguments: GetApplicationRelease.Arguments): Release? {
         val release = withContext(Dispatchers.IO) {
-            with(json) {
-                networkService.client
+            try {
+                val response = networkService.client
                     .newCall(GET("https://api.github.com/repos/${arguments.repository}/releases/latest"))
-                    .awaitSuccess()
-                    .parseAs<GithubRelease>()
+                    .await()
+                if (!response.isSuccessful) {
+                    response.close()
+                    return@withContext null
+                }
+                with(json) {
+                    response.parseAs<GithubRelease>()
+                }
+            } catch (_: Exception) {
+                null
             }
-        }
+        } ?: return null
 
         val downloadLink = getDownloadLink(release = release, isFoss = arguments.isFoss) ?: return null
 

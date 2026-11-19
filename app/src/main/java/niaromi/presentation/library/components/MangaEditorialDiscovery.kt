@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -52,6 +51,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import niaromi.domain.category.model.Category
 import niaromi.domain.manga.model.asMangaCover
+import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.rounded.FilterList
 import niaromi.icons.materialsymbols.rounded.Search
 import niaromi.presentation.core.components.material.PullRefresh
@@ -70,13 +70,7 @@ private val SearchBarBorder = Color(0xFFE9E5D8)
 data class DiscoveryCategorySection(
     val id: Long,
     val name: String,
-    val coverGroups: List<DiscoveryCoverGroup>,
-)
-
-data class DiscoveryCoverGroup(
-    val primaryItem: LibraryItem,
-    val secondaryItems: List<LibraryItem>,
-    val metadataLabel: String,
+    val items: List<LibraryItem>,
 )
 
 fun buildDiscoverySections(
@@ -87,12 +81,19 @@ fun buildDiscoverySections(
 ): List<DiscoveryCategorySection> {
     val query = searchQuery?.trim()
     val filterItem: (LibraryItem) -> Boolean = { item ->
-        query.isNullOrEmpty() || item.libraryManga.manga.title.contains(query, ignoreCase = true)
+        query.isNullOrEmpty() ||
+            item.libraryManga.manga.title.contains(query, ignoreCase = true) ||
+            item.libraryManga.manga.author?.contains(query, ignoreCase = true) == true
     }
 
-    val customCategories = categories.filterNot { it.isSystemCategory }
-    val result = mutableListOf<DiscoveryCategorySection>()
+    val filteredFavorites = favorites.filter(filterItem)
+    if (filteredFavorites.isEmpty()) return emptyList()
 
+    val result = mutableListOf<DiscoveryCategorySection>()
+    val seenSectionNames = mutableSetOf<String>()
+
+    // 1. Custom categories (if user defined categories exist)
+    val customCategories = categories.filterNot { it.isSystemCategory }
     if (customCategories.isNotEmpty()) {
         customCategories.forEach { category ->
             val items = getItemsForCategory(category).filter(filterItem)
@@ -101,95 +102,74 @@ fun buildDiscoverySections(
                     DiscoveryCategorySection(
                         id = category.id,
                         name = category.name,
-                        coverGroups = createCoverGroups(items),
+                        items = items,
                     ),
                 )
+                seenSectionNames.add(category.name.lowercase())
             }
         }
-        val defaultCategory = categories.find { it.isSystemCategory }
-        if (defaultCategory != null) {
-            val defaultItems = getItemsForCategory(defaultCategory).filter(filterItem)
-            if (defaultItems.isNotEmpty()) {
-                result.add(
-                    DiscoveryCategorySection(
-                        id = defaultCategory.id,
-                        name = "More Favourites",
-                        coverGroups = createCoverGroups(defaultItems),
-                    ),
-                )
-            }
-        }
-        if (result.isNotEmpty()) return result
     }
 
-    val allFiltered = favorites.filter(filterItem)
-    if (allFiltered.isEmpty()) return emptyList()
-
-    val genreMap = mutableMapOf<String, MutableList<LibraryItem>>()
-    allFiltered.forEach { item ->
+    // 2. All Genres in the user's library (Action, Adventure, Comedy, Drama, etc.)
+    val genreMap = linkedMapOf<String, MutableList<LibraryItem>>()
+    filteredFavorites.forEach { item ->
         val genres = item.libraryManga.manga.genre
         if (!genres.isNullOrEmpty()) {
-            genres.take(2).forEach { g ->
-                genreMap.getOrPut(g.trim()) { mutableListOf() }.add(item)
+            genres.forEach { g ->
+                val clean = g.trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                if (clean.isNotBlank()) {
+                    genreMap.getOrPut(clean) { mutableListOf() }.add(item)
+                }
             }
         }
     }
 
-    val popularGenres = genreMap.entries
-        .filter { it.value.size >= 2 }
-        .sortedByDescending { it.value.size }
-        .take(5)
+    // Sort genres by number of titles descending, then by name
+    val sortedGenres = genreMap.entries
+        .sortedWith(
+            compareByDescending<Map.Entry<String, MutableList<LibraryItem>>> {
+                it.value.size
+            }.thenBy { it.key },
+        )
 
-    if (popularGenres.isNotEmpty()) {
-        popularGenres.forEachIndexed { index, entry ->
+    var genreSectionId = 1000L
+    sortedGenres.forEach { (genreName, items) ->
+        if (genreName.lowercase() !in seenSectionNames) {
             result.add(
                 DiscoveryCategorySection(
-                    id = index.toLong() + 100L,
-                    name = entry.key,
-                    coverGroups = createCoverGroups(entry.value),
+                    id = genreSectionId++,
+                    name = genreName,
+                    items = items.distinctBy { it.id },
                 ),
             )
+            seenSectionNames.add(genreName.lowercase())
         }
-        return result
     }
 
-    val reading = allFiltered.filter { it.libraryManga.hasStarted && it.libraryManga.unreadCount > 0 }
-    val planToRead = allFiltered.filter { !it.libraryManga.hasStarted }
-    val completed = allFiltered.filter { it.libraryManga.hasStarted && it.libraryManga.unreadCount <= 0 }
+    // 3. Any titles that don't have genres or didn't fall into the above sections
+    val titlesInSections = result.flatMap { it.items.map { item -> item.id } }.toSet()
+    val remainingTitles = filteredFavorites.filter { it.id !in titlesInSections }
+    if (remainingTitles.isNotEmpty()) {
+        result.add(
+            DiscoveryCategorySection(
+                id = 9999L,
+                name = if (result.isEmpty()) "All Titles" else "More Favourites",
+                items = remainingTitles,
+            ),
+        )
+    }
 
-    if (reading.isNotEmpty()) {
-        result.add(DiscoveryCategorySection(1L, "Currently Reading", createCoverGroups(reading)))
-    }
-    if (planToRead.isNotEmpty()) {
-        result.add(DiscoveryCategorySection(2L, "Plan to Read", createCoverGroups(planToRead)))
-    }
-    if (completed.isNotEmpty()) {
-        result.add(DiscoveryCategorySection(3L, "Completed", createCoverGroups(completed)))
-    }
     if (result.isEmpty()) {
-        result.add(DiscoveryCategorySection(0L, "Favourites", createCoverGroups(allFiltered)))
+        result.add(
+            DiscoveryCategorySection(
+                id = 0L,
+                name = "All Titles",
+                items = filteredFavorites,
+            ),
+        )
     }
+
     return result
-}
-
-private fun createCoverGroups(items: List<LibraryItem>): List<DiscoveryCoverGroup> {
-    val groups = mutableListOf<DiscoveryCoverGroup>()
-    val chunkSize = 3
-    val chunks = items.chunked(chunkSize)
-
-    chunks.forEachIndexed { index, chunk ->
-        val primary = chunk.first()
-        val secondaries = chunk.drop(1)
-        val label = when {
-            index == 0 -> "<100 Ch."
-            index == 1 -> "100-300 Ch."
-            index == 2 -> "300> Ch."
-            primary.libraryManga.unreadCount == 0L -> "Completed"
-            else -> "Ongoing"
-        }
-        groups.add(DiscoveryCoverGroup(primary, secondaries, label))
-    }
-    return groups
 }
 
 @Composable
@@ -211,6 +191,18 @@ fun MangaEditorialDiscovery(
 ) {
     val sections = remember(categories, favorites, searchQuery) {
         buildDiscoverySections(categories, favorites, getItemsForCategory, searchQuery)
+    }
+
+    val matchingFavorites = remember(favorites, searchQuery) {
+        val q = searchQuery?.trim()
+        if (q.isNullOrBlank()) {
+            emptyList()
+        } else {
+            favorites.filter {
+                it.libraryManga.manga.title.contains(q, ignoreCase = true) ||
+                    it.libraryManga.manga.author?.contains(q, ignoreCase = true) == true
+            }
+        }
     }
 
     val scope = rememberCoroutineScope()
@@ -253,7 +245,68 @@ fun MangaEditorialDiscovery(
                 }
 
                 if (!searchQuery.isNullOrBlank()) {
-                    if (sections.isEmpty()) {
+                    // Search is active
+                    if (matchingFavorites.isNotEmpty()) {
+                        item(key = "search_library_header") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "IN YOUR LIBRARY (${matchingFavorites.size})",
+                                    style = TextStyle(
+                                        fontFamily = FontFamily.SansSerif,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        letterSpacing = 1.sp,
+                                        color = NearBlackText,
+                                    ),
+                                )
+                            }
+                        }
+
+                        items(
+                            items = matchingFavorites,
+                            key = { "fav_search_${it.id}" },
+                        ) { item ->
+                            EditorialSearchResultItem(
+                                item = item,
+                                onClick = { onClickManga(item.libraryManga.manga.id) },
+                            )
+                        }
+
+                        item(key = "search_extension_additional_action") {
+                            when {
+                                extensionSearchState.isSearching -> {
+                                    ExtensionSearchingCard(
+                                        query = searchQuery,
+                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                                    )
+                                }
+                                extensionSearchState.result != null -> {
+                                    ExtensionFoundMangaCard(
+                                        result = extensionSearchState.result,
+                                        onClick = { onClickManga(extensionSearchState.result.manga.id) },
+                                        onViewAllSources = { onViewAllSources(searchQuery) },
+                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                                    )
+                                }
+                                else -> {
+                                    AddTitlePromptCard(
+                                        query = searchQuery,
+                                        onAddTitle = { onAddTitle(searchQuery) },
+                                        onViewAllSources = { onViewAllSources(searchQuery) },
+                                        isNotInLibrary = false,
+                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Not found in local library
                         item(key = "search_extension_empty_state") {
                             when {
                                 extensionSearchState.isSearching -> {
@@ -288,48 +341,9 @@ fun MangaEditorialDiscovery(
                                 }
                             }
                         }
-                    } else {
-                        items(
-                            items = sections,
-                            key = { it.id },
-                        ) { section ->
-                            DiscoveryCategoryRow(
-                                section = section,
-                                onClickManga = onClickManga,
-                                onViewAll = { onViewAll(section.id, section.name) },
-                                modifier = Modifier.padding(bottom = 24.dp),
-                            )
-                        }
-
-                        item(key = "search_extension_additional_action") {
-                            when {
-                                extensionSearchState.isSearching -> {
-                                    ExtensionSearchingCard(
-                                        query = searchQuery,
-                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                                    )
-                                }
-                                extensionSearchState.result != null -> {
-                                    ExtensionFoundMangaCard(
-                                        result = extensionSearchState.result,
-                                        onClick = { onClickManga(extensionSearchState.result.manga.id) },
-                                        onViewAllSources = { onViewAllSources(searchQuery) },
-                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                                    )
-                                }
-                                else -> {
-                                    AddTitlePromptCard(
-                                        query = searchQuery,
-                                        onAddTitle = { onAddTitle(searchQuery) },
-                                        onViewAllSources = { onViewAllSources(searchQuery) },
-                                        isNotInLibrary = false,
-                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                                    )
-                                }
-                            }
-                        }
                     }
                 } else {
+                    // Normal feed - show all genre and category sections
                     items(
                         items = sections,
                         key = { it.id },
@@ -368,7 +382,7 @@ fun EditorialSearchBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.Search,
+                imageVector = MaterialSymbols.Rounded.Search,
                 contentDescription = "Search",
                 tint = Color(0xFF888888),
                 modifier = Modifier.size(18.dp),
@@ -404,7 +418,7 @@ fun EditorialSearchBar(
                 )
             }
             Icon(
-                imageVector = niaromi.icons.materialsymbols.MaterialSymbols.Rounded.FilterList,
+                imageVector = MaterialSymbols.Rounded.FilterList,
                 contentDescription = "Filter",
                 tint = Color(0xFF888888),
                 modifier = Modifier
@@ -436,15 +450,26 @@ fun DiscoveryCategoryRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = section.name,
-                style = TextStyle(
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = NearBlackText,
-                ),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = section.name,
+                    style = TextStyle(
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = NearBlackText,
+                    ),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "${section.items.size}",
+                    style = TextStyle(
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = 12.sp,
+                        color = MutedGrayText,
+                    ),
+                )
+            }
             Text(
                 text = "View all",
                 style = TextStyle(
@@ -465,16 +490,16 @@ fun DiscoveryCategoryRow(
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
             items(
-                items = section.coverGroups,
-                key = { it.primaryItem.id },
-            ) { group ->
-                DiscoveryCoverGroupItem(
-                    group = group,
-                    onClick = { onClickManga(group.primaryItem.libraryManga.manga.id) },
+                items = section.items,
+                key = { "${section.id}_${it.id}" },
+            ) { item ->
+                EditorialMangaCard(
+                    item = item,
+                    onClick = { onClickManga(item.libraryManga.manga.id) },
                 )
             }
         }
@@ -482,15 +507,15 @@ fun DiscoveryCategoryRow(
 }
 
 @Composable
-fun DiscoveryCoverGroupItem(
-    group: DiscoveryCoverGroup,
+fun EditorialMangaCard(
+    item: LibraryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         modifier = modifier
-            .width(88.dp)
+            .width(105.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -499,74 +524,46 @@ fun DiscoveryCoverGroupItem(
     ) {
         Box(
             modifier = Modifier
-                .width(88.dp)
-                .height(112.dp),
-        ) {
-            val secondaries = group.secondaryItems
-            if (secondaries.size >= 2) {
-                Box(
-                    modifier = Modifier
-                        .offset(x = 18.dp, y = 2.dp)
-                        .width(58.dp)
-                        .height(90.dp)
-                        .shadow(2.dp, RoundedCornerShape(4.dp))
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFE5E2D9)),
-                ) {
-                    MangaCover.Book(
-                        data = secondaries[1].libraryManga.manga.asMangaCover(),
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
-
-            if (secondaries.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .offset(x = 9.dp, y = 5.dp)
-                        .width(62.dp)
-                        .height(94.dp)
-                        .shadow(3.dp, RoundedCornerShape(4.dp))
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFECE9E0)),
-                ) {
-                    MangaCover.Book(
-                        data = secondaries[0].libraryManga.manga.asMangaCover(),
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .offset(x = 0.dp, y = 8.dp)
-                    .width(66.dp)
-                    .height(98.dp)
-                    .shadow(
-                        elevation = 3.dp,
-                        shape = RoundedCornerShape(4.dp),
-                    )
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFFF0ECE3)),
-            ) {
-                MangaCover.Book(
-                    data = group.primaryItem.libraryManga.manga.asMangaCover(),
-                    modifier = Modifier.fillMaxSize(),
+                .width(105.dp)
+                .height(150.dp)
+                .shadow(
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(8.dp),
+                    ambientColor = Color(0x20000000),
+                    spotColor = Color(0x30000000),
                 )
-            }
-
-            FrostedGlassShelfStand(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(26.dp)
-                    .align(Alignment.BottomCenter),
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFFEDE9DF)),
+        ) {
+            MangaCover.Book(
+                data = item.libraryManga.manga.asMangaCover(),
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = group.metadataLabel,
+            text = item.libraryManga.manga.title,
+            style = TextStyle(
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                color = NearBlackText,
+                lineHeight = 16.sp,
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        val unread = item.unreadCount
+        val subText = when {
+            unread > 0 -> "$unread unread"
+            item.libraryManga.manga.status.toInt() == 2 -> "Completed"
+            else -> item.libraryManga.manga.author?.ifBlank { null } ?: "In Library"
+        }
+        Text(
+            text = subText,
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Normal,
@@ -574,30 +571,81 @@ fun DiscoveryCoverGroupItem(
                 color = MutedGrayText,
             ),
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-fun FrostedGlassShelfStand(
+fun EditorialSearchResultItem(
+    item: LibraryItem,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
         modifier = modifier
-            .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(6.dp),
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 5.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFFFBF9F1))
+            .border(0.5.dp, Color(0xFFE9E5D8), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(52.dp)
+                .height(74.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFFEDE9DF)),
+        ) {
+            MangaCover.Book(
+                data = item.libraryManga.manga.asMangaCover(),
+                modifier = Modifier.fillMaxSize(),
             )
-            .background(
-                color = Color.White.copy(alpha = 0.65f),
-                shape = RoundedCornerShape(6.dp),
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.libraryManga.manga.title,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    color = NearBlackText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            .border(
-                width = 1.dp,
-                color = Color.White.copy(alpha = 0.90f),
-                shape = RoundedCornerShape(6.dp),
-            ),
-    )
+            Spacer(modifier = Modifier.height(2.dp))
+            val genreText = item.libraryManga.manga.genre?.take(3)?.joinToString(" • ")
+            if (!genreText.isNullOrBlank()) {
+                Text(
+                    text = genreText,
+                    style = TextStyle(
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = 12.sp,
+                        color = Color(0xFFD97706),
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+            }
+            val author = item.libraryManga.manga.author?.ifBlank { null } ?: "In Library"
+            Text(
+                text = author,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 12.sp,
+                    color = MutedGrayText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 @Composable

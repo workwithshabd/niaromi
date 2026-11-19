@@ -93,20 +93,21 @@ fun MangaEditorialDetailScreen(
         value = context.appGraph.getFavorites.await()
     }
 
-    val carouselMangaList = remember(allFavorites, state.manga) {
-        val list = allFavorites.toMutableList()
-        if (list.none { it.id == state.manga.id }) {
-            list.add(0, state.manga)
-        }
-        list
+    val currentGenres = remember(state.manga) {
+        state.manga.genre?.map { it.trim().lowercase() }?.toSet().orEmpty()
     }
 
-    val initialIndex = remember(carouselMangaList, state.manga) {
-        carouselMangaList.indexOfFirst { it.id == state.manga.id }.coerceAtLeast(0)
+    val carouselMangaList = remember(allFavorites, state.manga, currentGenres) {
+        val otherFavorites = allFavorites.filter { it.id != state.manga.id }
+        val (sameGenre, differentGenre) = otherFavorites.partition { fav ->
+            fav.genre?.any { it.trim().lowercase() in currentGenres } == true
+        }
+        // state.manga is ALWAYS at index 0! Same-genre titles come immediately after!
+        listOf(state.manga) + sameGenre + differentGenre
     }
 
     val pagerState = rememberPagerState(
-        initialPage = initialIndex,
+        initialPage = 0,
         pageCount = { carouselMangaList.size },
     )
 
@@ -199,7 +200,7 @@ fun MangaEditorialDetailScreen(
         } else if (nextChapter != null && nextChapter.id > 0) {
             onChapterClicked(nextChapter)
         } else {
-            context.toast("No available chapters. Please re-add title or check sources.")
+            onSelectManga(currentManga.id)
         }
     }
 
@@ -483,7 +484,7 @@ fun MangaEditorialDetailScreen(
                                 if (chapter.id > 0) {
                                     onChapterClicked(chapter)
                                 } else {
-                                    context.toast("Chapter unavailable. Please re-add title or check other sources.")
+                                    onSelectManga(currentManga.id)
                                 }
                             },
                         )

@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import niaromi.core.navigation.LocalNavigator
+import niaromi.core.navigation.MangaRoute
 import niaromi.data.download.model.Download
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.library.service.LibraryPreferences
@@ -134,6 +136,7 @@ fun MangaScreen(
         }
     }
 
+    val navigator = LocalNavigator.current
     if (!isTabletUi) {
         MangaEditorialDetailScreen(
             state = state,
@@ -145,7 +148,9 @@ fun MangaScreen(
             onWebViewClicked = onWebViewClicked,
             onMigrateClicked = onMigrateClicked,
             onEditCategoryClicked = onEditCategoryClicked,
-            onSelectManga = {},
+            onSelectManga = { newMangaId ->
+                navigator.replace(MangaRoute(newMangaId))
+            },
         )
     } else {
         MangaScreenLargeImpl(

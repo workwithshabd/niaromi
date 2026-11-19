@@ -21,22 +21,30 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -47,12 +55,18 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.navigation3.runtime.NavKey
 import dev.icerock.moko.resources.StringResource
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import niaromi.BuildConfig
+import niaromi.app.di.appGraph
 import niaromi.core.navigation.AboutRoute
 import niaromi.core.navigation.ExtensionMigrationRoute
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.Navigator
+import niaromi.core.navigation.NewUpdateRoute
 import niaromi.core.navigation.SettingsSearchRoute
+import niaromi.data.updater.GITHUB_REPO
+import niaromi.domain.release.interactor.GetApplicationRelease
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
 import niaromi.icons.materialsymbols.automirroredrounded.ChromeReaderMode
@@ -67,6 +81,8 @@ import niaromi.icons.materialsymbols.rounded.Search
 import niaromi.icons.materialsymbols.rounded.Security
 import niaromi.icons.materialsymbols.rounded.Storage
 import niaromi.icons.materialsymbols.rounded.Sync
+import niaromi.icons.simpleicons.Github
+import niaromi.icons.simpleicons.SimpleIcons
 import niaromi.presentation.core.components.material.Scaffold
 import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.util.isTabletUi
@@ -124,6 +140,8 @@ data object SettingsMainScreen : NavKey {
         } else {
             null
         }
+
+        var showGitHubUpdateDialog by remember { mutableStateOf(false) }
 
         val state = rememberLazyListState()
 
@@ -277,7 +295,13 @@ data object SettingsMainScreen : NavKey {
                                         SettingsItemRow(
                                             item = item,
                                             isSelected = isSelected,
-                                            onClick = { navigator.navigate(item.screen, twoPane) },
+                                            onClick = {
+                                                if (item.isUpdateAction) {
+                                                    showGitHubUpdateDialog = true
+                                                } else if (item.screen != null) {
+                                                    navigator.navigate(item.screen, twoPane)
+                                                }
+                                            },
                                         )
                                         if (itemIndex < section.items.lastIndex) {
                                             HorizontalDivider(
@@ -294,6 +318,12 @@ data object SettingsMainScreen : NavKey {
                 }
             },
         )
+
+        if (showGitHubUpdateDialog) {
+            GitHubUpdateDialog(
+                onDismissRequest = { showGitHubUpdateDialog = false },
+            )
+        }
     }
 
     private fun Navigator.navigate(screen: NavKey, twoPane: Boolean) {
@@ -306,7 +336,8 @@ data object SettingsMainScreen : NavKey {
         val subtitleRes: StringResource? = null,
         val formatSubtitle: @Composable () -> String? = { subtitleRes?.let { stringResource(it) } },
         val icon: ImageVector,
-        val screen: NavKey,
+        val screen: NavKey? = null,
+        val isUpdateAction: Boolean = false,
     )
 
     private data class SettingsSection(
@@ -374,6 +405,14 @@ data object SettingsMainScreen : NavKey {
             subtitleRes = MR.strings.pref_backup_summary,
             icon = MaterialSymbols.Rounded.Storage,
             screen = SettingsDataScreen,
+        ),
+        Item(
+            titleRes = MR.strings.check_for_updates,
+            formatSubtitle = {
+                "Check and push updates from GitHub ($GITHUB_REPO)"
+            },
+            icon = SimpleIcons.Github,
+            isUpdateAction = true,
         ),
         Item(
             titleRes = MR.strings.pref_category_advanced,
@@ -500,4 +539,120 @@ fun Navigator.openSettings(screen: NavKey? = null, twoPane: Boolean) {
     }
     if (!popTo { it == SettingsMainScreen }) push(SettingsMainScreen)
     push(screen ?: SettingsAppearanceScreen)
+}
+
+@Composable
+fun GitHubUpdateDialog(
+    onDismissRequest: () -> Unit,
+) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val updateChecker = remember { context.appGraph.updateChecker }
+
+    var statusText by remember { mutableStateOf("Press 'Check for Updates' to query latest releases from GitHub.") }
+    var isChecking by remember { mutableStateOf(false) }
+    var newRelease by remember { mutableStateOf<niaromi.domain.release.model.Release?>(null) }
+
+    val onCheckClick: () -> Unit = {
+        if (!isChecking) {
+            scope.launch {
+                isChecking = true
+                statusText = "Checking GitHub ($GITHUB_REPO)..."
+                newRelease = null
+                try {
+                    when (val result = updateChecker.checkForUpdate(forceCheck = true)) {
+                        is GetApplicationRelease.Result.NewUpdate -> {
+                            newRelease = result.release
+                            statusText = "New release found: ${result.release.version}"
+                        }
+                        is GetApplicationRelease.Result.NoNewUpdate -> {
+                            statusText = "Up to date. No new releases found on GitHub ($GITHUB_REPO)."
+                        }
+                        is GetApplicationRelease.Result.OsTooOld -> {
+                            statusText = "Device OS version is not supported for updates."
+                        }
+                    }
+                } catch (e: Exception) {
+                    statusText = "Unable to connect to GitHub releases: ${e.message ?: "Unknown error"}"
+                } finally {
+                    isChecking = false
+                }
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            if (newRelease != null) {
+                TextButton(
+                    onClick = {
+                        val release = newRelease!!
+                        onDismissRequest()
+                        navigator.push(
+                            NewUpdateRoute(
+                                versionName = release.version,
+                                changelogInfo = release.info,
+                                releaseLink = release.releaseLink,
+                                downloadLink = release.downloadLink,
+                            ),
+                        )
+                    },
+                ) {
+                    Text("Install Update")
+                }
+            } else {
+                TextButton(
+                    onClick = onCheckClick,
+                    enabled = !isChecking,
+                ) {
+                    Text(if (isChecking) "Checking..." else "Check for Updates")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Close")
+            }
+        },
+        title = {
+            Text("GitHub Updates")
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Current: Niaromi ${BuildConfig.VERSION_NAME} (r${BuildConfig.COMMIT_COUNT})",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = "Repository: $GITHUB_REPO",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedGrayText,
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                if (isChecking) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        },
+    )
 }

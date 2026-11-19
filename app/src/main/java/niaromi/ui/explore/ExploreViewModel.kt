@@ -43,6 +43,8 @@ data class SourceFilterItem(
 data class ExploreState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMorePages: Boolean = true,
     val allItems: List<ExploreItem> = emptyList(),
     val displayedItems: List<ExploreItem> = emptyList(),
     val preferredItems: List<ExploreItem> = emptyList(),
@@ -64,6 +66,9 @@ class ExploreViewModel(
 
     private val _state = MutableStateFlow(ExploreState())
     val state = _state.asStateFlow()
+
+    private var currentPage: Int = 1
+    private val seenTitles = mutableSetOf<String>()
 
     init {
         loadExploreFeed()
@@ -97,6 +102,9 @@ class ExploreViewModel(
             }
 
             try {
+                currentPage = 1
+                seenTitles.clear()
+
                 val enabledLanguages = sourcePreferences.enabledLanguages.get()
                 val disabledSources = sourcePreferences.disabledSources.get()
                 val pinnedSources = sourcePreferences.pinnedSources.get()
@@ -136,7 +144,7 @@ class ExploreViewModel(
                         .thenBy { it.name.lowercase() },
                 )
 
-                // Query sources concurrently
+                // Query sources concurrently for page 1
                 val rawResults = supervisorScope {
                     sortedSources.map { source ->
                         async(Dispatchers.IO) {
@@ -150,7 +158,7 @@ class ExploreViewModel(
                                     }
                                 } ?: emptyList()
                                 Triple(source, isPreferred, mangas)
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 Triple(source, isPreferred, emptyList<SManga>())
                             }
                         }
@@ -158,7 +166,6 @@ class ExploreViewModel(
                 }
 
                 // Deduplicate across extensions, strictly preserving preferred extension priority
-                val seenTitles = mutableSetOf<String>()
                 val rawExploreItems = mutableListOf<RawItem>()
 
                 for ((source, isPreferred, mangas) in rawResults) {
@@ -220,6 +227,8 @@ class ExploreViewModel(
                     current.copy(
                         isLoading = false,
                         isRefreshing = false,
+                        isLoadingMore = false,
+                        hasMorePages = true,
                         allItems = items,
                         displayedItems = filtered,
                         preferredItems = preferred,
@@ -232,9 +241,107 @@ class ExploreViewModel(
                     it.copy(
                         isLoading = false,
                         isRefreshing = false,
+                        isLoadingMore = false,
                         errorMessage = "Unable to load explore feed: ${e.message}",
                     )
                 }
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        val currentVal = _state.value
+        if (currentVal.isLoading || currentVal.isRefreshing || currentVal.isLoadingMore || !currentVal.hasMorePages) {
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingMore = true) }
+            val nextPage = currentPage + 1
+
+            try {
+                val enabledLanguages = sourcePreferences.enabledLanguages.get()
+                val disabledSources = sourcePreferences.disabledSources.get()
+                val pinnedSources = sourcePreferences.pinnedSources.get()
+                val preferredExts = sourcePreferences.preferredExtensions.get()
+                val loadedExts = extensionManager.getLoadedExtensions()
+                val preferredSourceIds = loadedExts
+                    .filter { it.pkgName in preferredExts }
+                    .flatMap { it.sources }
+                    .map { it.id }
+                    .toSet()
+
+                val onlineSources = sourceManager.getOnlineSources()
+                    .filter { !it.isLocal() }
+                    .filter { it.lang in enabledLanguages || it.lang == "all" }
+                    .filterNot { it.id.toString() in disabledSources }
+
+                val sortedSources = onlineSources.sortedWith(
+                    compareByDescending<CatalogueSource> { it.id in preferredSourceIds || "${it.id}" in pinnedSources }
+                        .thenByDescending { it.id in preferredSourceIds }
+                        .thenBy { it.name.lowercase() },
+                )
+
+                val rawResults = supervisorScope {
+                    sortedSources.map { source ->
+                        async(Dispatchers.IO) {
+                            val isPreferred = source.id in preferredSourceIds || "${source.id}" in pinnedSources
+                            try {
+                                val mangas = withTimeoutOrNull(15_000) {
+                                    if (source.supportsLatest) {
+                                        source.getLatestUpdates(nextPage).mangas
+                                    } else {
+                                        source.getPopularManga(nextPage).mangas
+                                    }
+                                } ?: emptyList()
+                                Triple(source, isPreferred, mangas)
+                            } catch (_: Exception) {
+                                Triple(source, isPreferred, emptyList<SManga>())
+                            }
+                        }
+                    }.awaitAll()
+                }
+
+                val newRawItems = mutableListOf<RawItem>()
+                for ((source, isPreferred, mangas) in rawResults) {
+                    for (manga in mangas) {
+                        val key = normalizeTitle(manga.title)
+                        if (key.isNotEmpty() && seenTitles.add(key)) {
+                            newRawItems.add(RawItem(manga, source.id, source.name, isPreferred))
+                        }
+                    }
+                }
+
+                if (newRawItems.isEmpty()) {
+                    _state.update { it.copy(isLoadingMore = false, hasMorePages = false) }
+                    return@launch
+                }
+
+                currentPage = nextPage
+                val domainMangas = newRawItems.map { it.sManga.toDomainManga(it.sourceId) }
+                val localMangas = networkToLocalManga(domainMangas)
+
+                val newExploreItems = newRawItems.zip(localMangas) { raw, local ->
+                    ExploreItem(
+                        manga = local,
+                        sourceId = raw.sourceId,
+                        sourceName = raw.sourceName,
+                        isPreferredSource = raw.isPreferred,
+                    )
+                }
+
+                _state.update { current ->
+                    val combinedAll = current.allItems + newExploreItems
+                    val filtered = filterItems(combinedAll, current.selectedSourceId, current.searchQuery)
+                    current.copy(
+                        isLoadingMore = false,
+                        allItems = combinedAll,
+                        displayedItems = filtered,
+                        hasMorePages = true,
+                    )
+                }
+            } catch (_: Exception) {
+                _state.update { it.copy(isLoadingMore = false) }
             }
         }
     }
