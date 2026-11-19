@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldState
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.material3.surfaceColorAtElevation
@@ -20,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -45,6 +47,7 @@ import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import mihon.app.di.appGraph
 import mihon.core.navigation.DownloadQueueRoute
@@ -144,10 +147,6 @@ fun HomeScreen() {
         NavigationSuiteType.NavigationBar
     }
     val navigationSuiteState = rememberNavigationSuiteScaffoldState()
-    LaunchedEffect(navigationSuiteState, tabletUi) {
-        if (tabletUi) navigationSuiteState.show()
-    }
-
     ResultEffect<ShowBottomNavEvent> {
         if (tabletUi || it.visible) {
             navigationSuiteState.show()
@@ -165,7 +164,7 @@ fun HomeScreen() {
         ),
         navigationItemVerticalArrangement = Arrangement.Center,
         navigationItems = {
-            TABS.fastForEach { NavigationSuiteItem(it, tabNavigator, navigationSuiteType) }
+            TABS.fastForEach { NavigationSuiteItem(it, tabNavigator, navigationSuiteType, navigationSuiteState) }
         },
     ) {
         val tabStateHolder = rememberSaveableStateHolder()
@@ -220,6 +219,11 @@ fun HomeScreen() {
             is TabEvent.More -> TopLevelRoute.More
         }
         tabNavigator.replaceAll(route)
+        if (route == TopLevelRoute.Library) {
+            navigationSuiteState.hide()
+        } else {
+            navigationSuiteState.show()
+        }
 
         if (it is TabEvent.Library && it.mangaIdToOpen != null) {
             navigator.push(MangaRoute(it.mangaIdToOpen))
@@ -235,7 +239,9 @@ private fun NavigationSuiteItem(
     tab: TopLevelRoute,
     tabNavigator: Navigator,
     navigationSuiteType: NavigationSuiteType,
+    navigationSuiteState: NavigationSuiteScaffoldState,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val resultEventBus = LocalResultEventBus.current
     val selected = tabNavigator.current == tab
     val options = tab.options(selected)
@@ -246,6 +252,11 @@ private fun NavigationSuiteItem(
         onClick = {
             if (!selected) {
                 tabNavigator.replaceAll(tab)
+                if (tab == TopLevelRoute.Library) {
+                    coroutineScope.launch { navigationSuiteState.hide() }
+                } else {
+                    coroutineScope.launch { navigationSuiteState.show() }
+                }
             } else {
                 resultEventBus.sendResult(
                     resultKey = tab.reselectEventKey,
