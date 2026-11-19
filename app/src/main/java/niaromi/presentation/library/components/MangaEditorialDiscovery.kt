@@ -89,6 +89,13 @@ fun buildDiscoverySections(
     val filteredFavorites = favorites.filter(filterItem)
     if (filteredFavorites.isEmpty()) return emptyList()
 
+    val sortByLastRead: (List<LibraryItem>) -> List<LibraryItem> = { list ->
+        list.sortedWith(
+            compareByDescending<LibraryItem> { it.libraryManga.lastRead?.toEpochMilliseconds() ?: 0L }
+                .thenByDescending { it.libraryManga.manga.favoriteAt?.toEpochMilliseconds() ?: 0L },
+        )
+    }
+
     val result = mutableListOf<DiscoveryCategorySection>()
     val seenSectionNames = mutableSetOf<String>()
     val assignedMangaIds = mutableSetOf<Long>()
@@ -105,7 +112,7 @@ fun buildDiscoverySections(
                     DiscoveryCategorySection(
                         id = category.id,
                         name = category.name,
-                        items = items,
+                        items = sortByLastRead(items),
                     ),
                 )
                 seenSectionNames.add(category.name.lowercase())
@@ -144,7 +151,7 @@ fun buildDiscoverySections(
                 DiscoveryCategorySection(
                     id = genreSectionId++,
                     name = genreName,
-                    items = items,
+                    items = sortByLastRead(items),
                 ),
             )
             seenSectionNames.add(genreName.lowercase())
@@ -159,7 +166,7 @@ fun buildDiscoverySections(
             DiscoveryCategorySection(
                 id = 9999L,
                 name = if (result.isEmpty()) "All Titles" else "More Favourites",
-                items = remainingTitles,
+                items = sortByLastRead(remainingTitles),
             ),
         )
     }
@@ -169,7 +176,7 @@ fun buildDiscoverySections(
             DiscoveryCategorySection(
                 id = 0L,
                 name = "All Titles",
-                items = filteredFavorites,
+                items = sortByLastRead(filteredFavorites),
             ),
         )
     }
@@ -190,6 +197,8 @@ fun MangaEditorialDiscovery(
     onFilterClick: () -> Unit,
     onRefresh: suspend () -> Boolean,
     modifier: Modifier = Modifier,
+    lazyListState: androidx.compose.foundation.lazy.LazyListState =
+        androidx.compose.foundation.lazy.rememberLazyListState(),
     extensionSearchState: ExtensionSearchState = ExtensionSearchState(),
     onAddTitle: (String) -> Unit = {},
     onViewAllSources: (String) -> Unit = {},
@@ -231,6 +240,7 @@ fun MangaEditorialDiscovery(
             },
         ) {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     top = contentPadding.calculateTopPadding(),

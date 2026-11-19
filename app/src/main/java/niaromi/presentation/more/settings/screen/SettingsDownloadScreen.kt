@@ -45,6 +45,11 @@ data object SettingsDownloadScreen : SearchableSettings {
                 preference = downloadPreferences.saveChaptersAsCBZ,
                 title = stringResource(MR.strings.save_chapter_as_cbz),
             ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = downloadPreferences.showChapterDownloadButtons,
+                title = "Show download buttons on chapters",
+                subtitle = "Display a download button on each chapter row for direct downloading",
+            ),
             Preference.PreferenceItem.SliderPreference(
                 preference = downloadPreferences.parallelSourceLimit,
                 valueRange = 1..10,

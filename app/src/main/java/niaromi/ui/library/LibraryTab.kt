@@ -3,6 +3,7 @@ package niaromi.ui.library
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -66,6 +67,7 @@ fun LibraryTab() {
     val resultBus = LocalResultEventBus.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
+    val discoveryListState = rememberLazyListState()
 
     val viewModel = metroViewModel<LibraryViewModel>()
     val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
@@ -167,12 +169,15 @@ fun LibraryTab() {
                     searchQuery = state.searchQuery,
                     extensionSearchState = extensionSearchState,
                     contentPadding = contentPadding,
+                    lazyListState = discoveryListState,
                     getItemsForCategory = { state.getItemsForCategory(it) },
-                    onClickManga = { navigator.push(MangaRoute(it)) },
+                    onClickManga = { mangaId ->
+                        navigator.push(MangaRoute(mangaId, fromSearch = !state.searchQuery.isNullOrBlank()))
+                    },
                     onViewAll = { id, name -> navigator.push(CategoryListingRoute(id, name)) },
                     onSearchQueryChange = viewModel::search,
-                    onAddTitle = viewModel::searchInExtensions,
-                    onViewAllSources = { navigator.push(GlobalSearchRoute(it)) },
+                    onAddTitle = { query -> navigator.push(GlobalSearchRoute(query)) },
+                    onViewAllSources = { query -> navigator.push(GlobalSearchRoute(query)) },
                     onFilterClick = viewModel::showSettingsDialog,
                     onRefresh = { onClickRefresh(state.activeCategory) },
                 )
@@ -235,11 +240,11 @@ fun LibraryTab() {
     ReportDrawnWhen { !state.isLoading }
 
     ResultEffect<LibrarySearchEvent> {
-        viewModel.search(it.query)
+        viewModel.search(it.query.ifBlank { null })
     }
 
     ResultEffect<Unit>(resultKey = TopLevelRoute.Library.reselectEventKey) {
-        viewModel.showSettingsDialog()
+        scope.launch { discoveryListState.animateScrollToItem(0) }
     }
 }
 

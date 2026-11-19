@@ -220,7 +220,14 @@ fun HomeScreen() {
                 FloatingBottomNavigationBar(
                     currentRoute = tabNavigator.current as? TopLevelRoute ?: TopLevelRoute.Library,
                     onSelectRoute = { route ->
+                        val current = tabNavigator.current as? TopLevelRoute
+                        if (current == TopLevelRoute.Library && route != TopLevelRoute.Library) {
+                            resultEventBus.sendResult(LibrarySearchEvent(""))
+                        }
                         tabNavigator.replaceAll(route)
+                    },
+                    onReselectRoute = { route ->
+                        resultEventBus.sendResult(route.reselectEventKey, Unit)
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

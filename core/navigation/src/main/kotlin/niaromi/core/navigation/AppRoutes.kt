@@ -29,6 +29,7 @@ data class CategoryListingRoute(
 data class MangaRoute(
     val mangaId: Long,
     val fromSource: Boolean = false,
+    val fromSearch: Boolean = false,
 ) : NavKey
 
 @Serializable

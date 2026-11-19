@@ -128,6 +128,7 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    fromSearch: Boolean = false,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -140,6 +141,7 @@ fun MangaScreen(
     if (!isTabletUi) {
         MangaEditorialDetailScreen(
             state = state,
+            fromSearch = fromSearch,
             navigateUp = navigateUp,
             onContinueReading = onContinueReading,
             onChapterClicked = onChapterClicked,
@@ -148,8 +150,15 @@ fun MangaScreen(
             onWebViewClicked = onWebViewClicked,
             onMigrateClicked = onMigrateClicked,
             onEditCategoryClicked = onEditCategoryClicked,
+            onDownloadActionClicked = onDownloadActionClicked,
+            onDownloadChapter = onDownloadChapter,
+            onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+            onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+            onMultiDeleteClicked = onMultiDeleteClicked,
+            onTagSearch = onTagSearch,
+            onCoverClicked = onCoverClicked,
             onSelectManga = { newMangaId ->
-                navigator.replace(MangaRoute(newMangaId))
+                navigator.replace(MangaRoute(newMangaId, fromSearch = fromSearch))
             },
         )
     } else {
@@ -241,6 +250,7 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    fromSearch: Boolean = false,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -474,6 +484,7 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    fromSearch: Boolean = false,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current

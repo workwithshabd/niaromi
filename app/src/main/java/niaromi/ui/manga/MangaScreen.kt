@@ -68,6 +68,7 @@ import niaromi.util.system.toast
 fun MangaScreen(
     mangaId: Long,
     fromSource: Boolean,
+    fromSearch: Boolean = false,
 ) {
     val navigator = LocalNavigator.current
     val resultEventBus = LocalResultEventBus.current
@@ -107,6 +108,7 @@ fun MangaScreen(
         snackbarHostState = viewModel.snackbarHostState,
         nextUpdate = successState.manga.expectedNextUpdate,
         isTabletUi = isTabletUi(),
+        fromSearch = fromSearch,
         chapterSwipeStartAction = viewModel.chapterSwipeStartAction,
         chapterSwipeEndAction = viewModel.chapterSwipeEndAction,
         navigateUp = navigator::pop,

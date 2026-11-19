@@ -39,7 +39,7 @@ fun GlobalSearchScreen(
                 is SearchItemResult.Success -> {
                     val manga = result.result.singleOrNull()
                     if (manga != null) {
-                        navigator.replace(MangaRoute(manga.id, true))
+                        navigator.replace(MangaRoute(manga.id, fromSource = true, fromSearch = true))
                     } else {
                         // Backoff to result screen
                         showSingleLoadingScreen = false
@@ -60,8 +60,8 @@ fun GlobalSearchScreen(
             onClickSource = {
                 navigator.push(BrowseSourceRoute(it.id, state.searchQuery))
             },
-            onClickItem = { navigator.push(MangaRoute(it.id, true)) },
-            onLongClickItem = { navigator.push(MangaRoute(it.id, true)) },
+            onClickItem = { navigator.push(MangaRoute(it.id, fromSource = true, fromSearch = true)) },
+            onLongClickItem = { navigator.push(MangaRoute(it.id, fromSource = true, fromSearch = true)) },
         )
     }
 }

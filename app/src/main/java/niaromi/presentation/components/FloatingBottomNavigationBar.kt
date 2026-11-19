@@ -73,6 +73,7 @@ fun FloatingBottomNavigationBar(
     currentRoute: TopLevelRoute,
     onSelectRoute: (TopLevelRoute) -> Unit,
     modifier: Modifier = Modifier,
+    onReselectRoute: (TopLevelRoute) -> Unit = onSelectRoute,
 ) {
     Box(
         modifier = modifier
@@ -117,7 +118,11 @@ fun FloatingBottomNavigationBar(
                             interactionSource = interactionSource,
                             indication = null,
                         ) {
-                            onSelectRoute(item.route)
+                            if (isSelected) {
+                                onReselectRoute(item.route)
+                            } else {
+                                onSelectRoute(item.route)
+                            }
                         }
                         .padding(start = animatedPadStart.value, end = animatedPadEnd.value),
                     verticalAlignment = Alignment.CenterVertically,

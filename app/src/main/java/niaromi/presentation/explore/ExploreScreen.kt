@@ -80,10 +80,10 @@ fun ExploreScreen(
     onSearchQueryChange: (String) -> Unit,
     onSelectSourceFilter: (Long?) -> Unit,
     modifier: Modifier = Modifier,
+    listState: androidx.compose.foundation.lazy.LazyListState =
+        androidx.compose.foundation.lazy.rememberLazyListState(),
     onLoadMore: () -> Unit = {},
 ) {
-    val listState = rememberLazyListState()
-
     val shouldLoadMore by remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo

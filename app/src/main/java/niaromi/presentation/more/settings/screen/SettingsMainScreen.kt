@@ -54,29 +54,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.result.ResultEffect
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import niaromi.BuildConfig
 import niaromi.app.di.appGraph
 import niaromi.core.navigation.AboutRoute
+import niaromi.core.navigation.CategoryRoute
+import niaromi.core.navigation.DownloadQueueRoute
 import niaromi.core.navigation.ExtensionMigrationRoute
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.Navigator
 import niaromi.core.navigation.NewUpdateRoute
 import niaromi.core.navigation.SettingsSearchRoute
+import niaromi.core.navigation.StatsRoute
 import niaromi.data.updater.GITHUB_REPO
 import niaromi.domain.release.interactor.GetApplicationRelease
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
 import niaromi.icons.materialsymbols.automirroredrounded.ChromeReaderMode
+import niaromi.icons.materialsymbols.automirroredrounded.Label
+import niaromi.icons.materialsymbols.rounded.CloudOff
 import niaromi.icons.materialsymbols.rounded.Code
 import niaromi.icons.materialsymbols.rounded.CollectionsBookmark
 import niaromi.icons.materialsymbols.rounded.Download
 import niaromi.icons.materialsymbols.rounded.Explore
+import niaromi.icons.materialsymbols.rounded.Eyeglasses2
 import niaromi.icons.materialsymbols.rounded.Info
 import niaromi.icons.materialsymbols.rounded.KeyboardArrowRight
 import niaromi.icons.materialsymbols.rounded.Palette
+import niaromi.icons.materialsymbols.rounded.QueryStats
 import niaromi.icons.materialsymbols.rounded.Search
 import niaromi.icons.materialsymbols.rounded.Security
 import niaromi.icons.materialsymbols.rounded.Storage
@@ -85,8 +93,10 @@ import niaromi.icons.simpleicons.Github
 import niaromi.icons.simpleicons.SimpleIcons
 import niaromi.presentation.core.components.material.Scaffold
 import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.core.util.isTabletUi
 import niaromi.presentation.more.settings.screen.about.getVersionName
+import niaromi.ui.home.TopLevelRoute
 import tachiyomi.i18n.MR
 
 private val WarmIvoryBg = Color(0xFFFFFDF4)
@@ -143,7 +153,19 @@ data object SettingsMainScreen : NavKey {
 
         var showGitHubUpdateDialog by remember { mutableStateOf(false) }
 
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val state = rememberLazyListState()
+
+        ResultEffect<Unit>(resultKey = TopLevelRoute.More.reselectEventKey) {
+            scope.launch { state.animateScrollToItem(0) }
+        }
+
+        val downloadedOnlyPref = remember { context.appGraph.basePreferences.downloadedOnly }
+        val downloadedOnly by downloadedOnlyPref.collectAsState()
+
+        val incognitoModePref = remember { context.appGraph.basePreferences.incognitoMode }
+        val incognitoMode by incognitoModePref.collectAsState()
 
         if (twoPane && selectedScreen != null) {
             val index = items.indexOfFirst { it.screen == selectedScreen }
@@ -259,6 +281,96 @@ data object SettingsMainScreen : NavKey {
                                         color = Color(0xFF999999),
                                     ),
                                     modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+
+                    item(key = "quick_controls_card") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                                .padding(top = 16.dp, bottom = 4.dp),
+                        ) {
+                            Text(
+                                text = "QUICK CONTROLS & TOOLS",
+                                style = TextStyle(
+                                    fontFamily = FontFamily.SansSerif,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp,
+                                    letterSpacing = 1.2.sp,
+                                    color = MutedGrayText,
+                                ),
+                                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(CardBg)
+                                    .border(0.5.dp, CardBorder, RoundedCornerShape(18.dp)),
+                            ) {
+                                QuickToggleRow(
+                                    title = "Downloaded only",
+                                    subtitle = "Only show titles that are saved locally on device",
+                                    icon = MaterialSymbols.Rounded.CloudOff,
+                                    checked = downloadedOnly,
+                                    onCheckedChange = { downloadedOnlyPref.set(it) },
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = DividerColor,
+                                )
+
+                                QuickToggleRow(
+                                    title = "Incognito mode",
+                                    subtitle = "Pauses reading history and download tracking",
+                                    icon = MaterialSymbols.Rounded.Eyeglasses2,
+                                    checked = incognitoMode,
+                                    onCheckedChange = { incognitoModePref.set(it) },
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = DividerColor,
+                                )
+
+                                QuickToolRow(
+                                    title = "Download queue",
+                                    subtitle = "View and manage active and pending downloads",
+                                    icon = MaterialSymbols.Rounded.Download,
+                                    onClick = { navigator.push(DownloadQueueRoute) },
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = DividerColor,
+                                )
+
+                                QuickToolRow(
+                                    title = "Categories",
+                                    subtitle = "Create, sort and manage custom library categories",
+                                    icon = MaterialSymbols.AutoMirroredRounded.Label,
+                                    onClick = { navigator.push(CategoryRoute) },
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = DividerColor,
+                                )
+
+                                QuickToolRow(
+                                    title = "Statistics",
+                                    subtitle = "View total chapters read, time spent and charts",
+                                    icon = MaterialSymbols.Rounded.QueryStats,
+                                    onClick = { navigator.push(StatsRoute) },
                                 )
                             }
                         }
@@ -517,6 +629,143 @@ private fun SettingsItemRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = MaterialSymbols.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color(0xFFB0AAA0),
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+@Composable
+private fun QuickToggleRow(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { onCheckedChange(!checked) })
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .background(IconBg, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = NearBlackText,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = NearBlackText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.5.sp,
+                    color = MutedGrayText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = NearBlackText,
+                uncheckedThumbColor = Color(0xFF888888),
+                uncheckedTrackColor = Color(0xFFE5E0D0),
+            ),
+        )
+    }
+}
+
+@Composable
+private fun QuickToolRow(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .background(IconBg, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = NearBlackText,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = NearBlackText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.5.sp,
+                    color = MutedGrayText,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         Spacer(modifier = Modifier.width(8.dp))
         Icon(

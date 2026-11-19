@@ -214,7 +214,7 @@ fun BrowseSourceScreen(
             onWebViewClick = onWebViewClick,
             onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
             onLocalSourceHelpClick = onHelpClick,
-            onMangaClick = { navigator.push(MangaRoute(it.id, true)) },
+            onMangaClick = { navigator.push(MangaRoute(it.id, fromSource = true, fromSearch = true)) },
             onMangaLongClick = { manga ->
                 scope.launch(Dispatchers.IO) {
                     val duplicates = viewModel.getDuplicateLibraryManga(manga)
