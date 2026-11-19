@@ -23,6 +23,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.MR
+import java.io.File
 import java.io.IOException
 
 /**
@@ -61,7 +62,7 @@ class DownloadProvider(
         }
 
         val sourceDirName = getSourceDirName(source)
-        val sourceDir = downloadsDir.createDirectory(sourceDirName)
+        val sourceDir = getOrCreateDirectory(downloadsDir, sourceDirName)
         if (sourceDir == null) {
             val displayablePath = downloadsDir.displayablePath + "/$sourceDirName"
             logcat(LogPriority.ERROR) { "Failed to create source download directory: $displayablePath" }
@@ -71,7 +72,7 @@ class DownloadProvider(
         }
 
         val mangaDirName = getMangaDirName(mangaTitle)
-        val mangaDir = sourceDir.createDirectory(mangaDirName)
+        val mangaDir = getOrCreateDirectory(sourceDir, mangaDirName)
         if (mangaDir == null) {
             val displayablePath = sourceDir.displayablePath + "/$mangaDirName"
             logcat(LogPriority.ERROR) { "Failed to create manga download directory: $displayablePath" }
@@ -81,6 +82,21 @@ class DownloadProvider(
         }
 
         return Result.success(mangaDir)
+    }
+
+    private fun getOrCreateDirectory(parent: UniFile, name: String): UniFile? {
+        val existing = parent.findFile(name)
+        if (existing != null && existing.isDirectory) return existing
+        val created = parent.createDirectory(name)
+        if (created != null) return created
+        val parentPath = parent.filePath
+        if (parentPath != null) {
+            val file = File(parentPath, name)
+            if (file.isDirectory || file.mkdirs()) {
+                return UniFile.fromFile(file)
+            }
+        }
+        return null
     }
 
     /**

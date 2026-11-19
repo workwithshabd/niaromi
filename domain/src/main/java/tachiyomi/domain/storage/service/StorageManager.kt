@@ -1,6 +1,10 @@
 package tachiyomi.domain.storage.service
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.AppScope
@@ -17,6 +21,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import mihon.core.metro.AppCoroutineScope
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 @Inject
@@ -47,9 +52,9 @@ class StorageManager(
             .onEach { uri ->
                 baseDirLazy = lazyOf(getBaseDir(uri))
                 baseDir?.let { parent ->
-                    parent.createDirectory(AUTOMATIC_BACKUPS_PATH)
-                    parent.createDirectory(LOCAL_SOURCE_PATH)
-                    parent.createDirectory(DOWNLOADS_PATH).also {
+                    (parent.findFile(AUTOMATIC_BACKUPS_PATH) ?: parent.createDirectory(AUTOMATIC_BACKUPS_PATH))
+                    (parent.findFile(LOCAL_SOURCE_PATH) ?: parent.createDirectory(LOCAL_SOURCE_PATH))
+                    (parent.findFile(DOWNLOADS_PATH) ?: parent.createDirectory(DOWNLOADS_PATH))?.also {
                         DiskUtil.createNoMediaFile(it, context)
                     }
                 }
@@ -59,8 +64,13 @@ class StorageManager(
     }
 
     private fun getBaseDir(uri: String): UniFile? {
-        return UniFile.fromUri(context, uri.toUri())
-            .takeIf { it?.exists() == true }
+        val parsedUri = uri.toUri()
+        val file = resolveToFile(context, parsedUri)
+        if (file != null && file.canWrite()) {
+            return UniFile.fromFile(file)
+        }
+        return UniFile.fromUri(context, parsedUri)
+            ?.takeIf { it.exists() }
     }
 
     fun getAutomaticBackupsDirectory(): UniFile? {
@@ -80,7 +90,72 @@ class StorageManager(
         childDirectories[name]
             ?.takeIf { (cachedParent, directory) -> cachedParent === parent && directory.exists() }
             ?.let { (_, directory) -> return directory }
-        return parent.createDirectory(name)?.also { childDirectories[name] = parent to it }
+        val directory = (parent.findFile(name)?.takeIf { it.isDirectory } ?: parent.createDirectory(name))
+            ?.let { ensureFileBacked(it, name) }
+            ?.also { childDirectories[name] = parent to it }
+        return directory
+    }
+
+    private fun ensureFileBacked(uniFile: UniFile, name: String): UniFile {
+        val file = resolveToFile(context, uniFile.uri)
+        if (file != null && file.canWrite()) {
+            return UniFile.fromFile(file) ?: uniFile
+        }
+        val parentFile = baseDir?.let { resolveToFile(context, it.uri) }
+        if (parentFile != null && parentFile.canWrite()) {
+            val child = File(parentFile, name)
+            if (child.exists() && child.canWrite()) {
+                return UniFile.fromFile(child) ?: uniFile
+            }
+        }
+        return uniFile
+    }
+
+    private fun resolveToFile(context: Context, uri: Uri): File? {
+        if (uri.scheme == ContentResolver.SCHEME_FILE) {
+            val path = uri.path ?: return null
+            return File(path).takeIf { it.exists() && it.canWrite() }
+        }
+        if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            val docId = try {
+                if (DocumentsContract.isDocumentUri(context, uri)) {
+                    DocumentsContract.getDocumentId(uri)
+                } else {
+                    DocumentsContract.getTreeDocumentId(uri)
+                }
+            } catch (_: Exception) {
+                uri.lastPathSegment
+            } ?: return null
+
+            val decodedDocId = Uri.decode(docId)
+            if (decodedDocId.startsWith("raw:")) {
+                val path = decodedDocId.removePrefix("raw:")
+                val file = File(path)
+                if (file.exists() && file.canWrite()) return file
+            }
+            if (uri.authority == "com.android.providers.downloads.documents") {
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (downloadDir.exists() && downloadDir.canWrite()) {
+                    if (decodedDocId == "downloads") return downloadDir
+                    val subName = decodedDocId.substringAfterLast("/")
+                    val subFile = File(downloadDir, subName)
+                    if (subFile.exists() && subFile.canWrite()) return subFile
+                    return downloadDir
+                }
+            }
+            if (uri.authority == "com.android.externalstorage.documents") {
+                val parts = decodedDocId.split(":")
+                if (parts.size >= 2) {
+                    val type = parts[0]
+                    val relPath = parts[1]
+                    if (type.equals("primary", ignoreCase = true)) {
+                        val file = File(Environment.getExternalStorageDirectory(), relPath)
+                        if (file.exists() && file.canWrite()) return file
+                    }
+                }
+            }
+        }
+        return null
     }
 }
 

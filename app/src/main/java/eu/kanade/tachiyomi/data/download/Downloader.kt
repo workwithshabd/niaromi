@@ -64,6 +64,8 @@ import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.MR
+import java.io.File
+import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
@@ -442,7 +444,10 @@ class Downloader(
             return
         }
 
-        val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)!!
+        val tmpDir = mangaDir.findFile(chapterDirname + TMP_DIR_SUFFIX)
+            ?: mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)
+            ?: mangaDir.filePath?.let { UniFile.fromFile(File(it, chapterDirname + TMP_DIR_SUFFIX).apply { mkdirs() }) }
+            ?: throw IOException("Failed to create temporary directory for $chapterDirname")
 
         try {
             // If the page list already exists, start from the file
@@ -573,7 +578,9 @@ class Downloader(
         page.progress = 0
         return flow {
             val file = tmpDir.findFile("$filename.tmp")
-                ?: tmpDir.createFile("$filename.tmp")!!
+                ?: tmpDir.createFile("$filename.tmp")
+                ?: tmpDir.filePath?.let { UniFile.fromFile(File(it, "$filename.tmp").apply { createNewFile() }) }
+                ?: throw IOException("Failed to create temporary file for $filename")
 
             try {
                 source.getImage(page, file.length()).use {
@@ -617,8 +624,11 @@ class Downloader(
         val tmpFile = chapterCache.openImage(imageUrl)?.use { input ->
             // Delete temp file if it exists
             tmpDir.findFile("$filename.tmp")?.delete()
-            tmpDir.createFile("$filename.tmp")!!.also { tmpFile ->
-                tmpFile.openOutputStream().use { output ->
+            val tmpFile = tmpDir.createFile("$filename.tmp")
+                ?: tmpDir.filePath?.let { UniFile.fromFile(File(it, "$filename.tmp").apply { createNewFile() }) }
+                ?: throw IOException("Failed to create temporary file for $filename")
+            tmpFile.also { target ->
+                target.openOutputStream().use { output ->
                     input.copyTo(output)
                 }
             }
@@ -693,7 +703,12 @@ class Downloader(
         dirname: String,
         tmpDir: UniFile,
     ) {
-        val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")!!
+        mangaDir.findFile("$dirname.cbz$TMP_DIR_SUFFIX")?.delete()
+        val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")
+            ?: mangaDir.filePath?.let {
+                UniFile.fromFile(File(it, "$dirname.cbz$TMP_DIR_SUFFIX").apply { createNewFile() })
+            }
+            ?: throw IOException("Failed to create temporary cbz for $dirname")
         ZipWriter(context, zip).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
                 writer.write(file)
@@ -730,7 +745,10 @@ class Downloader(
 
         // Remove the old file
         dir.findFile(COMIC_INFO_FILE)?.delete()
-        dir.createFile(COMIC_INFO_FILE)!!.openOutputStream().use {
+        val comicInfoFile = dir.createFile(COMIC_INFO_FILE)
+            ?: dir.filePath?.let { UniFile.fromFile(File(it, COMIC_INFO_FILE).apply { createNewFile() }) }
+            ?: throw IOException("Failed to create $COMIC_INFO_FILE")
+        comicInfoFile.openOutputStream().use {
             val comicInfoString = xml.encodeToString(ComicInfo.serializer(), comicInfo)
             it.write(comicInfoString.toByteArray())
         }
