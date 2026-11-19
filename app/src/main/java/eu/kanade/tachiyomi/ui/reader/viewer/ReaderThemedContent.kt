@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.presentation.theme.NiaromiTheme
 
 /**
  * [content] in the app's theme under the reader's own night mode, from [readerThemedContext].
@@ -20,6 +20,6 @@ fun ReaderThemedContent(readerThemedContext: Context, content: @Composable () ->
         LocalContext provides readerThemedContext,
         LocalConfiguration provides readerThemedContext.resources.configuration,
     ) {
-        TachiyomiTheme(content = content)
+        NiaromiTheme(content = content)
     }
 }

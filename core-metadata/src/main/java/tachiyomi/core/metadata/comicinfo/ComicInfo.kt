@@ -88,7 +88,7 @@ data class ComicInfo(
     val day: Day?,
     val publishingStatus: PublishingStatusTachiyomi?,
     val categories: CategoriesTachiyomi?,
-    val source: SourceMihon?,
+    val source: SourceNiaromi?,
 ) {
     @XmlElement(false)
     @XmlSerialName("xmlns:xsd", "", "")
@@ -176,8 +176,10 @@ data class ComicInfo(
     data class CategoriesTachiyomi(@XmlValue(true) val value: String = "")
 
     @Serializable
-    @XmlSerialName("SourceMihon", "http://www.w3.org/2001/XMLSchema", "mh")
-    data class SourceMihon(@XmlValue(true) val value: String = "")
+    @XmlSerialName("SourceNiaromi", "http://www.w3.org/2001/XMLSchema", "nr")
+    data class SourceNiaromi(@XmlValue(true) val value: String = "")
+
+    typealias SourceMihon = SourceNiaromi
 }
 
 enum class ComicInfoPublishingStatus(

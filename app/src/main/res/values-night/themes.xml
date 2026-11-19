@@ -2,7 +2,7 @@
 <resources>
 
     <!--== AMOLED Mode Overlay ==-->
-    <style name="ThemeOverlay.Tachiyomi.Amoled" parent="">
+    <style name="ThemeOverlay.Niaromi.Amoled" parent="">
         <!-- Theme Colors -->
         <item name="android:colorBackground">@color/amoled_background</item>
         <item name="colorOnBackground">@color/amoled_onBackground</item>
@@ -13,4 +13,5 @@
         <item name="colorSurfaceContainerHighest">@color/amoled_surfaceContainerHighest</item>
     </style>
 
+    <style name="ThemeOverlay.Tachiyomi.Amoled" parent="ThemeOverlay.Niaromi.Amoled" />
 </resources>

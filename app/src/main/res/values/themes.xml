@@ -6,48 +6,48 @@
     <!--============-->
 
     <!--== Theme Base ==-->
-    <style name="Base.Theme.Tachiyomi" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.Niaromi" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Disallow "Force dark theme" -->
         <item name="android:forceDarkAllowed" tools:targetApi="Q">false</item>
 
         <!-- Theme Colors -->
-        <item name="colorPrimary">@color/tachiyomi_primary</item>
-        <item name="colorOnPrimary">@color/tachiyomi_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/tachiyomi_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/tachiyomi_onPrimaryContainer</item>
-        <item name="colorPrimaryInverse">@color/tachiyomi_inversePrimary</item>
-        <item name="colorSecondary">@color/tachiyomi_secondary</item>
-        <item name="colorOnSecondary">@color/tachiyomi_onSecondary</item>
-        <item name="colorSecondaryContainer">@color/tachiyomi_secondaryContainer</item>
-        <item name="colorOnSecondaryContainer">@color/tachiyomi_onSecondaryContainer</item>
-        <item name="colorTertiary">@color/tachiyomi_tertiary</item>
-        <item name="colorOnTertiary">@color/tachiyomi_onTertiary</item>
-        <item name="colorTertiaryContainer">@color/tachiyomi_tertiaryContainer</item>
-        <item name="colorOnTertiaryContainer">@color/tachiyomi_onTertiaryContainer</item>
-        <item name="android:colorBackground">@color/tachiyomi_background</item>
-        <item name="colorOnBackground">@color/tachiyomi_onBackground</item>
-        <item name="colorSurface">@color/tachiyomi_surface</item>
-        <item name="colorOnSurface">@color/tachiyomi_onSurface</item>
-        <item name="colorSurfaceVariant">@color/tachiyomi_surfaceVariant</item>
-        <item name="colorOnSurfaceVariant">@color/tachiyomi_onSurfaceVariant</item>
-        <item name="elevationOverlayColor">@color/tachiyomi_surfaceTint</item>
-        <item name="colorSurfaceInverse">@color/tachiyomi_inverseSurface</item>
-        <item name="colorOnSurfaceInverse">@color/tachiyomi_inverseOnSurface</item>
-        <item name="colorError">@color/tachiyomi_error</item>
-        <item name="colorOnError">@color/tachiyomi_onError</item>
-        <item name="colorErrorContainer">@color/tachiyomi_errorContainer</item>
-        <item name="colorOnErrorContainer">@color/tachiyomi_onErrorContainer</item>
-        <item name="colorOutline">@color/tachiyomi_outline</item>
-        <item name="colorOutlineVariant">@color/tachiyomi_outlineVariant</item>
-        <item name="colorSurfaceContainer">@color/tachiyomi_surfaceContainer</item>
-        <item name="colorSurfaceContainerHigh">@color/tachiyomi_surfaceContainerHigh</item>
-        <item name="colorSurfaceContainerHighest">@color/tachiyomi_surfaceContainerHighest</item>
-        <item name="colorSurfaceContainerLow">@color/tachiyomi_surfaceContainerLow</item>
-        <item name="colorSurfaceContainerLowest">@color/tachiyomi_surfaceContainerLowest</item>
+        <item name="colorPrimary">@color/niaromi_primary</item>
+        <item name="colorOnPrimary">@color/niaromi_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/niaromi_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/niaromi_onPrimaryContainer</item>
+        <item name="colorPrimaryInverse">@color/niaromi_inversePrimary</item>
+        <item name="colorSecondary">@color/niaromi_secondary</item>
+        <item name="colorOnSecondary">@color/niaromi_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/niaromi_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/niaromi_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/niaromi_tertiary</item>
+        <item name="colorOnTertiary">@color/niaromi_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/niaromi_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/niaromi_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/niaromi_background</item>
+        <item name="colorOnBackground">@color/niaromi_onBackground</item>
+        <item name="colorSurface">@color/niaromi_surface</item>
+        <item name="colorOnSurface">@color/niaromi_onSurface</item>
+        <item name="colorSurfaceVariant">@color/niaromi_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/niaromi_onSurfaceVariant</item>
+        <item name="elevationOverlayColor">@color/niaromi_surfaceTint</item>
+        <item name="colorSurfaceInverse">@color/niaromi_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/niaromi_inverseOnSurface</item>
+        <item name="colorError">@color/niaromi_error</item>
+        <item name="colorOnError">@color/niaromi_onError</item>
+        <item name="colorErrorContainer">@color/niaromi_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/niaromi_onErrorContainer</item>
+        <item name="colorOutline">@color/niaromi_outline</item>
+        <item name="colorOutlineVariant">@color/niaromi_outlineVariant</item>
+        <item name="colorSurfaceContainer">@color/niaromi_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/niaromi_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/niaromi_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/niaromi_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/niaromi_surfaceContainerLowest</item>
 
         <item name="android:divider">@color/divider_default</item>
         <item name="android:listDivider">@drawable/line_divider</item>
-        <item name="materialDividerStyle">@style/Widget.Tachiyomi.MaterialDivider</item>
+        <item name="materialDividerStyle">@style/Widget.Niaromi.MaterialDivider</item>
 
         <!-- Ripples -->
         <item name="colorControlHighlight">?attr/colorSurfaceVariant</item>
@@ -64,29 +64,29 @@
         <item name="android:enforceNavigationBarContrast" tools:targetApi="Q">false</item>
         <item name="android:enforceStatusBarContrast" tools:targetApi="Q">false</item>
         <item name="android:itemTextAppearance">@style/TextAppearance.Widget.Menu</item>
-        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Tachiyomi.MaterialAlertDialog</item>
-        <item name="alertDialogTheme">@style/ThemeOverlay.Tachiyomi.MaterialAlertDialog</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Niaromi.MaterialAlertDialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.Niaromi.MaterialAlertDialog</item>
         <item name="textAppearanceButton">@style/TextAppearance.Widget.Button</item>
         <item name="android:buttonStyle">?attr/borderlessButtonStyle</item>
         <item name="android:backgroundDimAmount">0.32</item>
         <item name="windowActionModeOverlay">true</item>
-        <item name="actionOverflowButtonStyle">@style/Theme.Tachiyomi.ActionButton.Overflow</item>
+        <item name="actionOverflowButtonStyle">@style/Theme.Niaromi.ActionButton.Overflow</item>
         <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
         <item name="appBarLayoutStyle">@style/Widget.Material3.AppBarLayout</item>
         <item name="toolbarStyle">@style/Widget.Material3.Toolbar.Surface</item>
-        <item name="switchStyle">@style/Widget.Tachiyomi.Switch</item>
+        <item name="switchStyle">@style/Widget.Niaromi.Switch</item>
         <item name="materialSwitchStyle">@style/Widget.Material3.CompoundButton.MaterialSwitch</item>
         <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>
     </style>
 
     <!--== Default Theme ==-->
-    <style name="Theme.Tachiyomi" parent="Base.Theme.Tachiyomi" />
+    <style name="Theme.Niaromi" parent="Base.Theme.Niaromi" />
 
     <!-- Monet theme only support S+ -->
-    <style name="Theme.Tachiyomi.Monet" />
+    <style name="Theme.Niaromi.Monet" />
 
     <!--== Catppuccin Theme ==-->
-    <style name="Theme.Tachiyomi.Catppuccin">
+    <style name="Theme.Niaromi.Catppuccin">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/catppuccin_primary</item>
         <item name="colorOnPrimary">@color/catppuccin_onPrimary</item>
@@ -126,7 +126,7 @@
     </style>
 
     <!--== Tokyo Night Theme ==-->
-    <style name="Theme.Tachiyomi.TokyoNight">
+    <style name="Theme.Niaromi.TokyoNight">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/tokyonight_primary</item>
         <item name="colorOnPrimary">@color/tokyonight_onPrimary</item>
@@ -166,7 +166,7 @@
     </style>
 
     <!--== Green Apple Theme ==-->
-    <style name="Theme.Tachiyomi.GreenApple">
+    <style name="Theme.Niaromi.GreenApple">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/greenapple_primary</item>
         <item name="colorOnPrimary">@color/greenapple_onPrimary</item>
@@ -206,7 +206,7 @@
     </style>
 
     <!--== Lavender Theme ==-->
-    <style name="Theme.Tachiyomi.Lavender">
+    <style name="Theme.Niaromi.Lavender">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/lavender_primary</item>
         <item name="colorOnPrimary">@color/lavender_onPrimary</item>
@@ -246,7 +246,7 @@
     </style>
 
     <!--== Midnight Dusk Theme ==-->
-    <style name="Theme.Tachiyomi.MidnightDusk">
+    <style name="Theme.Niaromi.MidnightDusk">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/midnightdusk_primary</item>
         <item name="colorOnPrimary">@color/midnightdusk_onPrimary</item>
@@ -279,7 +279,7 @@
     </style>
 
     <!--== Strawberry Daiquiri Theme ==-->
-    <style name="Theme.Tachiyomi.StrawberryDaiquiri">
+    <style name="Theme.Niaromi.StrawberryDaiquiri">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/strawberry_primary</item>
         <item name="colorOnPrimary">@color/strawberry_onPrimary</item>
@@ -319,7 +319,7 @@
     </style>
 
     <!--== Tako Theme ==-->
-    <style name="Theme.Tachiyomi.Tako">
+    <style name="Theme.Niaromi.Tako">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/tako_primary</item>
         <item name="colorOnPrimary">@color/tako_onPrimary</item>
@@ -352,7 +352,7 @@
     </style>
 
     <!--== Teal & Turquoise Theme ==-->
-    <style name="Theme.Tachiyomi.TealTurquoise">
+    <style name="Theme.Niaromi.TealTurquoise">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/tealturquoise_primary</item>
         <item name="colorOnPrimary">@color/tealturquoise_onPrimary</item>
@@ -385,7 +385,7 @@
     </style>
 
     <!--== Yin & Yang Theme ==-->
-    <style name="Theme.Tachiyomi.YinYang">
+    <style name="Theme.Niaromi.YinYang">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/yinyang_primary</item>
         <item name="colorOnPrimary">@color/yinyang_onPrimary</item>
@@ -418,7 +418,7 @@
     </style>
 
     <!--== Yotsuba Theme ==-->
-    <style name="Theme.Tachiyomi.Yotsuba">
+    <style name="Theme.Niaromi.Yotsuba">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/yotsuba_primary</item>
         <item name="colorOnPrimary">@color/yotsuba_onPrimary</item>
@@ -451,7 +451,7 @@
     </style>
 
     <!--== Tidal Wave Theme ==-->
-    <style name="Theme.Tachiyomi.TidalWave">
+    <style name="Theme.Niaromi.TidalWave">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/tidalwave_primary</item>
         <item name="colorOnPrimary">@color/tidalwave_onPrimary</item>
@@ -484,7 +484,7 @@
     </style>
 
     <!--== Nord Theme ==-->
-    <style name="Theme.Tachiyomi.Nord">
+    <style name="Theme.Niaromi.Nord">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/nord_primary</item>
         <item name="colorOnPrimary">@color/nord_onPrimary</item>
@@ -521,7 +521,7 @@
     </style>
 
     <!--== Monochrome Theme ==-->
-    <style name="Theme.Tachiyomi.Monochrome">
+    <style name="Theme.Niaromi.Monochrome">
         <!-- Theme Colors -->
         <item name="colorPrimary">@color/monochrome_primary</item>
         <item name="colorOnPrimary">@color/monochrome_onPrimary</item>
@@ -560,14 +560,14 @@
     </style>
 
     <!--== AMOLED Mode Overlay ==-->
-    <style name="ThemeOverlay.Tachiyomi.Amoled" parent="" />
+    <style name="ThemeOverlay.Niaromi.Amoled" parent="" />
 
     <!--===============-->
     <!-- Launch Screen -->
     <!--===============-->
 
     <!--== Splash Theme ==-->
-    <style name="Theme.Tachiyomi.SplashScreen" parent="Theme.SplashScreen">
+    <style name="Theme.Niaromi.SplashScreen" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_niaromi_splash</item>
         <item name="windowSplashScreenBackground">@color/splash</item>
         <item name="postSplashScreenTheme">@style/Theme.Niaromi</item>
@@ -577,7 +577,26 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
-    <style name="Theme.Niaromi" parent="Theme.Tachiyomi" />
-    <style name="Theme.Niaromi.SplashScreen" parent="Theme.Tachiyomi.SplashScreen" />
 
+
+
+
+    <style name="Base.Theme.Tachiyomi" parent="Base.Theme.Niaromi" />
+    <style name="Theme.Tachiyomi" parent="Theme.Niaromi" />
+    <style name="ThemeOverlay.Tachiyomi.Amoled" parent="ThemeOverlay.Niaromi.Amoled" />
+    <style name="Theme.Tachiyomi.SplashScreen" parent="Theme.Niaromi.SplashScreen" />
+    <style name="Theme.Tachiyomi.Monet" parent="Theme.Niaromi.Monet" />
+    <style name="Theme.Tachiyomi.Catppuccin" parent="Theme.Niaromi.Catppuccin" />
+    <style name="Theme.Tachiyomi.TokyoNight" parent="Theme.Niaromi.TokyoNight" />
+    <style name="Theme.Tachiyomi.GreenApple" parent="Theme.Niaromi.GreenApple" />
+    <style name="Theme.Tachiyomi.Lavender" parent="Theme.Niaromi.Lavender" />
+    <style name="Theme.Tachiyomi.MidnightDusk" parent="Theme.Niaromi.MidnightDusk" />
+    <style name="Theme.Tachiyomi.StrawberryDaiquiri" parent="Theme.Niaromi.StrawberryDaiquiri" />
+    <style name="Theme.Tachiyomi.Tako" parent="Theme.Niaromi.Tako" />
+    <style name="Theme.Tachiyomi.TealTurquoise" parent="Theme.Niaromi.TealTurquoise" />
+    <style name="Theme.Tachiyomi.YinYang" parent="Theme.Niaromi.YinYang" />
+    <style name="Theme.Tachiyomi.Yotsuba" parent="Theme.Niaromi.Yotsuba" />
+    <style name="Theme.Tachiyomi.TidalWave" parent="Theme.Niaromi.TidalWave" />
+    <style name="Theme.Tachiyomi.Nord" parent="Theme.Niaromi.Nord" />
+    <style name="Theme.Tachiyomi.Monochrome" parent="Theme.Niaromi.Monochrome" />
 </resources>

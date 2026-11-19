@@ -34,7 +34,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
-        android:name=".App"
+        android:name="niaromi.App"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
@@ -79,7 +79,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="niaromi" />
-                <data android:scheme="mihon" />
                 <data android:host="extension-store" />
             </intent-filter>
 
@@ -163,6 +162,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
+                <action android:name="niaromi.SEARCH" />
                 <action android:name="eu.kanade.tachiyomi.SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -220,7 +220,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="niaromi" />
-                <data android:scheme="mihon" />
 
                 <data android:host="anilist-auth" />
                 <data android:host="bangumi-auth" />
@@ -238,7 +237,6 @@
 
                 <!-- Comick requires native reverse-domain schemes  -->
                 <data android:scheme="app.niaromi" />
-                <data android:scheme="app.mihon" />
                 <data android:host="comick-auth" />
             </intent-filter>
         </activity>

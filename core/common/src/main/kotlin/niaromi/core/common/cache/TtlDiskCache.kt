@@ -232,7 +232,7 @@ class TtlDiskCache(
                 val iterator = lines.iterator()
                 if (!iterator.hasNext()) return indexed
                 val header = iterator.next()
-                if (header != HEADER && header != "mihon.TtlDiskCache 1") return indexed
+                if (header != HEADER) return indexed
                 iterator.forEach { line ->
                     val parts = line.split(' ')
                     if (parts.size != 3) return@forEach

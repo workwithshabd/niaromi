@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.inputmethod.EditorInfoCompat
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.presentation.theme.NiaromiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -30,7 +30,7 @@ inline fun ComponentActivity.setComposeContent(
     crossinline content: @Composable () -> Unit,
 ) {
     setContent(parent) {
-        TachiyomiTheme {
+        NiaromiTheme {
             CompositionLocalProvider(
                 LocalTextStyle provides MaterialTheme.typography.bodySmall,
                 LocalContentColor provides MaterialTheme.colorScheme.onBackground,
@@ -47,7 +47,7 @@ fun ComposeView.setComposeContent(
 ) {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
-        TachiyomiTheme {
+        NiaromiTheme {
             CompositionLocalProvider(
                 LocalTextStyle provides MaterialTheme.typography.bodySmall,
                 LocalContentColor provides MaterialTheme.colorScheme.onBackground,

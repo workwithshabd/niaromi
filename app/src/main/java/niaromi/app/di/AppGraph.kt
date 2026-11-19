@@ -13,7 +13,6 @@ import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.service.DelayedTrackingUpdateWorker
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.tachiyomi.App
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateWorker
@@ -42,6 +41,7 @@ import eu.kanade.tachiyomi.ui.setting.track.BaseOAuthLoginActivity
 import eu.kanade.tachiyomi.util.CrashLogUtil
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import niaromi.App
 import niaromi.core.metro.IsDebugBuild
 import niaromi.data.cache.ChapterCache
 import niaromi.domain.extension.interactor.GetExtensionStoreCountAsFlow
