@@ -10,7 +10,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.core.util.insertSeparatorsReversed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,13 +28,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
+import niaromi.core.common.preference.getAndSet
+import niaromi.core.common.util.lang.SubscriberGate
+import niaromi.core.util.insertSeparatorsReversed
+import niaromi.domain.category.interactor.GetCategories
+import niaromi.domain.category.model.Category
+import niaromi.domain.manga.model.Manga
 import niaromi.domain.upcoming.interactor.GetUpcomingManga
-import tachiyomi.core.common.preference.getAndSet
-import tachiyomi.core.common.util.lang.SubscriberGate
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.upcoming.service.UpcomingPreferences
+import niaromi.domain.upcoming.service.UpcomingPreferences
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 

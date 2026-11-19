@@ -27,24 +27,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastForEach
-import eu.kanade.core.util.fastFilterNot
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.components.AdaptiveSheet
+import niaromi.core.common.preference.Preference
+import niaromi.core.common.preference.getAndSet
+import niaromi.core.common.preference.toggle
+import niaromi.core.util.fastFilterNot
 import niaromi.domain.migration.models.MigrationFlag
+import niaromi.domain.source.service.SourcePreferences
 import niaromi.feature.common.utils.getLabel
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.rounded.Check
 import niaromi.icons.materialsymbols.roundedfilled.Warning
-import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.getAndSet
-import tachiyomi.core.common.preference.toggle
+import niaromi.presentation.components.AdaptiveSheet
+import niaromi.presentation.core.components.material.Button
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.theme.active
+import niaromi.presentation.core.theme.header
+import niaromi.presentation.core.util.collectAsState
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
-import tachiyomi.presentation.core.theme.header
-import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
 fun MigrationConfigScreenSheet(

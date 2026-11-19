@@ -9,13 +9,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation3.runtime.result.ResultEffect
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
-import eu.kanade.tachiyomi.util.system.toast
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
 import niaromi.core.navigation.MigrateSearchRoute
 import niaromi.feature.migration.list.components.MigrationExitDialog
 import niaromi.feature.migration.list.components.MigrationMangaDialog
 import niaromi.feature.migration.list.components.MigrationProgressDialog
+import niaromi.util.system.toast
 import tachiyomi.i18n.MR
 
 @Composable

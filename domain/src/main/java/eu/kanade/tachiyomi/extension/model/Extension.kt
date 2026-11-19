@@ -1,9 +1,9 @@
-package eu.kanade.tachiyomi.extension.model
+package niaromi.extension.model
 
 import eu.kanade.tachiyomi.source.Source
 import niaromi.domain.extension.model.ContentWarning
 import niaromi.domain.extension.model.ExtensionStore
-import tachiyomi.domain.source.model.StubSource
+import niaromi.domain.source.model.StubSource
 
 sealed interface Extension {
 

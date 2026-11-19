@@ -6,59 +6,59 @@ import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
-import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.domain.track.interactor.AddTracks
-import eu.kanade.domain.track.service.DelayedTrackingUpdateWorker
-import eu.kanade.domain.track.service.TrackPreferences
-import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.tachiyomi.core.security.PrivacyPreferences
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateWorker
-import eu.kanade.tachiyomi.data.backup.google.GoogleDriveService
-import eu.kanade.tachiyomi.data.backup.google.GoogleDriveSyncHelper
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
-import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.download.DownloadCache
-import eu.kanade.tachiyomi.data.download.DownloadManager
-import eu.kanade.tachiyomi.data.download.DownloadWorker
-import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
-import eu.kanade.tachiyomi.data.library.MetadataUpdateWorker
-import eu.kanade.tachiyomi.data.notification.NotificationReceiver
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
-import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.extension.util.ExtensionInstallActivity
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegateImpl
-import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.reader.ReaderActivity
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
-import eu.kanade.tachiyomi.ui.setting.track.BaseOAuthLoginActivity
-import eu.kanade.tachiyomi.util.CrashLogUtil
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import niaromi.App
 import niaromi.core.metro.IsDebugBuild
+import niaromi.core.security.PrivacyPreferences
+import niaromi.core.security.SecurityPreferences
+import niaromi.data.backup.create.BackupCreateWorker
+import niaromi.data.backup.google.GoogleDriveService
+import niaromi.data.backup.google.GoogleDriveSyncHelper
+import niaromi.data.backup.restore.BackupRestoreWorker
 import niaromi.data.cache.ChapterCache
+import niaromi.data.cache.CoverCache
+import niaromi.data.download.DownloadCache
+import niaromi.data.download.DownloadManager
+import niaromi.data.download.DownloadWorker
+import niaromi.data.library.LibraryUpdateWorker
+import niaromi.data.library.MetadataUpdateWorker
+import niaromi.data.notification.NotificationReceiver
+import niaromi.data.track.TrackerManager
+import niaromi.data.updater.AppUpdateChecker
+import niaromi.domain.backup.service.BackupPreferences
+import niaromi.domain.base.BasePreferences
+import niaromi.domain.category.interactor.GetCategories
+import niaromi.domain.category.interactor.ResetCategoryFlags
+import niaromi.domain.chapter.interactor.GetChaptersByMangaId
+import niaromi.domain.download.service.DownloadPreferences
 import niaromi.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import niaromi.domain.extension.interactor.TrustExtension
 import niaromi.domain.extension.repository.ExtensionStoreRepository
+import niaromi.domain.library.service.LibraryPreferences
+import niaromi.domain.manga.interactor.GetFavorites
+import niaromi.domain.manga.interactor.NetworkToLocalManga
+import niaromi.domain.manga.interactor.ResetViewerFlags
+import niaromi.domain.source.service.SourceManager
+import niaromi.domain.source.service.SourcePreferences
+import niaromi.domain.storage.service.StoragePreferences
+import niaromi.domain.track.interactor.AddTracks
+import niaromi.domain.track.interactor.UpsertTrack
+import niaromi.domain.track.service.DelayedTrackingUpdateWorker
+import niaromi.domain.track.service.TrackPreferences
+import niaromi.domain.ui.UiPreferences
+import niaromi.extension.ExtensionManager
+import niaromi.extension.util.ExtensionInstallActivity
+import niaromi.ui.base.delegate.SecureActivityDelegateImpl
+import niaromi.ui.main.MainActivity
+import niaromi.ui.reader.ReaderActivity
+import niaromi.ui.reader.setting.ReaderPreferences
+import niaromi.ui.setting.track.BaseOAuthLoginActivity
+import niaromi.util.CrashLogUtil
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.domain.backup.service.BackupPreferences
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.category.interactor.ResetCategoryFlags
-import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.manga.interactor.GetFavorites
-import tachiyomi.domain.manga.interactor.NetworkToLocalManga
-import tachiyomi.domain.manga.interactor.ResetViewerFlags
-import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.storage.service.StoragePreferences
-import tachiyomi.domain.track.interactor.UpsertTrack
 
 @DependencyGraph(
     scope = AppScope::class,
@@ -92,7 +92,7 @@ interface AppGraph : ViewModelGraph {
     val trackPreferences: TrackPreferences
     val backupPreferences: BackupPreferences
     val storagePreferences: StoragePreferences
-    val storageManager: tachiyomi.domain.storage.service.StorageManager
+    val storageManager: niaromi.domain.storage.service.StorageManager
     val privacyPreferences: PrivacyPreferences
     val securityPreferences: SecurityPreferences
     val downloadPreferences: DownloadPreferences

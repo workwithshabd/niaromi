@@ -11,13 +11,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import niaromi.core.common.util.system.logcat
 import niaromi.core.metro.AppCoroutineScope
 import niaromi.core.metro.IsDebugBuild
 import niaromi.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.util.system.logcat
 
 @BindingContainer
 object AppBindings {

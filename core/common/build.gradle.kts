@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "eu.kanade.tachiyomi.core.common"
+    namespace = "niaromi.core.common"
 }
 
 kotlin {

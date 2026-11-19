@@ -3,7 +3,6 @@ package niaromi.data.extension.service
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -14,15 +13,16 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.okio.decodeFromBufferedSource
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import niaromi.core.common.util.system.logcat
 import niaromi.data.extension.model.NetworkExtensionStore
 import niaromi.data.extension.model.NetworkLegacyExtension
 import niaromi.data.extension.model.NetworkLegacyExtensionRepo
 import niaromi.data.extension.model.toAvailableExtensions
 import niaromi.domain.extension.model.ExtensionStore
+import niaromi.extension.model.Extension
 import okio.BufferedSource
 import okio.buffer
 import okio.gzip
-import tachiyomi.core.common.util.system.logcat
 import kotlin.coroutines.cancellation.CancellationException
 
 @Inject

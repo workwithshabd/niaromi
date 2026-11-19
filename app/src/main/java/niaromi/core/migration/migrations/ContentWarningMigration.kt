@@ -3,11 +3,11 @@ package niaromi.core.migration.migrations
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
-import eu.kanade.domain.source.service.SourcePreferences
+import niaromi.core.common.preference.PreferenceStore
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
 import niaromi.domain.extension.model.ContentWarning
-import tachiyomi.core.common.preference.PreferenceStore
+import niaromi.domain.source.service.SourcePreferences
 
 @Inject
 @ContributesIntoSet(AppScope::class)

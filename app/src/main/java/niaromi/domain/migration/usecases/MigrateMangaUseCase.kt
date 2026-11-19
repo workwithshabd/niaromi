@@ -1,29 +1,29 @@
 package niaromi.domain.migration.usecases
 
 import dev.zacsweers.metro.Inject
-import eu.kanade.domain.manga.interactor.UpdateManga
-import eu.kanade.domain.manga.model.hasCustomCover
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.download.DownloadManager
-import eu.kanade.tachiyomi.data.track.EnhancedTracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import niaromi.core.metro.AppCoroutineScope
+import niaromi.data.cache.CoverCache
+import niaromi.data.download.DownloadManager
+import niaromi.data.track.EnhancedTracker
+import niaromi.data.track.TrackerManager
+import niaromi.domain.category.interactor.GetCategories
+import niaromi.domain.category.interactor.SetMangaCategories
+import niaromi.domain.chapter.interactor.GetChaptersByMangaId
+import niaromi.domain.chapter.interactor.UpdateChapter
+import niaromi.domain.chapter.model.ChapterUpdate
+import niaromi.domain.manga.interactor.UpdateManga
+import niaromi.domain.manga.model.Manga
+import niaromi.domain.manga.model.MangaUpdate
+import niaromi.domain.manga.model.hasCustomCover
 import niaromi.domain.migration.models.MigrationFlag
 import niaromi.domain.source.interactor.UpdateMangaFromRemote
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.category.interactor.SetMangaCategories
-import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
-import tachiyomi.domain.chapter.interactor.UpdateChapter
-import tachiyomi.domain.chapter.model.ChapterUpdate
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.model.MangaUpdate
-import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.GetTracks
-import tachiyomi.domain.track.interactor.UpsertTrack
+import niaromi.domain.source.service.SourceManager
+import niaromi.domain.source.service.SourcePreferences
+import niaromi.domain.track.interactor.GetTracks
+import niaromi.domain.track.interactor.UpsertTrack
 import kotlin.time.Clock
 
 @Inject

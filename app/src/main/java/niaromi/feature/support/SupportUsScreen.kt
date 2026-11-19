@@ -21,8 +21,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import niaromi.core.common.Constants
 import niaromi.core.navigation.LocalNavigator
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.OpenInNew
@@ -30,10 +29,11 @@ import niaromi.icons.simpleicons.Discord
 import niaromi.icons.simpleicons.OpenCollective
 import niaromi.icons.simpleicons.Patreon
 import niaromi.icons.simpleicons.SimpleIcons
-import tachiyomi.core.common.Constants
+import niaromi.presentation.components.AppBar
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.more.settings.widget.TextPreferenceWidget
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun SupportUsScreen() {

@@ -3,14 +3,14 @@ package niaromi.core.migration.migrations
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
-import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import niaromi.core.common.util.system.logcat
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
 import niaromi.domain.extension.repository.ExtensionStoreRepository
-import tachiyomi.core.common.util.system.logcat
+import niaromi.domain.source.service.SourcePreferences
 
 @Inject
 @ContributesIntoSet(AppScope::class)

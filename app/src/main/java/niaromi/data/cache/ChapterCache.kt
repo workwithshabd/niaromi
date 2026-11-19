@@ -6,7 +6,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.ui.reader.model.DownloadStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +14,11 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import niaromi.core.common.cache.TtlDiskCache
+import niaromi.core.common.util.system.logcat
 import niaromi.core.metro.AppCoroutineScope
+import niaromi.domain.chapter.model.Chapter
+import niaromi.ui.reader.model.DownloadStream
 import okhttp3.Response
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.chapter.model.Chapter
 import java.io.File
 import java.io.IOException
 import java.io.InputStream

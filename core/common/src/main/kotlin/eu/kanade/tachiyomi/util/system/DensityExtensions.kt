@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.util.system
 
-import android.content.res.Resources
+import niaromi.util.system.dpToPx as niaromiDpToPx
 
-/**
- * Converts to px.
- */
-val Int.dpToPx: Int
-    get() = (this * Resources.getSystem().displayMetrics.density).toInt()
+inline val Int.dpToPx: Int
+    get() = this.niaromiDpToPx

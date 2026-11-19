@@ -4,9 +4,9 @@ import android.content.Context
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
+import niaromi.data.library.LibraryUpdateWorker
 
 @Inject
 @ContributesIntoSet(AppScope::class)

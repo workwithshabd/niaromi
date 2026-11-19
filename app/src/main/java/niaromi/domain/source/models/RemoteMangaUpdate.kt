@@ -1,7 +1,7 @@
 package niaromi.domain.source.models
 
-import tachiyomi.domain.chapter.model.Chapter
-import tachiyomi.domain.manga.model.Manga
+import niaromi.domain.chapter.model.Chapter
+import niaromi.domain.manga.model.Manga
 
 data class RemoteMangaUpdate(
     val manga: Manga,

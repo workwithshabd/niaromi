@@ -32,7 +32,7 @@ if (Config.includeTelemetry) {
 val keystorePropertiesFile = layout.settingsDirectory.file("keystore.properties").asFile
 
 android {
-    namespace = "eu.kanade.tachiyomi"
+    namespace = "niaromi"
 
     defaultConfig {
         applicationId = "app.niaromi"

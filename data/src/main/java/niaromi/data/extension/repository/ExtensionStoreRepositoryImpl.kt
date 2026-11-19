@@ -6,7 +6,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -18,14 +17,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
+import niaromi.core.common.util.system.logcat
 import niaromi.core.metro.AppCoroutineScope
+import niaromi.data.Database
 import niaromi.data.extension.service.ExtensionStoreService
+import niaromi.data.subscribeToList
+import niaromi.data.subscribeToOne
 import niaromi.domain.extension.model.ExtensionStore
 import niaromi.domain.extension.repository.ExtensionStoreRepository
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.Database
-import tachiyomi.data.subscribeToList
-import tachiyomi.data.subscribeToOne
+import niaromi.extension.model.Extension
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

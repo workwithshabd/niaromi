@@ -20,10 +20,10 @@ import androidx.navigation3.runtime.metadata
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.scene.SceneStrategy
 import androidx.navigation3.scene.SceneStrategyScope
+import niaromi.presentation.core.components.TwoPanelBox
 import niaromi.presentation.core.util.isTabletUi
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
-import tachiyomi.presentation.core.components.TwoPanelBox
 
 val LocalBackButtonVisibility = compositionLocalOf { true }
 

@@ -10,9 +10,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,17 +30,19 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import niaromi.core.common.util.system.logcat
+import niaromi.domain.chapter.interactor.GetChapterSummaryByMangaId
+import niaromi.domain.manga.interactor.GetManga
+import niaromi.domain.manga.interactor.NetworkToLocalManga
+import niaromi.domain.manga.model.Manga
 import niaromi.domain.migration.usecases.MigrateMangaUseCase
 import niaromi.domain.source.interactor.UpdateMangaFromRemote
+import niaromi.domain.source.service.SourceManager
+import niaromi.domain.source.service.SourcePreferences
 import niaromi.feature.migration.list.models.MigratingManga
 import niaromi.feature.migration.list.models.MigratingManga.SearchResult
 import niaromi.feature.migration.list.search.SmartSourceSearchEngine
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.chapter.interactor.GetChapterSummaryByMangaId
-import tachiyomi.domain.manga.interactor.GetManga
-import tachiyomi.domain.manga.interactor.NetworkToLocalManga
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.source.service.SourceManager
+import niaromi.source.getNameForMangaInfo
 
 @AssistedInject
 class MigrationListViewModel(

@@ -27,7 +27,7 @@ import kotlinx.datetime.plusMonth
 import kotlinx.datetime.toJavaDayOfWeek
 import niaromi.core.designsystem.utils.isExpandedWidthWindow
 import niaromi.core.designsystem.utils.isMediumWidthWindow
-import tachiyomi.presentation.core.components.material.padding
+import niaromi.presentation.core.components.material.padding
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields

@@ -1,8 +1,8 @@
 package niaromi.domain.extension.repository
 
-import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.flow.Flow
 import niaromi.domain.extension.model.ExtensionStore
+import niaromi.extension.model.Extension
 
 interface ExtensionStoreRepository {
     suspend fun insert(indexUrl: String): Result<Unit>

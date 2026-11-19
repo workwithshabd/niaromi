@@ -1,6 +1,5 @@
 package niaromi.feature.library
 
-import eu.kanade.tachiyomi.ui.library.LibraryItem
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -14,7 +13,8 @@ import niaromi.domain.library.model.search.MangaField
 import niaromi.domain.library.model.search.NotNode
 import niaromi.domain.library.model.search.OrNode
 import niaromi.domain.library.model.search.QueryNode
-import tachiyomi.source.local.LocalSource
+import niaromi.source.local.LocalSource
+import niaromi.ui.library.LibraryItem
 import kotlin.math.abs
 import kotlin.time.Instant
 

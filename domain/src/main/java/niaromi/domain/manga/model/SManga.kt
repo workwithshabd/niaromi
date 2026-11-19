@@ -1,7 +1,7 @@
 package niaromi.domain.manga.model
 
 import eu.kanade.tachiyomi.source.model.SManga
-import tachiyomi.domain.manga.model.Manga
+import niaromi.domain.manga.model.Manga
 
 fun SManga.toDomainManga(sourceId: Long): Manga {
     return Manga.create().copy(

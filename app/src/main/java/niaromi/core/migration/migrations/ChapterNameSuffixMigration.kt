@@ -5,7 +5,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
-import tachiyomi.domain.library.service.LibraryPreferences
+import niaromi.domain.library.service.LibraryPreferences
 
 @Inject
 @ContributesIntoSet(AppScope::class)

@@ -7,9 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.library.service.LibraryPreferences
+import niaromi.domain.category.interactor.GetCategories
+import niaromi.domain.download.service.DownloadPreferences
+import niaromi.domain.library.service.LibraryPreferences
 
 @Inject
 @ContributesIntoSet(AppScope::class)

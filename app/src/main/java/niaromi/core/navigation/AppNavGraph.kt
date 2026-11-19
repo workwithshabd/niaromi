@@ -2,52 +2,52 @@ package niaromi.core.navigation
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import eu.kanade.presentation.category.CategoryListingScreen
-import eu.kanade.presentation.more.settings.screen.SettingsAdvancedScreen
-import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
-import eu.kanade.presentation.more.settings.screen.SettingsBrowseScreen
-import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
-import eu.kanade.presentation.more.settings.screen.SettingsDownloadScreen
-import eu.kanade.presentation.more.settings.screen.SettingsLibraryScreen
-import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
-import eu.kanade.presentation.more.settings.screen.SettingsReaderScreen
-import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
-import eu.kanade.presentation.more.settings.screen.SettingsSecurityScreen
-import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
-import eu.kanade.presentation.more.settings.screen.about.AboutScreen
-import eu.kanade.presentation.more.settings.screen.about.OpenSourceLicensesScreen
-import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
-import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
-import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import eu.kanade.presentation.more.settings.screen.data.CreateBackupScreen
-import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
-import eu.kanade.presentation.more.settings.screen.debug.BackupSchemaScreen
-import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
-import eu.kanade.presentation.more.settings.screen.debug.WorkerInfoScreen
-import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilterScreen
-import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
-import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
-import eu.kanade.tachiyomi.ui.browse.migration.manga.MigrateMangaScreen
-import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
-import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSourceSearchScreen
-import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterScreen
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoryScreen
-import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
-import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
-import eu.kanade.tachiyomi.ui.manga.MangaScreen
-import eu.kanade.tachiyomi.ui.manga.notes.MangaNotesScreen
-import eu.kanade.tachiyomi.ui.manga.track.TrackInfoDialog
-import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
-import eu.kanade.tachiyomi.ui.more.OnboardingScreen
-import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import niaromi.feature.migration.config.MigrationConfigScreen
 import niaromi.feature.migration.list.MigrationListScreen
 import niaromi.feature.support.SupportUsScreen
 import niaromi.feature.upcoming.UpcomingScreen
+import niaromi.presentation.category.CategoryListingScreen
+import niaromi.presentation.more.settings.screen.SettingsAdvancedScreen
+import niaromi.presentation.more.settings.screen.SettingsAppearanceScreen
+import niaromi.presentation.more.settings.screen.SettingsBrowseScreen
+import niaromi.presentation.more.settings.screen.SettingsDataScreen
+import niaromi.presentation.more.settings.screen.SettingsDownloadScreen
+import niaromi.presentation.more.settings.screen.SettingsLibraryScreen
+import niaromi.presentation.more.settings.screen.SettingsMainScreen
+import niaromi.presentation.more.settings.screen.SettingsReaderScreen
+import niaromi.presentation.more.settings.screen.SettingsSearchScreen
+import niaromi.presentation.more.settings.screen.SettingsSecurityScreen
+import niaromi.presentation.more.settings.screen.SettingsTrackingScreen
+import niaromi.presentation.more.settings.screen.about.AboutScreen
+import niaromi.presentation.more.settings.screen.about.OpenSourceLicensesScreen
+import niaromi.presentation.more.settings.screen.advanced.ClearDatabaseScreen
+import niaromi.presentation.more.settings.screen.appearance.AppLanguageScreen
+import niaromi.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import niaromi.presentation.more.settings.screen.data.CreateBackupScreen
+import niaromi.presentation.more.settings.screen.data.RestoreBackupScreen
+import niaromi.presentation.more.settings.screen.debug.BackupSchemaScreen
+import niaromi.presentation.more.settings.screen.debug.DebugInfoScreen
+import niaromi.presentation.more.settings.screen.debug.WorkerInfoScreen
+import niaromi.ui.browse.extension.ExtensionFilterScreen
+import niaromi.ui.browse.extension.details.ExtensionDetailsScreen
+import niaromi.ui.browse.extension.details.SourcePreferencesScreen
+import niaromi.ui.browse.migration.manga.MigrateMangaScreen
+import niaromi.ui.browse.migration.search.MigrateSearchScreen
+import niaromi.ui.browse.migration.search.MigrateSourceSearchScreen
+import niaromi.ui.browse.source.SourcesFilterScreen
+import niaromi.ui.browse.source.browse.BrowseSourceScreen
+import niaromi.ui.browse.source.globalsearch.GlobalSearchScreen
+import niaromi.ui.category.CategoryScreen
+import niaromi.ui.deeplink.DeepLinkScreen
+import niaromi.ui.download.DownloadQueueScreen
+import niaromi.ui.home.HomeScreen
+import niaromi.ui.manga.MangaScreen
+import niaromi.ui.manga.notes.MangaNotesScreen
+import niaromi.ui.manga.track.TrackInfoDialog
+import niaromi.ui.more.NewUpdateScreen
+import niaromi.ui.more.OnboardingScreen
+import niaromi.ui.stats.StatsScreen
+import niaromi.ui.webview.WebViewScreen
 
 fun EntryProviderScope<NavKey>.appEntries() {
     entry<HomeRoute> {
@@ -105,7 +105,7 @@ fun EntryProviderScope<NavKey>.appEntries() {
         ExtensionFilterScreen()
     }
     entry<ExtensionMigrationRoute> {
-        eu.kanade.presentation.more.settings.screen.browse.ExtensionMigrationScreen()
+        niaromi.presentation.more.settings.screen.browse.ExtensionMigrationScreen()
     }
     entry<MigrateMangaRoute> { route ->
         MigrateMangaScreen(route.sourceId)

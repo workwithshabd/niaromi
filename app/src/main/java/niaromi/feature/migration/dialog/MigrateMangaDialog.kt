@@ -25,25 +25,25 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.domain.manga.model.hasCustomCover
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.download.DownloadManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import niaromi.data.cache.CoverCache
+import niaromi.data.download.DownloadManager
+import niaromi.domain.manga.model.Manga
+import niaromi.domain.manga.model.hasCustomCover
 import niaromi.domain.migration.models.MigrationFlag
 import niaromi.domain.migration.usecases.MigrateMangaUseCase
+import niaromi.domain.source.service.SourcePreferences
 import niaromi.feature.common.utils.getLabel
-import tachiyomi.domain.manga.model.Manga
+import niaromi.presentation.core.components.LabeledCheckbox
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.screens.LoadingScreen
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.LabeledCheckbox
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun MigrateMangaDialog(

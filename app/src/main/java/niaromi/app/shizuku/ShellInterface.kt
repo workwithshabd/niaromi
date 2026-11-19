@@ -47,7 +47,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.os.UserHandle
-import eu.kanade.tachiyomi.BuildConfig
+import niaromi.BuildConfig
 import rikka.shizuku.SystemServiceHelper
 import java.io.OutputStream
 import kotlin.system.exitProcess

@@ -7,8 +7,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
 import niaromi.data.extension.model.NetworkExtensionStore.ContentWarning
 import niaromi.data.extension.model.NetworkExtensionStore.ExtensionList
 import niaromi.domain.extension.model.ExtensionStore
-import eu.kanade.tachiyomi.extension.model.Extension as TachiyomiExtension
 import niaromi.domain.extension.model.ContentWarning as DomainContentWarning
+import niaromi.extension.model.Extension as TachiyomiExtension
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable

@@ -40,12 +40,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.manga.components.MangaCover
-import eu.kanade.presentation.util.formatChapterNumber
-import eu.kanade.presentation.util.rememberResourceBitmapPainter
-import eu.kanade.tachiyomi.R
+import niaromi.R
+import niaromi.domain.manga.model.Manga
 import niaromi.feature.migration.list.models.MigratingManga
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowForward
@@ -55,16 +51,20 @@ import niaromi.icons.materialsymbols.rounded.ContentCopy
 import niaromi.icons.materialsymbols.rounded.CopyAll
 import niaromi.icons.materialsymbols.rounded.DoneAll
 import niaromi.icons.materialsymbols.rounded.MoreVert
-import tachiyomi.domain.manga.model.Manga
+import niaromi.presentation.components.AppBar
+import niaromi.presentation.components.AppBarActions
+import niaromi.presentation.core.components.Badge
+import niaromi.presentation.core.components.BadgeGroup
+import niaromi.presentation.core.components.FastScrollLazyColumn
+import niaromi.presentation.core.components.material.Scaffold
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.components.material.topSmallPaddingValues
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.util.plus
+import niaromi.presentation.manga.components.MangaCover
+import niaromi.presentation.util.formatChapterNumber
+import niaromi.presentation.util.rememberResourceBitmapPainter
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
-import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun MigrationListScreenContent(

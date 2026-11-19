@@ -3,13 +3,13 @@ package niaromi.core.migration.migrations
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
-import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import niaromi.core.common.preference.PreferenceStore
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
-import tachiyomi.core.common.preference.PreferenceStore
+import niaromi.ui.reader.setting.ReaderPreferences
+import niaromi.ui.reader.setting.ReadingMode
 
 @Inject
 @ContributesIntoSet(AppScope::class)

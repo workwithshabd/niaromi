@@ -19,19 +19,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.components.TabbedDialog
-import eu.kanade.presentation.components.TabbedDialogPaddings
+import niaromi.core.common.preference.TriState
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
-import tachiyomi.core.common.preference.TriState
+import niaromi.presentation.category.visualName
+import niaromi.presentation.components.TabbedDialog
+import niaromi.presentation.components.TabbedDialogPaddings
+import niaromi.presentation.core.components.SettingsItemsPaddings
+import niaromi.presentation.core.components.TriStateItem
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.screens.LoadingScreen
+import niaromi.presentation.core.util.collectAsState
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.SettingsItemsPaddings
-import tachiyomi.presentation.core.components.TriStateItem
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
 fun UpcomingScreen() {

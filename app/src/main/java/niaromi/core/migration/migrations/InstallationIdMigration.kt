@@ -3,10 +3,10 @@ package niaromi.core.migration.migrations
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
-import eu.kanade.domain.base.BasePreferences
 import niaromi.core.common.FeatureFlags
 import niaromi.core.migration.Migration
 import niaromi.core.migration.MigrationContext
+import niaromi.domain.base.BasePreferences
 import kotlin.uuid.ExperimentalUuidApi
 
 @Inject

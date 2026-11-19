@@ -30,8 +30,8 @@ import kotlinx.datetime.yearMonth
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.rounded.KeyboardArrowLeft
 import niaromi.icons.materialsymbols.rounded.KeyboardArrowRight
+import niaromi.presentation.core.i18n.stringResource
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
 import kotlin.time.Clock
 

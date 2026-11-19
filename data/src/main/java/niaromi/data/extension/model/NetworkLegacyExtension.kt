@@ -1,10 +1,10 @@
 package niaromi.data.extension.model
 
 import android.annotation.SuppressLint
-import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.serialization.Serializable
 import niaromi.domain.extension.model.ContentWarning
 import niaromi.domain.extension.model.ExtensionStore
+import niaromi.extension.model.Extension
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
