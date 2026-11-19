@@ -20,9 +20,11 @@ fun PreferenceScaffold(
                 title = stringResource(titleRes),
                 navigateUp = onBackPressed,
                 actions = actions,
+                backgroundColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
                 scrollBehavior = it,
             )
         },
+        containerColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
         content = { contentPadding ->
             PreferenceScreen(
                 items = itemsProvider(),

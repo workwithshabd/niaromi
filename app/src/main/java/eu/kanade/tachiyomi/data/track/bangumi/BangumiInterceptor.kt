@@ -30,7 +30,7 @@ class BangumiInterceptor(
         return originalRequest.newBuilder()
             .header(
                 "User-Agent",
-                "antsylich/Mihon/v${BuildConfig.VERSION_NAME} (Android) (http://github.com/mihonapp/mihon)",
+                "workwithshabd/Niaromi/v${BuildConfig.VERSION_NAME} (Android) (https://github.com/workwithshabd/niaromi)",
             )
             .addHeader("Authorization", "Bearer ${currAuth.accessToken}")
             .build()

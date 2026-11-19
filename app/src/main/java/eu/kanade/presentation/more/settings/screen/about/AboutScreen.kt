@@ -82,9 +82,11 @@ fun AboutScreen() {
                     navigator.pop()
                     Unit
                 }.takeIf { backVisibility },
+                backgroundColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
                 scrollBehavior = scrollBehavior,
             )
         },
+        containerColor = androidx.compose.ui.graphics.Color(0xFFFFFDF4),
     ) { contentPadding ->
         ScrollbarLazyColumn(
             contentPadding = contentPadding,
@@ -168,7 +170,7 @@ fun AboutScreen() {
             item {
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.privacy_policy),
-                    onPreferenceClick = { uriHandler.openUri("https://mihon.app/privacy/") },
+                    onPreferenceClick = { uriHandler.openUri("https://github.com/workwithshabd/niaromi") },
                 )
             }
 
@@ -176,34 +178,9 @@ fun AboutScreen() {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 12.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    LinkIcon(
-                        label = stringResource(MR.strings.website),
-                        icon = MaterialSymbols.Rounded.Public,
-                        url = "https://mihon.app",
-                    )
-                    LinkIcon(
-                        label = "Discord",
-                        icon = SimpleIcons.Discord,
-                        url = Constants.URL_DISCORD,
-                    )
-                    LinkIcon(
-                        label = "X",
-                        icon = SimpleIcons.X,
-                        url = "https://x.com/mihonapp",
-                    )
-                    LinkIcon(
-                        label = "Facebook",
-                        icon = SimpleIcons.Facebook,
-                        url = "https://facebook.com/mihonapp",
-                    )
-                    LinkIcon(
-                        label = "Reddit",
-                        icon = SimpleIcons.Reddit,
-                        url = "https://www.reddit.com/r/mihonapp",
-                    )
                     LinkIcon(
                         label = "GitHub",
                         icon = SimpleIcons.Github,
