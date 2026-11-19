@@ -363,7 +363,10 @@ class ReaderViewModel(
                 )
 
                 chapterList = loadChapterList()
-                loadChapter(loader!!, chapterList.first { chapterId == it.chapter.id })
+                val targetChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
+                    ?: chapterList.firstOrNull()
+                    ?: error("Requested chapter of id $chapterId not found in chapter list")
+                loadChapter(loader!!, targetChapter)
             } catch (e: Throwable) {
                 if (e is CancellationException) {
                     throw e
@@ -817,8 +820,13 @@ class ReaderViewModel(
     fun getMangaReadingMode(resolveDefault: Boolean = true): Int {
         val default = readerPreferences.defaultReadingMode.get()
         val readingMode = ReadingMode.fromPreference(manga?.readingMode?.toInt())
+        val isEbook = manga?.url?.let {
+            it.endsWith(".epub", ignoreCase = true) || it.contains(".epub#", ignoreCase = true)
+        } == true
         return when {
-            resolveDefault && readingMode == ReadingMode.DEFAULT -> default
+            resolveDefault && readingMode == ReadingMode.DEFAULT -> {
+                if (isEbook) ReadingMode.LEFT_TO_RIGHT.flagValue else default
+            }
             else -> manga?.readingMode?.toInt() ?: default
         }
     }

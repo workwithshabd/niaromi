@@ -71,6 +71,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.ResultEventBus
 import androidx.navigation3.runtime.result.rememberResultEventBus
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
+import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -91,9 +92,11 @@ import eu.kanade.tachiyomi.ui.home.TopLevelRoute
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
+import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.updaterEnabled
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,7 +107,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import logcat.logcat
 import mihon.app.di.AppGraph
 import mihon.app.di.appGraph
 import mihon.core.metro.metroGraph
@@ -701,9 +706,40 @@ class MainActivity : BaseActivity() {
                 null
             }
             Intent.ACTION_VIEW -> {
+                val dataUri = intent.data
+                val dataStr = dataUri?.toString().orEmpty()
+                val mimeType = intent.type.orEmpty()
                 // Handling opening of backup files
-                if (intent.data.toString().endsWith(".tachibk")) {
-                    navigator.replaceAll(RestoreBackupRoute(intent.data.toString()))
+                if (dataStr.endsWith(".tachibk")) {
+                    navigator.replaceAll(RestoreBackupRoute(dataStr))
+                }
+                // Handling opening/importing of EPUB files
+                else if (dataStr.endsWith(".epub", ignoreCase = true) || mimeType == "application/epub+zip") {
+                    dataUri?.let { uri ->
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            try {
+                                val storageManager = appGraph.storageManager
+                                val localDir = storageManager.getLocalSourceDirectory()
+                                if (localDir != null) {
+                                    val filename = UniFile.fromUri(applicationContext, uri)?.name
+                                        ?: "book_${System.currentTimeMillis()}.epub"
+                                    val targetFile = localDir.createFile(filename)
+                                    if (targetFile != null) {
+                                        contentResolver.openInputStream(uri)?.use { input ->
+                                            targetFile.openOutputStream().use { output ->
+                                                input.copyTo(output)
+                                            }
+                                        }
+                                        withContext(Dispatchers.Main) {
+                                            toast("Imported $filename to Local source")
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                logcat(LogPriority.ERROR, e) { "Failed to import external epub" }
+                            }
+                        }
+                    }
                 }
                 // Deep link to add extension store
                 else if (intent.isAddExtensionStoreIntent()) {

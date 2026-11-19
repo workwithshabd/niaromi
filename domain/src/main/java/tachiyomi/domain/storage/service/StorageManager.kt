@@ -33,7 +33,17 @@ class StorageManager(
 ) {
 
     @Volatile
-    private var baseDirLazy: Lazy<UniFile?> = lazy { getBaseDir(storagePreferences.baseStorageDirectory.get()) }
+    private var baseDirLazy: Lazy<UniFile?> = lazy {
+        var uri = storagePreferences.baseStorageDirectory.get()
+        if (uri.isBlank()) {
+            val autoDir = autoResolveOrCreateDirectory(context)
+            if (autoDir != null) {
+                uri = Uri.fromFile(autoDir).toString()
+                storagePreferences.baseStorageDirectory.set(uri)
+            }
+        }
+        getBaseDir(uri)
+    }
     private val baseDir: UniFile?
         get() = baseDirLazy.value
 
@@ -46,6 +56,13 @@ class StorageManager(
         .shareIn(scope, SharingStarted.Lazily, 1)
 
     init {
+        if (storagePreferences.baseStorageDirectory.get().isBlank()) {
+            val autoDir = autoResolveOrCreateDirectory(context)
+            if (autoDir != null) {
+                storagePreferences.baseStorageDirectory.set(Uri.fromFile(autoDir).toString())
+            }
+        }
+
         storagePreferences.baseStorageDirectory.changes()
             .drop(1)
             .distinctUntilChanged()
@@ -162,3 +179,43 @@ class StorageManager(
 private const val AUTOMATIC_BACKUPS_PATH = "autobackup"
 private const val DOWNLOADS_PATH = "downloads"
 private const val LOCAL_SOURCE_PATH = "local"
+
+fun autoResolveOrCreateDirectory(context: Context): File? {
+    val candidates = listOf(
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Niaromi"),
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Niaromi"),
+        File(Environment.getExternalStorageDirectory(), "Niaromi"),
+        File(Environment.getExternalStorageDirectory(), "Mihon"),
+        File(Environment.getExternalStorageDirectory(), "Tachiyomi"),
+        context.getExternalFilesDir(null)?.let { File(it, "Niaromi") },
+    ).filterNotNull()
+
+    for (candidate in candidates) {
+        if (candidate.exists() && candidate.isDirectory && candidate.canWrite()) {
+            return candidate
+        }
+    }
+
+    val createTargets = listOf(
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Niaromi"),
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Niaromi"),
+        File(Environment.getExternalStorageDirectory(), "Niaromi"),
+        context.getExternalFilesDir(null)?.let { File(it, "Niaromi") },
+    ).filterNotNull()
+
+    for (target in createTargets) {
+        try {
+            if (!target.exists()) {
+                target.mkdirs()
+            }
+            if (target.exists() && target.isDirectory && target.canWrite()) {
+                File(target, AUTOMATIC_BACKUPS_PATH).mkdirs()
+                File(target, DOWNLOADS_PATH).mkdirs()
+                File(target, LOCAL_SOURCE_PATH).mkdirs()
+                return target
+            }
+        } catch (_: Exception) {
+        }
+    }
+    return null
+}

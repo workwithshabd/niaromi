@@ -92,6 +92,7 @@ interface AppGraph : ViewModelGraph {
     val trackPreferences: TrackPreferences
     val backupPreferences: BackupPreferences
     val storagePreferences: StoragePreferences
+    val storageManager: tachiyomi.domain.storage.service.StorageManager
     val privacyPreferences: PrivacyPreferences
     val securityPreferences: SecurityPreferences
     val downloadPreferences: DownloadPreferences

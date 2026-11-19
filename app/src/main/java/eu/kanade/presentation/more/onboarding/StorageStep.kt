@@ -64,7 +64,13 @@ internal class StorageStep : OnboardingStep {
                     }
                 },
             ) {
-                Text(stringResource(MR.strings.onboarding_storage_action_select))
+                Text(
+                    if (storagePref.isSet()) {
+                        "Change storage location"
+                    } else {
+                        stringResource(MR.strings.onboarding_storage_action_select)
+                    },
+                )
             }
 
             HorizontalDivider(
@@ -82,6 +88,12 @@ internal class StorageStep : OnboardingStep {
         }
 
         LaunchedEffect(Unit) {
+            if (!storagePref.isSet()) {
+                val autoDir = tachiyomi.domain.storage.service.autoResolveOrCreateDirectory(context)
+                if (autoDir != null) {
+                    storagePref.set(android.net.Uri.fromFile(autoDir).toString())
+                }
+            }
             storagePref.changes()
                 .collectLatest { _isComplete = storagePref.isSet() }
         }

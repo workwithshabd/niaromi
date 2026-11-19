@@ -58,6 +58,7 @@ import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import logcat.LogPriority
 import mihon.app.di.appGraph
@@ -109,6 +110,7 @@ data object SettingsDataScreen : SearchableSettings {
             getStorageLocationPref(storagePreferences = storagePreferences),
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
+            getEbookGroup(),
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             getGoogleDriveGroup(backupPreferences = backupPreferences),
             getDataGroup(),
@@ -436,6 +438,66 @@ data object SettingsDataScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_google_drive),
             preferenceItems = items,
+        )
+    }
+
+    @Composable
+    private fun getEbookGroup(): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val storageManager = remember { context.appGraph.storageManager }
+
+        val chooseEpub = rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenMultipleDocuments(),
+        ) { uris ->
+            if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
+            scope.launch(Dispatchers.IO) {
+                var imported = 0
+                val localDir = storageManager.getLocalSourceDirectory()
+                if (localDir != null) {
+                    uris.forEach { uri ->
+                        try {
+                            val filename =
+                                UniFile.fromUri(context, uri)?.name ?: "book_${System.currentTimeMillis()}.epub"
+                            val targetFile = localDir.createFile(filename)
+                            if (targetFile != null) {
+                                context.contentResolver.openInputStream(uri)?.use { input ->
+                                    targetFile.openOutputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                                imported++
+                            }
+                        } catch (e: Exception) {
+                            logcat(LogPriority.ERROR, e) { "Failed to import ebook" }
+                        }
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    if (imported > 0) {
+                        context.toast("Imported $imported eBook(s) to Local source")
+                    } else {
+                        context.toast("Failed to import eBook")
+                    }
+                }
+            }
+        }
+
+        return Preference.PreferenceGroup(
+            title = "eBooks & EPUBs",
+            preferenceItems = listOf(
+                Preference.PreferenceItem.TextPreference(
+                    title = "Import eBook (EPUB)",
+                    subtitle = "Import .epub books and novels into your local collection",
+                    onClick = {
+                        try {
+                            chooseEpub.launch(arrayOf("application/epub+zip", "application/octet-stream", "*/*"))
+                        } catch (e: ActivityNotFoundException) {
+                            context.toast(MR.strings.file_picker_error)
+                        }
+                    },
+                ),
+            ),
         )
     }
 

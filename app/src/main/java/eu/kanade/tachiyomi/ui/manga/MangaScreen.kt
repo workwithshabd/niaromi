@@ -296,11 +296,19 @@ fun MangaScreen(
 }
 
 private fun continueReading(context: Context, unreadChapter: Chapter?) {
-    if (unreadChapter != null) openChapter(context, unreadChapter)
+    if (unreadChapter != null && unreadChapter.id > 0) {
+        openChapter(context, unreadChapter)
+    } else {
+        context.toast("No available chapters. Please re-add title or check sources.")
+    }
 }
 
 private fun openChapter(context: Context, chapter: Chapter) {
-    context.startActivity(ReaderActivity.newIntent(context, chapter.mangaId, chapter.id))
+    if (chapter.id > 0 && chapter.mangaId > 0) {
+        context.startActivity(ReaderActivity.newIntent(context, chapter.mangaId, chapter.id))
+    } else {
+        context.toast("Chapter unavailable. Please re-add title or check sources.")
+    }
 }
 
 private fun getMangaUrl(manga_: Manga?, source_: Source?): String? {

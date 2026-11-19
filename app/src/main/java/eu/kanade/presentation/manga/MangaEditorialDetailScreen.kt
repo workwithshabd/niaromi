@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
@@ -147,18 +148,21 @@ fun MangaEditorialDetailScreen(
             emptyList()
         },
         key1 = activeManga.id,
+        key2 = state.processedChapters,
     ) {
-        val cached = chaptersCache[activeManga.id]
-        if (cached != null) {
-            value = cached
-        } else if (activeManga.id == state.manga.id) {
+        if (activeManga.id == state.manga.id && state.processedChapters.isNotEmpty()) {
             val chapters = state.processedChapters.map { it.chapter }
             chaptersCache[activeManga.id] = chapters
             value = chapters
         } else {
-            val chapters = context.appGraph.getChaptersByMangaId.await(activeManga.id)
-            chaptersCache[activeManga.id] = chapters
-            value = chapters
+            val cached = chaptersCache[activeManga.id]
+            if (cached != null && cached.isNotEmpty()) {
+                value = cached
+            } else {
+                val chapters = context.appGraph.getChaptersByMangaId.await(activeManga.id)
+                chaptersCache[activeManga.id] = chapters
+                value = chapters
+            }
         }
     }
 
@@ -178,9 +182,12 @@ fun MangaEditorialDetailScreen(
         activeChapters.any { it.read }
     }
 
-    val nextChapter = remember(currentManga.id, activeChapters, state.processedChapters) {
-        if (currentManga.id == state.manga.id) {
-            null
+    val nextChapter = remember(activeManga.id, activeChapters, state.processedChapters) {
+        if (activeManga.id == state.manga.id) {
+            state.processedChapters.firstOrNull { !it.chapter.read }?.chapter
+                ?: state.processedChapters.firstOrNull()?.chapter
+                ?: activeChapters.firstOrNull { !it.read }
+                ?: activeChapters.firstOrNull()
         } else {
             activeChapters.firstOrNull { !it.read } ?: activeChapters.firstOrNull()
         }
@@ -189,8 +196,10 @@ fun MangaEditorialDetailScreen(
     val onReadButtonClick: () -> Unit = {
         if (currentManga.id == state.manga.id) {
             onContinueReading()
-        } else if (nextChapter != null) {
+        } else if (nextChapter != null && nextChapter.id > 0) {
             onChapterClicked(nextChapter)
+        } else {
+            context.toast("No available chapters. Please re-add title or check sources.")
         }
     }
 
@@ -470,7 +479,13 @@ fun MangaEditorialDetailScreen(
                     ) { chapter ->
                         MangaEditorialChapterRow(
                             chapter = chapter,
-                            onClick = { onChapterClicked(chapter) },
+                            onClick = {
+                                if (chapter.id > 0) {
+                                    onChapterClicked(chapter)
+                                } else {
+                                    context.toast("Chapter unavailable. Please re-add title or check other sources.")
+                                }
+                            },
                         )
                         HorizontalDivider(
                             color = Color(0x0C000000),

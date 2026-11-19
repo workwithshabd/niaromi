@@ -178,13 +178,27 @@ fun AboutScreen() {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.Center,
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        20.dp,
+                        androidx.compose.ui.Alignment.CenterHorizontally,
+                    ),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                 ) {
+                    LinkIcon(
+                        label = "X",
+                        icon = SimpleIcons.X,
+                        url = "https://x.com/workwithshabd",
+                    )
+                    LinkIcon(
+                        label = "Discord",
+                        icon = SimpleIcons.Discord,
+                        url = "https://discord.com/users/workwithshabd",
+                    )
                     LinkIcon(
                         label = "GitHub",
                         icon = SimpleIcons.Github,
-                        url = "https://github.com/workwithshabd/niaromi",
+                        url = "https://github.com/workwithshabd",
                     )
                 }
             }
