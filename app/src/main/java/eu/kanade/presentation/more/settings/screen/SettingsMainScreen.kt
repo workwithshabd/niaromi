@@ -70,7 +70,7 @@ data object SettingsMainScreen : NavKey {
     }
 
     @Composable
-    fun Content() {
+    fun Content(navigateUp: (() -> Unit)? = null) {
         val navigator = LocalNavigator.current
         val twoPane = isTabletUi()
         val containerColor = if (twoPane) getPalerSurface() else MaterialTheme.colorScheme.surface
@@ -81,9 +81,13 @@ data object SettingsMainScreen : NavKey {
             topBar = { scrollBehavior ->
                 AppBar(
                     title = stringResource(MR.strings.label_settings),
-                    navigateUp = {
-                        navigator.popTo { it == SettingsMainScreen }
-                        navigator.pop()
+                    navigateUp = navigateUp ?: if (!twoPane && navigator.routes.size > 1) {
+                        {
+                            navigator.popTo { it == SettingsMainScreen }
+                            navigator.pop()
+                        }
+                    } else {
+                        null
                     },
                     actions = {
                         AppBarActions(
@@ -203,6 +207,12 @@ data object SettingsMainScreen : NavKey {
             subtitleRes = MR.strings.pref_tracking_summary,
             icon = MaterialSymbols.Rounded.Sync,
             screen = SettingsTrackingScreen,
+        ),
+        Item(
+            titleRes = MR.strings.label_extensions,
+            formatSubtitle = { "Manage installed extensions and migrate sources" },
+            icon = MaterialSymbols.Rounded.Explore,
+            screen = mihon.core.navigation.ExtensionMigrationRoute,
         ),
         Item(
             titleRes = MR.strings.browse,

@@ -111,9 +111,14 @@ fun MangaEditorialDetailScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val chaptersCache = remember { mutableMapOf<Long, List<Chapter>>() }
+
+    LaunchedEffect(state.manga.id, state.processedChapters) {
+        chaptersCache[state.manga.id] = state.processedChapters.map { it.chapter }
+    }
 
     LaunchedEffect(pagerState, carouselMangaList) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
+        snapshotFlow { pagerState.settledPage }.collect { page ->
             if (page in carouselMangaList.indices) {
                 val currentManga = carouselMangaList[page]
                 if (currentManga.id != state.manga.id) {
@@ -123,7 +128,7 @@ fun MangaEditorialDetailScreen(
         }
     }
 
-    LaunchedEffect(pagerState.currentPage) {
+    LaunchedEffect(pagerState.settledPage) {
         if (listState.firstVisibleItemIndex > 0) {
             listState.scrollToItem(0)
         }
@@ -132,21 +137,28 @@ fun MangaEditorialDetailScreen(
     var showMenu by remember { mutableStateOf(false) }
 
     val currentManga = carouselMangaList.getOrNull(pagerState.currentPage) ?: state.manga
+    val activeManga = carouselMangaList.getOrNull(pagerState.settledPage) ?: state.manga
     val categoryHeading = currentManga.genre?.firstOrNull() ?: "MANGA DETAILS"
 
     val activeChapters by produceState(
-        initialValue = if (currentManga.id == state.manga.id) {
+        initialValue = chaptersCache[activeManga.id] ?: if (activeManga.id == state.manga.id) {
             state.processedChapters.map { it.chapter }
         } else {
             emptyList()
         },
-        key1 = currentManga.id,
-        key2 = state.processedChapters,
+        key1 = activeManga.id,
     ) {
-        value = if (currentManga.id == state.manga.id) {
-            state.processedChapters.map { it.chapter }
+        val cached = chaptersCache[activeManga.id]
+        if (cached != null) {
+            value = cached
+        } else if (activeManga.id == state.manga.id) {
+            val chapters = state.processedChapters.map { it.chapter }
+            chaptersCache[activeManga.id] = chapters
+            value = chapters
         } else {
-            context.appGraph.getChaptersByMangaId.await(currentManga.id)
+            val chapters = context.appGraph.getChaptersByMangaId.await(activeManga.id)
+            chaptersCache[activeManga.id] = chapters
+            value = chapters
         }
     }
 
@@ -213,6 +225,8 @@ fun MangaEditorialDetailScreen(
 
                         HorizontalPager(
                             state = pagerState,
+                            beyondViewportPageCount = 2,
+                            key = { page -> carouselMangaList.getOrNull(page)?.id ?: page.toLong() },
                             contentPadding = PaddingValues(horizontal = 72.dp),
                             pageSpacing = 16.dp,
                             modifier = Modifier

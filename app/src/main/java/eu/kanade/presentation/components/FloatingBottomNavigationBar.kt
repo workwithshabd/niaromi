@@ -32,9 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.tachiyomi.ui.home.TopLevelRoute
 import mihon.icons.materialsymbols.rounded.Book
-import mihon.icons.materialsymbols.rounded.CollectionsBookmark
-import mihon.icons.materialsymbols.rounded.Person
-import mihon.icons.materialsymbols.rounded.Search
+import mihon.icons.materialsymbols.rounded.Settings
 
 private val NavContainerBg = Color(0xFFFAF8F0).copy(alpha = 0.96f)
 private val NavContainerBorder = Color(0xFFE8E5DA)
@@ -56,21 +54,9 @@ val NAV_TAB_ITEMS = listOf(
         matches = { it is TopLevelRoute.Library },
     ),
     NavTabItem(
-        route = TopLevelRoute.Browse,
-        label = "Search",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Search,
-        matches = { it is TopLevelRoute.Browse },
-    ),
-    NavTabItem(
-        route = TopLevelRoute.History,
-        label = "Lists",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.CollectionsBookmark,
-        matches = { it is TopLevelRoute.History || it is TopLevelRoute.Updates },
-    ),
-    NavTabItem(
         route = TopLevelRoute.More,
-        label = "Profile",
-        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Person,
+        label = "Settings",
+        icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Settings,
         matches = { it is TopLevelRoute.More },
     ),
 )

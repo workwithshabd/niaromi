@@ -29,6 +29,8 @@ import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,6 +50,8 @@ import kotlinx.coroutines.withContext
 import mihon.core.common.utils.mutate
 import mihon.core.metro.AppCoroutineScope
 import mihon.domain.library.model.search.QueryNode
+import mihon.domain.manga.model.toDomainManga
+import mihon.domain.source.interactor.UpdateMangaFromRemote
 import mihon.feature.library.matches
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -67,6 +71,7 @@ import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.sort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetLibraryManga
+import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.manga.model.applyFilter
@@ -98,9 +103,14 @@ class LibraryViewModel(
     private val downloadManager: DownloadManager,
     private val downloadCache: DownloadCache,
     private val trackerManager: TrackerManager,
+    private val networkToLocalManga: NetworkToLocalManga,
+    private val updateMangaFromRemote: UpdateMangaFromRemote,
 ) : ViewModel() {
 
     private val subscriberGate = SubscriberGate()
+
+    val extensionSearchState = MutableStateFlow(ExtensionSearchState())
+    private var extensionSearchJob: kotlinx.coroutines.Job? = null
 
     private val searchQuery = MutableStateFlow<String?>(null)
 
@@ -708,6 +718,74 @@ class LibraryViewModel(
 
     fun search(query: String?) {
         searchQuery.update { query }
+        extensionSearchJob?.cancel()
+        extensionSearchState.update { ExtensionSearchState() }
+    }
+
+    fun searchInExtensions(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+        extensionSearchJob?.cancel()
+        extensionSearchJob = viewModelScope.launch(Dispatchers.IO) {
+            extensionSearchState.update { it.copy(isSearching = true, hasSearched = true, result = null) }
+            try {
+                val sources = sourceManager.getOnlineSources()
+                val searchResults = sources.map { source ->
+                    async {
+                        try {
+                            val page = source.getSearchManga(1, trimmed, source.getFilterList())
+                            val first = page.mangas.firstOrNull()
+                            if (first != null) {
+                                source to first
+                            } else {
+                                null
+                            }
+                        } catch (_: Throwable) {
+                            null
+                        }
+                    }
+                }.awaitAll().filterNotNull()
+
+                if (searchResults.isNotEmpty()) {
+                    val best = searchResults.firstOrNull { (_, sManga) ->
+                        sManga.title.equals(trimmed, ignoreCase = true)
+                    } ?: searchResults.first()
+
+                    val (source, sManga) = best
+                    val localMangaList = networkToLocalManga(listOf(sManga.toDomainManga(source.id)))
+                    val localManga = localMangaList.first()
+
+                    var latestChapterName: String? = null
+                    try {
+                        val updateResult = updateMangaFromRemote(
+                            source = source,
+                            manga = localManga,
+                            fetchDetails = true,
+                            fetchChapters = true,
+                        )
+                        val chapters = updateResult.getOrNull()?.newChapters
+                        latestChapterName = chapters?.maxByOrNull { it.chapterNumber }?.name
+                            ?: chapters?.firstOrNull()?.name
+                    } catch (_: Throwable) {
+                    }
+
+                    extensionSearchState.update {
+                        it.copy(
+                            isSearching = false,
+                            result = ExtensionSearchResult(
+                                manga = localManga,
+                                sourceName = source.name,
+                                latestChapterName = latestChapterName,
+                            ),
+                        )
+                    }
+                } else {
+                    extensionSearchState.update { it.copy(isSearching = false, result = null) }
+                }
+            } catch (_: Throwable) {
+                extensionSearchState.update { it.copy(isSearching = false, result = null) }
+            }
+        }
     }
 
     fun updateActiveCategoryIndex(index: Int) {
@@ -853,3 +931,17 @@ class LibraryViewModel(
         }
     }
 }
+
+@Immutable
+data class ExtensionSearchResult(
+    val manga: Manga,
+    val sourceName: String,
+    val latestChapterName: String?,
+)
+
+@Immutable
+data class ExtensionSearchState(
+    val isSearching: Boolean = false,
+    val result: ExtensionSearchResult? = null,
+    val hasSearched: Boolean = false,
+)

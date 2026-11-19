@@ -82,6 +82,10 @@ class MigrateMangaViewModel(
         }
     }
 
+    fun selectAll() {
+        selection.update { state.value.titles.map { it.id }.toSet() }
+    }
+
     fun clearSelection() {
         selection.update { emptySet() }
     }

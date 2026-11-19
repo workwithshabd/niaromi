@@ -70,6 +70,7 @@ fun LibraryTab() {
     val viewModel = metroViewModel<LibraryViewModel>()
     val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val extensionSearchState by viewModel.extensionSearchState.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -164,11 +165,14 @@ fun LibraryTab() {
                     categories = state.displayedCategories,
                     favorites = state.libraryData.favorites,
                     searchQuery = state.searchQuery,
+                    extensionSearchState = extensionSearchState,
                     contentPadding = contentPadding,
                     getItemsForCategory = { state.getItemsForCategory(it) },
                     onClickManga = { navigator.push(MangaRoute(it)) },
                     onViewAll = { id, name -> navigator.push(CategoryListingRoute(id, name)) },
                     onSearchQueryChange = viewModel::search,
+                    onAddTitle = viewModel::searchInExtensions,
+                    onViewAllSources = { navigator.push(GlobalSearchRoute(it)) },
                     onFilterClick = viewModel::showSettingsDialog,
                     onRefresh = { onClickRefresh(state.activeCategory) },
                 )

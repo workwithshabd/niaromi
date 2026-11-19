@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.manga.components.BaseMangaListItem
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
@@ -27,6 +28,8 @@ import mihon.core.navigation.MangaRoute
 import mihon.core.navigation.MigrationConfigRoute
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -60,12 +63,33 @@ fun MigrateMangaScreen(sourceId: Long) {
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                title = state.source!!.name,
+                title = if (state.selectionMode) "${state.selection.size} selected" else state.source!!.name,
                 navigateUp = {
                     if (state.selectionMode) {
                         viewModel.clearSelection()
                     } else {
                         navigator.pop()
+                    }
+                },
+                actions = {
+                    if (!state.isEmpty) {
+                        AppBarActions(
+                            listOf(
+                                if (state.selection.size == state.titles.size && state.titles.isNotEmpty()) {
+                                    AppBar.Action(
+                                        title = "Deselect all",
+                                        icon = MaterialSymbols.Rounded.Deselect,
+                                        onClick = viewModel::clearSelection,
+                                    )
+                                } else {
+                                    AppBar.Action(
+                                        title = "Select all",
+                                        icon = MaterialSymbols.Rounded.SelectAll,
+                                        onClick = viewModel::selectAll,
+                                    )
+                                },
+                            ),
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior,

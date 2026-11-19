@@ -201,16 +201,12 @@ fun HomeScreen() {
                         UpdatesTab()
                     }
 
-                    entry<TopLevelRoute.History> {
-                        HistoryTab()
-                    }
-
                     entry<TopLevelRoute.Browse> {
                         BrowseTab()
                     }
 
                     entry<TopLevelRoute.More> {
-                        MoreTab()
+                        eu.kanade.presentation.more.settings.screen.SettingsMainScreen.Content()
                     }
                 },
             )
@@ -385,8 +381,5 @@ private val spec = materialFadeThroughIn(
 
 private val TABS: List<TopLevelRoute> = listOf(
     TopLevelRoute.Library,
-    TopLevelRoute.Updates,
-    TopLevelRoute.History,
-    TopLevelRoute.Browse,
     TopLevelRoute.More,
 )
