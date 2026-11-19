@@ -55,7 +55,7 @@ android {
         }
     }
 
-    if (System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
+    if (System.getenv("NIAROMI_GITHUB_RELEASE").toBoolean() || System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
         signingConfigs {
             named("debug") {
                 storeFile = file(System.getenv("storeFile"))

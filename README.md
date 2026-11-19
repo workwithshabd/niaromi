@@ -136,8 +136,6 @@ Niaromi is a reading client and content organizer. The developer does not host, 
 ## License
 
 ```
-Copyright © 2015 Javier Tomás
-Copyright © 2024 Mihon Open Source Project
 Copyright © 2026 Niaromi Project (Shabd)
 
 Licensed under the Apache License, Version 2.0 (the "License");
