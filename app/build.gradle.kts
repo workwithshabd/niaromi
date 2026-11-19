@@ -46,6 +46,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        named("debug") {
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+        }
+    }
+
     if (System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
         signingConfigs {
             named("debug") {

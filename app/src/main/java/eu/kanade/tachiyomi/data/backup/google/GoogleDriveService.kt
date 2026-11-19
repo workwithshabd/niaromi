@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
-import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -77,14 +76,8 @@ class GoogleDriveService(
         val metadataJson = """{"name":"$fileName","parents":["appDataFolder"]}"""
         val multipartBody = MultipartBody.Builder()
             .setType("multipart/related".toMediaType())
-            .addPart(
-                Headers.headersOf("Content-Type", "application/json; charset=UTF-8"),
-                metadataJson.toRequestBody("application/json; charset=UTF-8".toMediaType()),
-            )
-            .addPart(
-                Headers.headersOf("Content-Type", "application/octet-stream"),
-                file.asRequestBody("application/octet-stream".toMediaType()),
-            )
+            .addPart(metadataJson.toRequestBody("application/json; charset=UTF-8".toMediaType()))
+            .addPart(file.asRequestBody("application/octet-stream".toMediaType()))
             .build()
 
         val url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"

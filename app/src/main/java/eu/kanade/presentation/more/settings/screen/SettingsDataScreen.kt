@@ -310,6 +310,16 @@ data object SettingsDataScreen : SearchableSettings {
                 account.displayName?.let { backupPreferences.googleDriveAccountName.set(it) }
                 account.photoUrl?.toString()?.let { backupPreferences.googleDriveAccountPhoto.set(it) }
                 context.toast(context.stringResource(MR.strings.google_drive_signed_in_as, account.email ?: ""))
+            } catch (e: ApiException) {
+                logcat(LogPriority.ERROR, e) { "Google Sign-In failed with status ${e.statusCode}" }
+                val errorMsg = when (e.statusCode) {
+                    com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes.SIGN_IN_CANCELLED ->
+                        "Sign-in cancelled. Tap 'Continue' on the Google prompt to grant permission."
+                    com.google.android.gms.common.api.CommonStatusCodes.DEVELOPER_ERROR ->
+                        "Developer error (10): OAuth client SHA-1 or package name mismatch."
+                    else -> context.stringResource(MR.strings.google_drive_sign_in_failed) + " (${e.statusCode})"
+                }
+                context.toast(errorMsg)
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Google Sign-In failed" }
                 context.toast(MR.strings.google_drive_sign_in_failed)
