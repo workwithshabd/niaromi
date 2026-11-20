@@ -126,6 +126,7 @@ class GoogleDriveService(
         val request = Request.Builder()
             .url(url)
             .header("Authorization", "Bearer $token")
+            .header("Accept-Encoding", "identity")
             .get()
             .build()
 
@@ -136,22 +137,44 @@ class GoogleDriveService(
                 ?: throw IOException("Failed to refresh Google token")
             val retryRequest = request.newBuilder()
                 .header("Authorization", "Bearer $freshToken")
+                .header("Accept-Encoding", "identity")
                 .build()
             response = client.newCall(retryRequest).execute()
         }
 
-        response.use { resp ->
-            if (!resp.isSuccessful) {
-                throw IOException("Google Drive download failed: code ${resp.code}")
-            }
-            val bodyStream = resp.body.byteStream()
-            destFile.outputStream().use { fileOut ->
-                bodyStream.copyTo(fileOut)
-            }
-        }
+        destFile.parentFile?.mkdirs()
+        val tempFile = File(destFile.parentFile, "${destFile.name}.${System.currentTimeMillis()}.tmp")
 
-        if (!destFile.exists() || destFile.length() == 0L) {
-            throw IOException("Downloaded backup file is empty or missing")
+        try {
+            response.use { resp ->
+                if (!resp.isSuccessful) {
+                    throw IOException("Google Drive download failed: code ${resp.code}")
+                }
+                val body = resp.body
+                tempFile.outputStream().use { fileOut ->
+                    body.byteStream().use { bodyStream ->
+                        bodyStream.copyTo(fileOut)
+                    }
+                    fileOut.fd.sync()
+                }
+            }
+
+            if (!tempFile.exists() || tempFile.length() == 0L) {
+                throw IOException("Downloaded backup file is empty or missing")
+            }
+
+            if (destFile.exists()) {
+                destFile.delete()
+            }
+            if (!tempFile.renameTo(destFile)) {
+                tempFile.copyTo(destFile, overwrite = true)
+                tempFile.delete()
+            }
+        } catch (e: Exception) {
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
+            throw e
         }
 
         destFile

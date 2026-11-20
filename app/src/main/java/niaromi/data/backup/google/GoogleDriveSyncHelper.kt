@@ -6,6 +6,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import niaromi.core.common.util.system.logcat
@@ -29,6 +30,7 @@ class GoogleDriveSyncHelper(
 ) {
 
     private var lastAutoRestoreCheck = 0L
+    private val restoreMutex = Mutex()
 
     suspend fun createAndUploadBackup(options: BackupOptions = BackupOptions()): GoogleDriveFile =
         withContext(Dispatchers.IO) {
@@ -53,11 +55,17 @@ class GoogleDriveSyncHelper(
         }
 
     suspend fun downloadBackup(fileId: String, fileName: String): File = withContext(Dispatchers.IO) {
-        val destFile = File(context.cacheDir, fileName)
-        if (destFile.exists()) {
-            destFile.delete()
+        val backupsDir = File(context.cacheDir, "backups").apply { mkdirs() }
+        // Clean up any stale temp backups older than 1 hour
+        backupsDir.listFiles()?.forEach { file ->
+            if (System.currentTimeMillis() - file.lastModified() > 3600_000L) {
+                file.delete()
+            }
         }
-        destFile.createNewFile()
+        val cleanName = fileName.filter {
+            it.isLetterOrDigit() || it == '.' || it == '_' || it == '-'
+        }.ifBlank { "backup.tachibk" }
+        val destFile = File(backupsDir, "drive_${fileId.take(10)}_${System.currentTimeMillis()}_$cleanName")
         googleDriveService.downloadBackup(fileId, destFile)
     }
 
@@ -82,12 +90,17 @@ class GoogleDriveSyncHelper(
         }
         lastAutoRestoreCheck = now
 
-        if (BackupRestoreWorker.isRunning(context.workManager)) {
-            logcat(LogPriority.INFO) { "Backup restore already in progress, skipping auto restore" }
+        if (!restoreMutex.tryLock()) {
+            logcat(LogPriority.INFO) { "Google Drive restore already running in another job, skipping" }
             return@withContext false
         }
 
         try {
+            if (BackupRestoreWorker.isRunning(context.workManager)) {
+                logcat(LogPriority.INFO) { "Backup restore already in progress, skipping auto restore" }
+                return@withContext false
+            }
+
             val backups = googleDriveService.listBackups()
             if (backups.isEmpty()) {
                 return@withContext false
@@ -118,6 +131,8 @@ class GoogleDriveSyncHelper(
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to auto-restore backup from Google Drive" }
             false
+        } finally {
+            restoreMutex.unlock()
         }
     }
 }

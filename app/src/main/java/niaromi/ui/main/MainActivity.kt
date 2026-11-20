@@ -390,14 +390,16 @@ class MainActivity : BaseActivity() {
             lifecycleScope.launch { chapterCache.clear() }
         }
 
-        if (isLaunch) {
+        if (isLaunch && preferences.shownOnboardingFlow.get()) {
             lifecycleScope.launch { graph.googleDriveSyncHelper.autoRestoreLatestBackup() }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        lifecycleScope.launch { graph.googleDriveSyncHelper.autoRestoreLatestBackup() }
+        if (preferences.shownOnboardingFlow.get()) {
+            lifecycleScope.launch { graph.googleDriveSyncHelper.autoRestoreLatestBackup() }
+        }
     }
 
     override fun onProvideAssistContent(outContent: AssistContent) {
