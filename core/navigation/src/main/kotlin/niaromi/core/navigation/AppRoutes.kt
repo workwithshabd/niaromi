@@ -101,6 +101,9 @@ data object CategoryRoute : NavKey
 data object DownloadQueueRoute : NavKey
 
 @Serializable
+data object HistoryRoute : NavKey
+
+@Serializable
 data class NewUpdateRoute(
     val versionName: String,
     val changelogInfo: String,

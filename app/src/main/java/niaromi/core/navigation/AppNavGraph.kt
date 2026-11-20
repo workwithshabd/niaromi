@@ -7,6 +7,7 @@ import niaromi.feature.migration.list.MigrationListScreen
 import niaromi.feature.support.SupportUsScreen
 import niaromi.feature.upcoming.UpcomingScreen
 import niaromi.presentation.category.CategoryListingScreen
+import niaromi.presentation.history.HistoryScreen
 import niaromi.presentation.more.settings.screen.SettingsAdvancedScreen
 import niaromi.presentation.more.settings.screen.SettingsAppearanceScreen
 import niaromi.presentation.more.settings.screen.SettingsBrowseScreen
@@ -134,6 +135,9 @@ fun EntryProviderScope<NavKey>.appEntries() {
     }
     entry<DownloadQueueRoute> {
         DownloadQueueScreen()
+    }
+    entry<HistoryRoute>(metadata = TwoPaneSettingsScene.fullScreen()) {
+        HistoryScreen()
     }
     entry<NewUpdateRoute>(metadata = TwoPaneSettingsScene.fullScreen()) { route ->
         NewUpdateScreen(

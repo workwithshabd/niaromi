@@ -64,6 +64,7 @@ import niaromi.core.navigation.AboutRoute
 import niaromi.core.navigation.CategoryRoute
 import niaromi.core.navigation.DownloadQueueRoute
 import niaromi.core.navigation.ExtensionMigrationRoute
+import niaromi.core.navigation.HistoryRoute
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.Navigator
 import niaromi.core.navigation.NewUpdateRoute
@@ -85,6 +86,7 @@ import niaromi.icons.materialsymbols.rounded.Info
 import niaromi.icons.materialsymbols.rounded.KeyboardArrowRight
 import niaromi.icons.materialsymbols.rounded.Palette
 import niaromi.icons.materialsymbols.rounded.QueryStats
+import niaromi.icons.materialsymbols.rounded.Schedule
 import niaromi.icons.materialsymbols.rounded.Search
 import niaromi.icons.materialsymbols.rounded.Security
 import niaromi.icons.materialsymbols.rounded.Storage
@@ -384,6 +386,19 @@ data object SettingsMainScreen : NavKey {
                                 )
 
                                 QuickToolRow(
+                                    title = "Reading history",
+                                    subtitle = "View recently read chapters and resume reading",
+                                    icon = MaterialSymbols.Rounded.Schedule,
+                                    onClick = { navigator.push(HistoryRoute) },
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp),
+                                    thickness = 0.5.dp,
+                                    color = SettingsDividerColor,
+                                )
+
+                                QuickToolRow(
                                     title = "Statistics",
                                     subtitle = "View total chapters read, time spent and charts",
                                     icon = MaterialSymbols.Rounded.QueryStats,
@@ -486,6 +501,12 @@ data object SettingsMainScreen : NavKey {
             subtitleRes = MR.strings.pref_reader_summary,
             icon = MaterialSymbols.AutoMirroredRounded.ChromeReaderMode,
             screen = SettingsReaderScreen,
+        ),
+        Item(
+            titleRes = MR.strings.history,
+            formatSubtitle = { "Recently read chapters and progress" },
+            icon = MaterialSymbols.Rounded.Schedule,
+            screen = HistoryRoute,
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
