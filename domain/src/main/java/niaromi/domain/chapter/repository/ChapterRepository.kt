@@ -1,6 +1,7 @@
 package niaromi.domain.chapter.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.JsonObject
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.chapter.model.ChapterRemoteUpdate
 import niaromi.domain.chapter.model.ChapterSummary
@@ -35,4 +36,12 @@ interface ChapterRepository {
     suspend fun getChapterByMangaIdAsFlow(mangaId: Long, applyScanlatorFilter: Boolean = false): Flow<List<Chapter>>
 
     suspend fun getChapterByUrlAndMangaId(url: String, mangaId: Long): Chapter?
+
+    suspend fun migrateChapter(
+        chapterId: Long,
+        newUrl: String,
+        newName: String,
+        newScanlator: String?,
+        newMemo: JsonObject,
+    )
 }

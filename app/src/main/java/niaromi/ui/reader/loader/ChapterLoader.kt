@@ -16,6 +16,7 @@ import niaromi.data.download.DownloadProvider
 import niaromi.domain.chapter.model.toSChapter
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.source.model.StubSource
+import niaromi.domain.source.service.SourceManager
 import niaromi.source.local.LocalSource
 import niaromi.source.local.io.Format
 import niaromi.ui.reader.model.ReaderChapter
@@ -33,6 +34,7 @@ class ChapterLoader(
     private val canLoadAhead: () -> Boolean,
     private val manga: Manga,
     private val source: Source,
+    private val sourceManager: SourceManager? = null,
 ) {
 
     /**
@@ -84,23 +86,35 @@ class ChapterLoader(
      */
     private suspend fun getPageLoader(chapter: ReaderChapter): PageLoader {
         val dbChapter = chapter.chapter
+        val chapterSourceId = dbChapter.memo["source_id"]?.let {
+            try {
+                it.toString().removeSurrounding("\"").toLongOrNull()
+            } catch (_: Exception) {
+                null
+            }
+        }
+        val effectiveSource = if (chapterSourceId != null && sourceManager != null) {
+            sourceManager.getOrStub(chapterSourceId)
+        } else {
+            source
+        }
         val isDownloaded = downloadManager.isChapterDownloadedOnDisk(
             dbChapter.name,
             dbChapter.scanlator,
             dbChapter.url,
             manga.title,
-            source,
+            effectiveSource,
         )
         return when {
             isDownloaded -> DownloadPageLoader(
                 context,
                 chapter,
                 manga,
-                source,
+                effectiveSource,
                 downloadManager,
                 downloadProvider,
             )
-            source is LocalSource -> source.getFormat(chapter.chapter.toSChapter()).let { format ->
+            effectiveSource is LocalSource -> effectiveSource.getFormat(chapter.chapter.toSChapter()).let { format ->
                 when (format) {
                     is Format.Directory -> DirectoryPageLoader(format.file)
                     is Format.Archive -> ArchivePageLoader(format.file.archiveReader(context))
@@ -111,8 +125,16 @@ class ChapterLoader(
                     )
                 }
             }
-            source is HttpSource -> HttpPageLoader(chapter, source, chapterCache, appScope, canLoadAhead)
-            source is StubSource -> error(context.stringResource(MR.strings.source_not_installed, source.toString()))
+            effectiveSource is HttpSource -> HttpPageLoader(
+                chapter,
+                effectiveSource,
+                chapterCache,
+                appScope,
+                canLoadAhead,
+            )
+            effectiveSource is StubSource -> error(
+                context.stringResource(MR.strings.source_not_installed, effectiveSource.toString()),
+            )
             else -> error(context.stringResource(MR.strings.loader_not_implemented_error))
         }
     }

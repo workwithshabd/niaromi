@@ -358,19 +358,48 @@ class Downloader(
         val source = sourceManager.get(manga.source) as? HttpSource ?: return false
         val wasEmpty = queueState.value.isEmpty()
         val chaptersToQueue = withContext(Dispatchers.IO) {
-            val downloadedChapterIds = provider.findDownloadedChapterIds(chapters, manga, source)
+            val customSourceIds = chapters.mapNotNull { chapter ->
+                chapter.memo["source_id"]?.let {
+                    try {
+                        it.toString().removeSurrounding("\"").toLongOrNull()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+            }.distinct()
+            val sourcesById = customSourceIds.associateWith {
+                sourceManager.get(it) as? HttpSource ?: source
+            }
+            val downloadedChapterIds = mutableSetOf<Long>()
+            val chaptersBySource = chapters.groupBy { ch ->
+                val chSourceId = ch.memo["source_id"]?.let {
+                    try {
+                        it.toString().removeSurrounding("\"").toLongOrNull()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                if (chSourceId != null) sourcesById[chSourceId] ?: source else source
+            }
+            for ((chSource, chList) in chaptersBySource) {
+                downloadedChapterIds.addAll(provider.findDownloadedChapterIds(chList, manga, chSource))
+            }
             val queuedChapterIds = queueState.value.mapTo(HashSet()) { it.chapter.id }
             chapters
-                // Filter out those already downloaded.
                 .filter { it.id !in downloadedChapterIds }
-                .asSequence()
-                // Add chapters to queue from the start.
                 .sortedByDescending { it.sourceOrder }
-                // Filter out those already enqueued.
                 .filter { it.id !in queuedChapterIds }
-                // Create a download for each one.
-                .map { Download(source, manga, it) }
-                .toList()
+                .map { chapter ->
+                    val chapterSourceId = chapter.memo["source_id"]?.let {
+                        try {
+                            it.toString().removeSurrounding("\"").toLongOrNull()
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                    val chapterSource = if (chapterSourceId != null) sourcesById[chapterSourceId] ?: source else source
+                    Download(chapterSource, manga, chapter)
+                }
         }
 
         if (chaptersToQueue.isNotEmpty()) {

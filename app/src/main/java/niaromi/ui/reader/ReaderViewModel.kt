@@ -360,6 +360,7 @@ class ReaderViewModel(
                     ::canLoadAhead,
                     manga,
                     source,
+                    sourceManager,
                 )
 
                 chapterList = loadChapterList()

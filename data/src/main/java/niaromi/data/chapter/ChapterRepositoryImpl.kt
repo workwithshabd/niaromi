@@ -168,6 +168,22 @@ class ChapterRepositoryImpl(
             .awaitAsOneOrNull()
     }
 
+    override suspend fun migrateChapter(
+        chapterId: Long,
+        newUrl: String,
+        newName: String,
+        newScanlator: String?,
+        newMemo: JsonObject,
+    ) {
+        database.chapterQueries.migrateChapter(
+            id = chapterId,
+            remoteUrl = newUrl,
+            remoteName = newName,
+            remoteScanlator = newScanlator,
+            remoteMemo = newMemo,
+        )
+    }
+
     private fun mapChapter(
         id: Long,
         mangaId: Long,

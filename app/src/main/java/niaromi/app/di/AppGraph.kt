@@ -128,6 +128,7 @@ interface AppGraph : ViewModelGraph {
     val setMangaCategories: niaromi.domain.category.interactor.SetMangaCategories
     val getCategories: GetCategories
     val getChaptersByMangaId: GetChaptersByMangaId
+    val migrateChapter: niaromi.domain.chapter.interactor.MigrateChapter
     val networkToLocalManga: NetworkToLocalManga
     val resetViewerFlags: ResetViewerFlags
     val resetCategoryFlags: ResetCategoryFlags
