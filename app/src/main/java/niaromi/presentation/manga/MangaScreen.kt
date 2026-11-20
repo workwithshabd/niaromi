@@ -130,6 +130,10 @@ fun MangaScreen(
     onInvertSelection: () -> Unit,
     fromSearch: Boolean = false,
     categoryName: String? = null,
+    onMigrateChapter: ((Chapter, Long, String, String, String, String?) -> Unit)? = null,
+    searchChapterInOtherSources: (
+        suspend (Manga, Chapter) -> List<niaromi.ui.manga.MangaViewModel.ChapterMigrationCandidate>
+    )? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -159,6 +163,9 @@ fun MangaScreen(
             onMultiDeleteClicked = onMultiDeleteClicked,
             onTagSearch = onTagSearch,
             onCoverClicked = onCoverClicked,
+            onRefresh = onRefresh,
+            onMigrateChapter = onMigrateChapter,
+            searchChapterInOtherSources = searchChapterInOtherSources,
             onSelectManga = { newMangaId ->
                 navigator.replace(MangaRoute(newMangaId, fromSearch = fromSearch, categoryName = categoryName))
             },

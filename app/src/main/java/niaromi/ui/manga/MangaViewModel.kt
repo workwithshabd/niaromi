@@ -20,9 +20,13 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.source.model.SChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +46,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import logcat.LogPriority
 import niaromi.core.common.i18n.stringResource
 import niaromi.core.common.preference.CheckboxState
@@ -56,6 +64,7 @@ import niaromi.core.preference.asState
 import niaromi.core.util.addOrRemove
 import niaromi.core.util.insertSeparators
 import niaromi.data.cache.CoverCache
+import niaromi.data.chapter.ChapterSanitizer
 import niaromi.data.download.DownloadCache
 import niaromi.data.download.DownloadManager
 import niaromi.data.download.model.Download
@@ -67,12 +76,16 @@ import niaromi.domain.category.interactor.SetMangaCategories
 import niaromi.domain.category.model.Category
 import niaromi.domain.chapter.interactor.FilterChaptersForDownload
 import niaromi.domain.chapter.interactor.GetAvailableScanlators
+import niaromi.domain.chapter.interactor.GetChaptersByMangaId
+import niaromi.domain.chapter.interactor.MigrateChapter
 import niaromi.domain.chapter.interactor.SetMangaDefaultChapterFlags
 import niaromi.domain.chapter.interactor.SetReadStatus
 import niaromi.domain.chapter.interactor.UpdateChapter
 import niaromi.domain.chapter.model.Chapter
 import niaromi.domain.chapter.model.ChapterUpdate
 import niaromi.domain.chapter.model.NoChaptersException
+import niaromi.domain.chapter.repository.ChapterRepository
+import niaromi.domain.chapter.service.ChapterRecognition
 import niaromi.domain.chapter.service.calculateChapterGap
 import niaromi.domain.chapter.service.getChapterSort
 import niaromi.domain.chapter.service.missingChaptersCount
@@ -84,10 +97,12 @@ import niaromi.domain.manga.interactor.SetExcludedScanlators
 import niaromi.domain.manga.interactor.SetMangaChapterFlags
 import niaromi.domain.manga.interactor.UpdateManga
 import niaromi.domain.manga.model.Manga
+import niaromi.domain.manga.model.MangaUpdate
 import niaromi.domain.manga.model.MangaWithChapterCount
 import niaromi.domain.manga.model.applyFilter
 import niaromi.domain.manga.model.chaptersFiltered
 import niaromi.domain.manga.model.downloadedFilter
+import niaromi.domain.manga.model.toSManga
 import niaromi.domain.source.interactor.UpdateMangaFromRemote
 import niaromi.domain.source.service.SourceManager
 import niaromi.domain.source.service.SourcePreferences
@@ -97,6 +112,7 @@ import niaromi.domain.track.interactor.RefreshTracks
 import niaromi.domain.track.interactor.TrackChapter
 import niaromi.domain.track.model.AutoTrackState
 import niaromi.domain.track.service.TrackPreferences
+import niaromi.feature.migration.list.search.SmartSourceSearchEngine
 import niaromi.presentation.manga.DownloadAction
 import niaromi.presentation.manga.components.ChapterDownloadAction
 import niaromi.presentation.util.formattedMessage
@@ -108,7 +124,9 @@ import niaromi.util.removeCovers
 import niaromi.util.system.toast
 import tachiyomi.i18n.MR
 import kotlin.math.floor
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 @AssistedInject
 class MangaViewModel(
@@ -144,6 +162,9 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    private val getChaptersByMangaId: GetChaptersByMangaId,
+    private val migrateChapterInteractor: MigrateChapter,
+    private val chapterRepository: ChapterRepository,
 ) : ViewModel() {
 
     private val subscriberGate = SubscriberGate()
@@ -341,16 +362,210 @@ class MangaViewModel(
         }
     }
 
-    fun fetchAllFromSource(manualFetch: Boolean = true) {
+    fun fetchAllFromSource(targetMangaId: Long = mangaId, manualFetch: Boolean = true) {
         viewModelScope.launch {
             isRefreshingData.value = true
-            fetchAllFromSource(
-                manga = getMangaAndChapters.awaitManga(mangaId),
-                manualFetch = manualFetch,
-                fetchDetails = true,
-                fetchChapters = true,
-            )
-            isRefreshingData.value = false
+            try {
+                val manga = getMangaAndChapters.awaitManga(targetMangaId)
+                fetchAllFromSource(
+                    manga = manga,
+                    manualFetch = manualFetch,
+                    fetchDetails = true,
+                    fetchChapters = true,
+                )
+                fetchNewChaptersFromAllSources(manga)
+            } finally {
+                isRefreshingData.value = false
+            }
+        }
+    }
+
+    private suspend fun fetchNewChaptersFromAllSources(manga: Manga) = withContext(Dispatchers.IO) {
+        try {
+            val onlineSources = sourceManager.getOnlineSources().filter { it.id != manga.source }
+            if (onlineSources.isEmpty()) return@withContext
+
+            val currentChapters = getChaptersByMangaId.await(manga.id)
+            val existingUrls = currentChapters.map { it.url }.toSet()
+            val existingNumbers = currentChapters.filter { it.isRecognizedNumber }.map { it.chapterNumber }.toSet()
+
+            val searchEngine = SmartSourceSearchEngine(null)
+            val newlyAdded = mutableListOf<Chapter>()
+            val semaphore = Semaphore(3)
+
+            coroutineScope {
+                onlineSources.map { source ->
+                    async {
+                        semaphore.withPermit {
+                            try {
+                                val matchedManga = searchEngine.regularSearch(source, manga.title)
+                                    ?: searchEngine.deepSearch(source, manga.title)
+                                    ?: return@withPermit
+
+                                val update = source.getMangaUpdate(
+                                    manga = matchedManga.toSManga(),
+                                    chapters = emptyList(),
+                                    fetchDetails = false,
+                                    fetchChapters = true,
+                                )
+                                val rawChapters = update.chapters
+                                if (rawChapters.isEmpty()) return@withPermit
+
+                                val candidateChapters = rawChapters.mapNotNull { sChapter ->
+                                    if (sChapter.url in existingUrls) return@mapNotNull null
+                                    val number = ChapterRecognition.parseChapterNumber(
+                                        manga.title,
+                                        sChapter.name,
+                                        sChapter.chapter_number.toDouble(),
+                                    )
+                                    if (number >= 0 && number in existingNumbers) return@mapNotNull null
+                                    sChapter to number
+                                }
+
+                                if (candidateChapters.isEmpty()) return@withPermit
+
+                                val toAdd = candidateChapters.mapIndexed { idx, (sChapter, number) ->
+                                    val cleanName = with(ChapterSanitizer) { sChapter.name.sanitize(manga.title) }
+                                    val memo = buildJsonObject {
+                                        put("source_id", JsonPrimitive(source.id))
+                                        put("source_name", JsonPrimitive(source.name))
+                                    }
+                                    Chapter.create().copy(
+                                        mangaId = manga.id,
+                                        url = sChapter.url,
+                                        name = cleanName,
+                                        scanlator = sChapter.scanlator ?: source.name,
+                                        chapterNumber = number,
+                                        dateUpload = sChapter.date_upload.takeIf { it > 0 }
+                                            ?.let { Instant.fromEpochMilliseconds(it) }
+                                            ?: Clock.System.now(),
+                                        dateFetch = Clock.System.now(),
+                                        sourceOrder = (currentChapters.maxOfOrNull { it.sourceOrder } ?: 0L) + 1 + idx,
+                                        memo = memo,
+                                    )
+                                }
+
+                                synchronized(newlyAdded) {
+                                    newlyAdded.addAll(toAdd)
+                                }
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
+                }.awaitAll()
+            }
+
+            if (newlyAdded.isNotEmpty()) {
+                chapterRepository.updateFromRemote(
+                    removedIds = emptyList(),
+                    added = newlyAdded,
+                    updated = emptyList(),
+                )
+                updateManga.await(MangaUpdate(manga.id) { lastUpdate = Clock.System.now() })
+                snackbarHostState.showSnackbar("Found ${newlyAdded.size} new chapters from other sources")
+            }
+        } catch (_: CancellationException) {
+            // ignore
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to fetch chapters from all sources" }
+        }
+    }
+
+    data class ChapterMigrationCandidate(
+        val source: Source,
+        val chapter: SChapter,
+    )
+
+    suspend fun findChapterInOtherSources(
+        manga: Manga,
+        targetChapter: Chapter,
+    ): List<ChapterMigrationCandidate> = withContext(Dispatchers.IO) {
+        val curSourceId = targetChapter.memo["source_id"]?.let { el ->
+            try {
+                el.toString().removeSurrounding("\"").toLongOrNull()
+            } catch (_: Exception) {
+                null
+            }
+        } ?: manga.source
+        val onlineSources = sourceManager.getOnlineSources().filter { it.id != curSourceId }
+        val searchEngine = SmartSourceSearchEngine(null)
+        val candidates = mutableListOf<ChapterMigrationCandidate>()
+        val semaphore = Semaphore(3)
+
+        coroutineScope {
+            onlineSources.map { source ->
+                async {
+                    semaphore.withPermit {
+                        try {
+                            val matchedManga = searchEngine.regularSearch(source, manga.title)
+                                ?: searchEngine.deepSearch(source, manga.title)
+                                ?: return@withPermit
+                            val update = source.getMangaUpdate(
+                                manga = matchedManga.toSManga(),
+                                chapters = emptyList(),
+                                fetchDetails = false,
+                                fetchChapters = true,
+                            )
+                            val matchingChapter = update.chapters.firstOrNull { sCh ->
+                                if (targetChapter.chapterNumber >= 0) {
+                                    val num = ChapterRecognition.parseChapterNumber(
+                                        manga.title,
+                                        sCh.name,
+                                        sCh.chapter_number.toDouble(),
+                                    )
+                                    num == targetChapter.chapterNumber
+                                } else {
+                                    sCh.name.equals(targetChapter.name, ignoreCase = true)
+                                }
+                            } ?: update.chapters.firstOrNull { sCh ->
+                                sCh.name.contains(targetChapter.name, ignoreCase = true)
+                            }
+
+                            if (matchingChapter != null) {
+                                synchronized(candidates) {
+                                    candidates.add(ChapterMigrationCandidate(source, matchingChapter))
+                                }
+                            }
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+            }.awaitAll()
+        }
+        candidates.sortedBy { it.source.name }
+    }
+
+    fun migrateChapter(
+        chapter: Chapter,
+        targetSourceId: Long,
+        targetSourceName: String,
+        targetUrl: String,
+        targetName: String,
+        targetScanlator: String?,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val newMemo = buildJsonObject {
+                    chapter.memo.forEach { (k, v) -> put(k, v) }
+                    put("source_id", JsonPrimitive(targetSourceId))
+                    put("source_name", JsonPrimitive(targetSourceName))
+                }
+                migrateChapterInteractor.await(
+                    chapterId = chapter.id,
+                    newUrl = targetUrl,
+                    newName = targetName,
+                    newScanlator = targetScanlator,
+                    newMemo = newMemo,
+                )
+                val currentManga = getMangaAndChapters.awaitManga(chapter.mangaId)
+                val currentSource = sourceManager.getOrStub(currentManga.source)
+                downloadManager.deleteChapters(listOf(chapter), currentManga, currentSource)
+
+                snackbarHostState.showSnackbar("Migrated chapter to $targetSourceName")
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to migrate chapter" }
+                snackbarHostState.showSnackbar("Failed to migrate chapter: ${e.message}")
+            }
         }
     }
 

@@ -179,6 +179,8 @@ fun MangaScreen(
         onChapterSelected = viewModel::toggleSelection,
         onAllChapterSelected = viewModel::toggleAllSelection,
         onInvertSelection = viewModel::invertSelection,
+        onMigrateChapter = viewModel::migrateChapter,
+        searchChapterInOtherSources = viewModel::findChapterInOtherSources,
     )
 
     var showScanlatorsDialog by remember { mutableStateOf(false) }
