@@ -83,6 +83,19 @@ fun CategoryListingScreen(
 
     val filteredManga = remember(libraryMangaList, categoryId, categoryName) {
         when {
+            categoryName.equals("Latest Chapters", ignoreCase = true) || categoryId == 50000L -> {
+                libraryMangaList.filter { it.hasLatestChapters }
+                    .sortedWith(
+                        compareByDescending<niaromi.domain.library.model.LibraryManga> {
+                            it.chapterFetchedAt?.toEpochMilliseconds()
+                                ?: 0L
+                        }
+                            .thenByDescending { it.manga.lastUpdate?.toEpochMilliseconds() ?: 0L }
+                            .thenByDescending { it.latestUpload?.toEpochMilliseconds() ?: 0L }
+                            .thenByDescending { it.manga.favoriteAt?.toEpochMilliseconds() ?: 0L },
+                    )
+                    .map { it.manga }
+            }
             categoryId in 1000L..9998L -> {
                 libraryMangaList.filter { item ->
                     val primary = item.manga.genre?.firstOrNull { it.isNotBlank() }
@@ -97,7 +110,7 @@ fun CategoryListingScreen(
                 }.map { it.manga }
             }
             else -> libraryMangaList.map { it.manga }
-        }.ifEmpty { libraryMangaList.map { it.manga } }
+        }
     }
 
     var showMenu by remember { mutableStateOf(false) }
@@ -116,27 +129,69 @@ fun CategoryListingScreen(
                 onMenuClick = { showMenu = true },
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-            ) {
-                items(
-                    items = filteredManga,
-                    key = { it.id },
-                ) { item ->
-                    CategoryMangaGridItem(
-                        item = item,
-                        onClick = { navigator.push(MangaRoute(item.id, categoryName = categoryName)) },
-                    )
+            if (filteredManga.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = if (categoryName.equals("Latest Chapters", ignoreCase = true)) {
+                                "No new chapters yet"
+                            } else {
+                                "No manga found"
+                            },
+                            style = TextStyle(
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = ListingText,
+                            ),
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if (categoryName.equals("Latest Chapters", ignoreCase = true)) {
+                                "Titles that get updated with new chapters will appear here."
+                            } else {
+                                "There are no titles in this category."
+                            },
+                            style = TextStyle(
+                                fontFamily = FontFamily.SansSerif,
+                                fontSize = 13.sp,
+                                color = ListingMuted,
+                                textAlign = TextAlign.Center,
+                            ),
+                        )
+                    }
                 }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                ) {
+                    items(
+                        items = filteredManga,
+                        key = { it.id },
+                    ) { item ->
+                        CategoryMangaGridItem(
+                            item = item,
+                            onClick = { navigator.push(MangaRoute(item.id, categoryName = categoryName)) },
+                        )
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.height(72.dp))
+                    item {
+                        Spacer(modifier = Modifier.height(72.dp))
+                    }
                 }
             }
         }

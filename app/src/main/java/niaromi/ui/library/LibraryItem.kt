@@ -12,6 +12,7 @@ data class LibraryItem(
     val badges: Badges,
 ) {
     val id: Long = libraryManga.id
+    val hasLatestChapters: Boolean get() = libraryManga.hasLatestChapters
 
     data class Badges(
         val downloadCount: Int,

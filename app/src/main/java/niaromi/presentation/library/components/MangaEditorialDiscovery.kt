@@ -77,6 +77,9 @@ private val EditorialCardBg: Color
 private val EditorialCardBorder: Color
     @Composable get() = MaterialTheme.colorScheme.outlineVariant
 
+const val LATEST_CHAPTERS_SECTION_ID = 50000L
+const val LATEST_CHAPTERS_NAME = "Latest Chapters"
+
 data class DiscoveryCategorySection(
     val id: Long,
     val name: String,
@@ -109,6 +112,26 @@ fun buildDiscoverySections(
     val result = mutableListOf<DiscoveryCategorySection>()
     val seenSectionNames = mutableSetOf<String>()
     val assignedMangaIds = mutableSetOf<Long>()
+
+    // 0. Latest Chapters collection: titles that just got updated and their new chapters arrived
+    val latestChaptersItems = filteredFavorites.filter { it.hasLatestChapters }
+        .sortedWith(
+            compareByDescending<LibraryItem> { it.libraryManga.chapterFetchedAt?.toEpochMilliseconds() ?: 0L }
+                .thenByDescending { it.libraryManga.manga.lastUpdate?.toEpochMilliseconds() ?: 0L }
+                .thenByDescending { it.libraryManga.latestUpload?.toEpochMilliseconds() ?: 0L }
+                .thenByDescending { it.libraryManga.manga.favoriteAt?.toEpochMilliseconds() ?: 0L },
+        )
+
+    if (latestChaptersItems.isNotEmpty()) {
+        result.add(
+            DiscoveryCategorySection(
+                id = LATEST_CHAPTERS_SECTION_ID,
+                name = LATEST_CHAPTERS_NAME,
+                items = latestChaptersItems,
+            ),
+        )
+        seenSectionNames.add(LATEST_CHAPTERS_NAME.lowercase())
+    }
 
     // 1. Custom categories (if user defined categories exist)
     val customCategories = categories.filterNot { it.isSystemCategory }

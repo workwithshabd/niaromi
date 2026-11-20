@@ -129,9 +129,10 @@ fun MangaEditorialDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val allFavorites by produceState(initialValue = emptyList<Manga>()) {
-        value = context.appGraph.getFavorites.await()
+    val libraryMangaList by produceState(initialValue = emptyList<niaromi.domain.library.model.LibraryManga>()) {
+        value = context.appGraph.getLibraryManga.await()
     }
+    val allFavorites = remember(libraryMangaList) { libraryMangaList.map { it.manga } }
 
     val initialManga = remember { state.manga }
 
@@ -148,6 +149,7 @@ fun MangaEditorialDetailScreen(
 
     val (carouselMangaList, initialPageIndex) = remember(
         allFavorites,
+        libraryMangaList,
         initialManga,
         resolvedCategoryName,
         fromSearch,
@@ -156,20 +158,38 @@ fun MangaEditorialDetailScreen(
             listOf(initialManga) to 0
         } else {
             val sameGenreFavorites = if (resolvedCategoryName.isNotBlank()) {
-                allFavorites.filter { fav ->
-                    val favPrimary = fav.genre?.firstOrNull { it.isNotBlank() }?.trim()
-                    favPrimary?.equals(resolvedCategoryName, ignoreCase = true) == true ||
-                        fav.genre?.any { it.trim().equals(resolvedCategoryName, ignoreCase = true) } == true
+                if (resolvedCategoryName.equals("Latest Chapters", ignoreCase = true)) {
+                    libraryMangaList.filter { it.hasLatestChapters }
+                        .sortedWith(
+                            compareByDescending<niaromi.domain.library.model.LibraryManga> {
+                                it.chapterFetchedAt?.toEpochMilliseconds()
+                                    ?: 0L
+                            }
+                                .thenByDescending { it.manga.lastUpdate?.toEpochMilliseconds() ?: 0L }
+                                .thenByDescending { it.latestUpload?.toEpochMilliseconds() ?: 0L }
+                                .thenByDescending { it.manga.favoriteAt?.toEpochMilliseconds() ?: 0L },
+                        )
+                        .map { it.manga }
+                } else {
+                    allFavorites.filter { fav ->
+                        val favPrimary = fav.genre?.firstOrNull { it.isNotBlank() }?.trim()
+                        favPrimary?.equals(resolvedCategoryName, ignoreCase = true) == true ||
+                            fav.genre?.any { it.trim().equals(resolvedCategoryName, ignoreCase = true) } == true
+                    }
                 }
             } else {
                 emptyList()
             }
 
             val sortedList = if (sameGenreFavorites.isNotEmpty()) {
-                sameGenreFavorites.sortedWith(
-                    compareByDescending<Manga> { it.favoriteAt?.toEpochMilliseconds() ?: 0L }
-                        .thenByDescending { it.lastUpdate?.toEpochMilliseconds() ?: 0L },
-                )
+                if (resolvedCategoryName.equals("Latest Chapters", ignoreCase = true)) {
+                    sameGenreFavorites
+                } else {
+                    sameGenreFavorites.sortedWith(
+                        compareByDescending<Manga> { it.favoriteAt?.toEpochMilliseconds() ?: 0L }
+                            .thenByDescending { it.lastUpdate?.toEpochMilliseconds() ?: 0L },
+                    )
+                }
             } else {
                 listOf(initialManga)
             }
