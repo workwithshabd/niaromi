@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.result.LocalResultEventBus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import niaromi.app.di.appGraph
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
@@ -78,7 +80,9 @@ fun CategoryListingScreen(
     val navigator = LocalNavigator.current
     val resultEventBus = LocalResultEventBus.current
     val libraryMangaList by produceState(initialValue = emptyList<niaromi.domain.library.model.LibraryManga>()) {
-        value = context.appGraph.getLibraryManga.await()
+        value = withContext(Dispatchers.IO) {
+            context.appGraph.getLibraryManga.await()
+        }
     }
 
     val filteredManga = remember(libraryMangaList, categoryId, categoryName) {

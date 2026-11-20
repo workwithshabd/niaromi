@@ -47,19 +47,20 @@ fun createAppImageLoader(
             add(CoverRequestInterceptor())
         }
 
+        val isLowRam = DeviceUtil.isLowRamDevice(context)
         memoryCache(
             MemoryCache.Builder()
-                .maxSizePercent(context)
+                .maxSizePercent(context, if (isLowRam) 0.10 else 0.20)
                 .build(),
         )
 
         crossfade((300 * context.animatorDurationScale).toInt())
-        allowRgb565(DeviceUtil.isLowRamDevice(context))
+        allowRgb565(isLowRam)
         if (verboseLogging) logger(DebugLogger())
 
         // Coil spawns a new thread for every image load by default
-        fetcherCoroutineContext(Dispatchers.IO.limitedParallelism(8))
-        decoderCoroutineContext(Dispatchers.IO.limitedParallelism(3))
+        fetcherCoroutineContext(Dispatchers.IO.limitedParallelism(if (isLowRam) 4 else 8))
+        decoderCoroutineContext(Dispatchers.IO.limitedParallelism(if (isLowRam) 2 else 3))
     }
         .build()
 }
