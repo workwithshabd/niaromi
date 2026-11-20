@@ -64,7 +64,6 @@ import niaromi.core.preference.asState
 import niaromi.core.util.addOrRemove
 import niaromi.core.util.insertSeparators
 import niaromi.data.cache.CoverCache
-import niaromi.data.chapter.ChapterSanitizer
 import niaromi.data.download.DownloadCache
 import niaromi.data.download.DownloadManager
 import niaromi.data.download.model.Download
@@ -373,101 +372,9 @@ class MangaViewModel(
                     fetchDetails = true,
                     fetchChapters = true,
                 )
-                fetchNewChaptersFromAllSources(manga)
             } finally {
                 isRefreshingData.value = false
             }
-        }
-    }
-
-    private suspend fun fetchNewChaptersFromAllSources(manga: Manga) = withContext(Dispatchers.IO) {
-        try {
-            val onlineSources = sourceManager.getOnlineSources().filter { it.id != manga.source }
-            if (onlineSources.isEmpty()) return@withContext
-
-            val currentChapters = getChaptersByMangaId.await(manga.id)
-            val existingUrls = currentChapters.map { it.url }.toSet()
-            val existingNumbers = currentChapters.filter { it.isRecognizedNumber }.map { it.chapterNumber }.toSet()
-
-            val searchEngine = SmartSourceSearchEngine(null)
-            val newlyAdded = mutableListOf<Chapter>()
-            val semaphore = Semaphore(3)
-
-            coroutineScope {
-                onlineSources.map { source ->
-                    async {
-                        semaphore.withPermit {
-                            try {
-                                val matchedManga = searchEngine.regularSearch(source, manga.title)
-                                    ?: searchEngine.deepSearch(source, manga.title)
-                                    ?: return@withPermit
-
-                                val update = source.getMangaUpdate(
-                                    manga = matchedManga.toSManga(),
-                                    chapters = emptyList(),
-                                    fetchDetails = false,
-                                    fetchChapters = true,
-                                )
-                                val rawChapters = update.chapters
-                                if (rawChapters.isEmpty()) return@withPermit
-
-                                val candidateChapters = rawChapters.mapNotNull { sChapter ->
-                                    if (sChapter.url in existingUrls) return@mapNotNull null
-                                    val number = ChapterRecognition.parseChapterNumber(
-                                        manga.title,
-                                        sChapter.name,
-                                        sChapter.chapter_number.toDouble(),
-                                    )
-                                    if (number >= 0 && number in existingNumbers) return@mapNotNull null
-                                    sChapter to number
-                                }
-
-                                if (candidateChapters.isEmpty()) return@withPermit
-
-                                val toAdd = candidateChapters.mapIndexed { idx, (sChapter, number) ->
-                                    val cleanName = with(ChapterSanitizer) { sChapter.name.sanitize(manga.title) }
-                                    val memo = buildJsonObject {
-                                        put("source_id", JsonPrimitive(source.id))
-                                        put("source_name", JsonPrimitive(source.name))
-                                    }
-                                    Chapter.create().copy(
-                                        mangaId = manga.id,
-                                        url = sChapter.url,
-                                        name = cleanName,
-                                        scanlator = sChapter.scanlator ?: source.name,
-                                        chapterNumber = number,
-                                        dateUpload = sChapter.date_upload.takeIf { it > 0 }
-                                            ?.let { Instant.fromEpochMilliseconds(it) }
-                                            ?: Clock.System.now(),
-                                        dateFetch = Clock.System.now(),
-                                        sourceOrder = (currentChapters.maxOfOrNull { it.sourceOrder } ?: 0L) + 1 + idx,
-                                        memo = memo,
-                                    )
-                                }
-
-                                synchronized(newlyAdded) {
-                                    newlyAdded.addAll(toAdd)
-                                }
-                            } catch (_: Exception) {
-                            }
-                        }
-                    }
-                }.awaitAll()
-            }
-
-            if (newlyAdded.isNotEmpty()) {
-                chapterRepository.updateFromRemote(
-                    removedIds = emptyList(),
-                    added = newlyAdded,
-                    updated = emptyList(),
-                )
-                updateManga.await(MangaUpdate(manga.id) { lastUpdate = Clock.System.now() })
-                snackbarHostState.showSnackbar("Found ${newlyAdded.size} new chapters from other sources")
-            }
-        } catch (_: CancellationException) {
-            // ignore
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to fetch chapters from all sources" }
         }
     }
 
