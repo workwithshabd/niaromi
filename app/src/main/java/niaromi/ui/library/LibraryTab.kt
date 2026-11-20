@@ -2,6 +2,7 @@ package niaromi.ui.library
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.result.LocalResultEventBus
@@ -142,7 +144,14 @@ fun LibraryTab() {
                 },
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(bottom = 76.dp),
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background,
     ) { contentPadding ->
         when {
@@ -172,15 +181,21 @@ fun LibraryTab() {
                     contentPadding = contentPadding,
                     lazyListState = discoveryListState,
                     getItemsForCategory = { state.getItemsForCategory(it) },
-                    onClickManga = { mangaId ->
-                        navigator.push(MangaRoute(mangaId, fromSearch = !state.searchQuery.isNullOrBlank()))
+                    onClickManga = { mangaId, sectionName ->
+                        navigator.push(
+                            MangaRoute(
+                                mangaId = mangaId,
+                                fromSearch = !state.searchQuery.isNullOrBlank(),
+                                categoryName = sectionName,
+                            ),
+                        )
                     },
                     onViewAll = { id, name -> navigator.push(CategoryListingRoute(id, name)) },
                     onSearchQueryChange = viewModel::search,
                     onAddTitle = { query -> navigator.push(GlobalSearchRoute(query)) },
                     onViewAllSources = { query -> navigator.push(GlobalSearchRoute(query)) },
                     onFilterClick = viewModel::showSettingsDialog,
-                    onRefresh = { onClickRefresh(state.activeCategory) },
+                    onRefresh = { onClickRefresh(null) },
                 )
             }
         }

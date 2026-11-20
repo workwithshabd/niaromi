@@ -82,6 +82,7 @@ import niaromi.icons.materialsymbols.rounded.Info
 import niaromi.icons.materialsymbols.rounded.MoreVert
 import niaromi.icons.materialsymbols.roundedfilled.Bookmark
 import niaromi.icons.materialsymbols.roundedfilled.CheckCircle
+import niaromi.presentation.category.components.ChangeCategoryDialog
 import niaromi.presentation.components.relativeDateText
 import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.manga.DownloadAction
@@ -108,6 +109,7 @@ private val ButtonPrimary: Color
 fun MangaEditorialDetailScreen(
     state: MangaViewModel.State.Success,
     fromSearch: Boolean = false,
+    categoryName: String? = null,
     navigateUp: () -> Unit,
     onContinueReading: () -> Unit,
     onChapterClicked: (Chapter) -> Unit,
@@ -133,33 +135,55 @@ fun MangaEditorialDetailScreen(
 
     val initialManga = remember { state.manga }
 
-    val currentGenres = remember(initialManga) {
-        initialManga.genre?.map { it.trim().lowercase() }?.toSet().orEmpty()
+    val resolvedCategoryName = remember(initialManga, categoryName) {
+        if (!categoryName.isNullOrBlank()) {
+            categoryName.trim()
+        } else {
+            initialManga.genre?.firstOrNull { it.isNotBlank() }
+                ?.trim()
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                ?: ""
+        }
     }
 
-    val (carouselMangaList, initialPageIndex) = remember(allFavorites, initialManga, currentGenres, fromSearch) {
+    val (carouselMangaList, initialPageIndex) = remember(
+        allFavorites,
+        initialManga,
+        resolvedCategoryName,
+        fromSearch,
+    ) {
         if (fromSearch) {
             listOf(initialManga) to 0
         } else {
-            val sameGenreFavorites = allFavorites.filter { fav ->
-                fav.genre?.any { it.trim().lowercase() in currentGenres } == true
-            }
-            val targetList = if (sameGenreFavorites.isNotEmpty()) {
-                sameGenreFavorites
+            val sameGenreFavorites = if (resolvedCategoryName.isNotBlank()) {
+                allFavorites.filter { fav ->
+                    val favPrimary = fav.genre?.firstOrNull { it.isNotBlank() }?.trim()
+                    favPrimary?.equals(resolvedCategoryName, ignoreCase = true) == true ||
+                        fav.genre?.any { it.trim().equals(resolvedCategoryName, ignoreCase = true) } == true
+                }
             } else {
-                allFavorites
+                emptyList()
             }
 
-            val targetIndex = targetList.indexOfFirst { it.id == initialManga.id }
+            val sortedList = if (sameGenreFavorites.isNotEmpty()) {
+                sameGenreFavorites.sortedWith(
+                    compareByDescending<Manga> { it.favoriteAt?.toEpochMilliseconds() ?: 0L }
+                        .thenByDescending { it.lastUpdate?.toEpochMilliseconds() ?: 0L },
+                )
+            } else {
+                listOf(initialManga)
+            }
+
+            val targetIndex = sortedList.indexOfFirst { it.id == initialManga.id }
             if (targetIndex >= 0) {
                 // Slice up to 5 previous and up to 5 next titles around target
                 val start = maxOf(0, targetIndex - 5)
-                val end = minOf(targetList.size, targetIndex + 6)
-                val slice = targetList.subList(start, end)
+                val end = minOf(sortedList.size, targetIndex + 6)
+                val slice = sortedList.subList(start, end)
                 val pageIndex = targetIndex - start
                 slice to pageIndex
             } else {
-                val remaining = targetList.filter { it.id != initialManga.id }.take(5)
+                val remaining = sortedList.filter { it.id != initialManga.id }.take(5)
                 (listOf(initialManga) + remaining) to 0
             }
         }
@@ -178,17 +202,6 @@ fun MangaEditorialDetailScreen(
         chaptersCache[state.manga.id] = state.processedChapters.map { it.chapter }
     }
 
-    LaunchedEffect(pagerState, carouselMangaList) {
-        snapshotFlow { pagerState.settledPage }.collect { page ->
-            if (page in carouselMangaList.indices) {
-                val currentManga = carouselMangaList[page]
-                if (currentManga.id != state.manga.id) {
-                    onSelectManga(currentManga.id)
-                }
-            }
-        }
-    }
-
     LaunchedEffect(pagerState.settledPage) {
         if (listState.firstVisibleItemIndex > 0) {
             listState.scrollToItem(0)
@@ -197,13 +210,16 @@ fun MangaEditorialDetailScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showChangeCategoryDialogForCurrent by remember { mutableStateOf(false) }
     var selectedChapterForMenu by remember { mutableStateOf<Chapter?>(null) }
     val downloadPreferences = remember { context.appGraph.downloadPreferences }
     val showChapterDownloadButtons by downloadPreferences.showChapterDownloadButtons.collectAsState()
 
     val currentManga = carouselMangaList.getOrNull(pagerState.currentPage) ?: state.manga
     val activeManga = carouselMangaList.getOrNull(pagerState.settledPage) ?: state.manga
-    val categoryHeading = currentManga.genre?.firstOrNull() ?: "MANGA DETAILS"
+    val categoryHeading = resolvedCategoryName.ifBlank {
+        currentManga.genre?.firstOrNull() ?: "MANGA DETAILS"
+    }
 
     val activeChapters by produceState(
         initialValue = chaptersCache[activeManga.id] ?: if (activeManga.id == state.manga.id) {
@@ -336,7 +352,11 @@ fun MangaEditorialDetailScreen(
                                 text = { Text("Change genre / collection") },
                                 onClick = {
                                     showMenu = false
-                                    onEditCategoryClicked()
+                                    if (currentManga.id == state.manga.id) {
+                                        onEditCategoryClicked()
+                                    } else {
+                                        showChangeCategoryDialogForCurrent = true
+                                    }
                                 },
                             )
                         }
@@ -522,7 +542,12 @@ fun MangaEditorialDetailScreen(
                                                 }
                                             }
                                         } else {
-                                            onSelectManga(currentManga.id)
+                                            coroutineScope.launch {
+                                                context.appGraph.downloadManager.downloadChapters(
+                                                    currentManga,
+                                                    activeChapters,
+                                                )
+                                            }
                                         }
                                     },
                                     shape = CircleShape,
@@ -557,7 +582,7 @@ fun MangaEditorialDetailScreen(
                                     }
                                 }
                             } else {
-                                // Not in library: Read Now / Continue, Download, Add to Library
+                                // Not in library: Read Now / Continue, Add to Library (no download button)
                                 Surface(
                                     onClick = onReadButtonClick,
                                     shape = CircleShape,
@@ -581,53 +606,6 @@ fun MangaEditorialDetailScreen(
                                             ),
                                             maxLines = 1,
                                             softWrap = false,
-                                        )
-                                    }
-                                }
-
-                                Surface(
-                                    onClick = {
-                                        if (currentManga.id == state.manga.id) {
-                                            if (onDownloadActionClicked != null) {
-                                                onDownloadActionClicked(DownloadAction.ALL_CHAPTERS)
-                                            } else if (onDownloadChapter != null) {
-                                                val items = state.processedChapters.filter { !it.isDownloaded }
-                                                if (items.isNotEmpty()) {
-                                                    onDownloadChapter(items, ChapterDownloadAction.START)
-                                                }
-                                            }
-                                        } else {
-                                            onSelectManga(currentManga.id)
-                                        }
-                                    },
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                    shadowElevation = 2.dp,
-                                    modifier = Modifier
-                                        .padding(vertical = 4.dp)
-                                        .height(44.dp),
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center,
-                                        modifier = Modifier.padding(horizontal = 14.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = MaterialSymbols.Rounded.Download,
-                                            contentDescription = "Download All Chapters",
-                                            tint = DetailText,
-                                            modifier = Modifier.size(16.dp),
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "Download",
-                                            style = TextStyle(
-                                                fontFamily = FontFamily.SansSerif,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 13.sp,
-                                                color = DetailText,
-                                            ),
                                         )
                                     }
                                 }
@@ -756,6 +734,10 @@ fun MangaEditorialDetailScreen(
                             onDownloadClick = {
                                 if (chapterItem != null && onDownloadChapter != null) {
                                     onDownloadChapter(listOf(chapterItem), ChapterDownloadAction.START)
+                                } else {
+                                    coroutineScope.launch {
+                                        context.appGraph.downloadManager.downloadChapters(currentManga, listOf(chapter))
+                                    }
                                 }
                             },
                             onDeleteClick = {
@@ -821,6 +803,20 @@ fun MangaEditorialDetailScreen(
                     }
                     selectedChapterForMenu = null
                 },
+            )
+        }
+
+        if (showChangeCategoryDialogForCurrent) {
+            ChangeCategoryDialog(
+                initialSelection = emptyList(),
+                onDismissRequest = { showChangeCategoryDialogForCurrent = false },
+                onEditCategories = {},
+                onConfirm = { include, _ ->
+                    coroutineScope.launch {
+                        context.appGraph.setMangaCategories.await(currentManga.id, include)
+                    }
+                },
+                manga = currentManga,
             )
         }
     }

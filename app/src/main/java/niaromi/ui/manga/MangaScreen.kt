@@ -69,6 +69,7 @@ fun MangaScreen(
     mangaId: Long,
     fromSource: Boolean,
     fromSearch: Boolean = false,
+    categoryName: String? = null,
 ) {
     val navigator = LocalNavigator.current
     val resultEventBus = LocalResultEventBus.current
@@ -109,6 +110,7 @@ fun MangaScreen(
         nextUpdate = successState.manga.expectedNextUpdate,
         isTabletUi = isTabletUi(),
         fromSearch = fromSearch,
+        categoryName = categoryName,
         chapterSwipeStartAction = viewModel.chapterSwipeStartAction,
         chapterSwipeEndAction = viewModel.chapterSwipeEndAction,
         navigateUp = navigator::pop,

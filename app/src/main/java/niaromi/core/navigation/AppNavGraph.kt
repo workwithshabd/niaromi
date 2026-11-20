@@ -68,7 +68,7 @@ fun EntryProviderScope<NavKey>.appEntries() {
     }
     entry<MangaRoute> { route ->
         LocalAssistContentManager.current.Provide(route) {
-            MangaScreen(route.mangaId, route.fromSource, route.fromSearch)
+            MangaScreen(route.mangaId, route.fromSource, route.fromSearch, route.categoryName)
         }
     }
     entry<TrackInfoDialogRoute>(metadata = OverlaySheetScene.overlaySheet()) { route ->

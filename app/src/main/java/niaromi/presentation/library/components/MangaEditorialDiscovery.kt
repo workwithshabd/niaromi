@@ -201,7 +201,7 @@ fun MangaEditorialDiscovery(
     searchQuery: String?,
     contentPadding: PaddingValues,
     getItemsForCategory: (Category) -> List<LibraryItem>,
-    onClickManga: (Long) -> Unit,
+    onClickManga: (Long, String) -> Unit,
     onViewAll: (Long, String) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onFilterClick: () -> Unit,
@@ -299,7 +299,7 @@ fun MangaEditorialDiscovery(
                         ) { item ->
                             EditorialSearchResultItem(
                                 item = item,
-                                onClick = { onClickManga(item.libraryManga.manga.id) },
+                                onClick = { onClickManga(item.libraryManga.manga.id, "") },
                             )
                         }
 
@@ -314,7 +314,7 @@ fun MangaEditorialDiscovery(
                                 extensionSearchState.result != null -> {
                                     ExtensionFoundMangaCard(
                                         result = extensionSearchState.result,
-                                        onClick = { onClickManga(extensionSearchState.result.manga.id) },
+                                        onClick = { onClickManga(extensionSearchState.result.manga.id, "") },
                                         onViewAllSources = { onViewAllSources(searchQuery) },
                                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                                     )
@@ -343,7 +343,7 @@ fun MangaEditorialDiscovery(
                                 extensionSearchState.result != null -> {
                                     ExtensionFoundMangaCard(
                                         result = extensionSearchState.result,
-                                        onClick = { onClickManga(extensionSearchState.result.manga.id) },
+                                        onClick = { onClickManga(extensionSearchState.result.manga.id, "") },
                                         onViewAllSources = { onViewAllSources(searchQuery) },
                                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
                                     )
@@ -461,7 +461,7 @@ fun EditorialSearchBar(
 @Composable
 fun DiscoveryCategoryRow(
     section: DiscoveryCategorySection,
-    onClickManga: (Long) -> Unit,
+    onClickManga: (Long, String) -> Unit,
     onViewAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -524,7 +524,7 @@ fun DiscoveryCategoryRow(
             ) { item ->
                 EditorialMangaCard(
                     item = item,
-                    onClick = { onClickManga(item.libraryManga.manga.id) },
+                    onClick = { onClickManga(item.libraryManga.manga.id, section.name) },
                 )
             }
         }

@@ -256,33 +256,23 @@ fun ChangeCategoryDialog(
         AlertDialog(
             onDismissRequest = onDismissRequest,
             confirmButton = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    niaromi.presentation.core.components.material.TextButton(onClick = {
+                niaromi.presentation.core.components.material.Button(
+                    onClick = {
                         onDismissRequest()
-                        onEditCategories()
-                    }) {
-                        Text(text = stringResource(MR.strings.action_edit_categories))
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    niaromi.presentation.core.components.material.TextButton(onClick = onDismissRequest) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    niaromi.presentation.core.components.material.TextButton(
-                        onClick = {
-                            onDismissRequest()
-                            val selected = selectedCategoryId
-                            if (selected == 0L) {
-                                onConfirm(emptyList(), categories.map { it.id })
-                            } else {
-                                onConfirm(listOf(selected), categories.filter { it.id != selected }.map { it.id })
-                            }
-                        },
-                    ) {
-                        Text(text = if (manga.favorite) stringResource(MR.strings.action_ok) else "Add to Library")
-                    }
+                        val selected = selectedCategoryId
+                        if (selected == 0L) {
+                            onConfirm(emptyList(), categories.map { it.id })
+                        } else {
+                            onConfirm(listOf(selected), categories.filter { it.id != selected }.map { it.id })
+                        }
+                    },
+                ) {
+                    Text(text = if (manga.favorite) "Save" else "Add to Library")
+                }
+            },
+            dismissButton = {
+                niaromi.presentation.core.components.material.TextButton(onClick = onDismissRequest) {
+                    Text(text = stringResource(MR.strings.action_cancel))
                 }
             },
             title = {
@@ -611,6 +601,17 @@ fun ChangeCategoryDialog(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    niaromi.presentation.core.components.material.TextButton(
+                        onClick = {
+                            onDismissRequest()
+                            onEditCategories()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(text = stringResource(MR.strings.action_edit_categories))
+                    }
                 }
             },
         )
@@ -643,32 +644,25 @@ fun ChangeCategoryDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            Row {
-                niaromi.presentation.core.components.material.TextButton(onClick = {
+            niaromi.presentation.core.components.material.Button(
+                onClick = {
                     onDismissRequest()
-                    onEditCategories()
-                }) {
-                    Text(text = stringResource(MR.strings.action_edit))
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                niaromi.presentation.core.components.material.TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-                niaromi.presentation.core.components.material.TextButton(
-                    onClick = {
-                        onDismissRequest()
-                        onConfirm(
-                            selection
-                                .filter { it is CheckboxState.State.Checked || it is CheckboxState.TriState.Include }
-                                .map { it.value.id },
-                            selection
-                                .filter { it is CheckboxState.State.None || it is CheckboxState.TriState.None }
-                                .map { it.value.id },
-                        )
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
+                    onConfirm(
+                        selection
+                            .filter { it is CheckboxState.State.Checked || it is CheckboxState.TriState.Include }
+                            .map { it.value.id },
+                        selection
+                            .filter { it is CheckboxState.State.None || it is CheckboxState.TriState.None }
+                            .map { it.value.id },
+                    )
+                },
+            ) {
+                Text(text = "Save")
+            }
+        },
+        dismissButton = {
+            niaromi.presentation.core.components.material.TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(MR.strings.action_cancel))
             }
         },
         title = {
@@ -713,6 +707,17 @@ fun ChangeCategoryDialog(
                             modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                niaromi.presentation.core.components.material.TextButton(
+                    onClick = {
+                        onDismissRequest()
+                        onEditCategories()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = stringResource(MR.strings.action_edit_categories))
                 }
             }
         },

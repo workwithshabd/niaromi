@@ -30,6 +30,7 @@ data class MangaRoute(
     val mangaId: Long,
     val fromSource: Boolean = false,
     val fromSearch: Boolean = false,
+    val categoryName: String? = null,
 ) : NavKey
 
 @Serializable

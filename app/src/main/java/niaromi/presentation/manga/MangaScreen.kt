@@ -129,6 +129,7 @@ fun MangaScreen(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     fromSearch: Boolean = false,
+    categoryName: String? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -142,6 +143,7 @@ fun MangaScreen(
         MangaEditorialDetailScreen(
             state = state,
             fromSearch = fromSearch,
+            categoryName = categoryName,
             navigateUp = navigateUp,
             onContinueReading = onContinueReading,
             onChapterClicked = onChapterClicked,
@@ -158,7 +160,7 @@ fun MangaScreen(
             onTagSearch = onTagSearch,
             onCoverClicked = onCoverClicked,
             onSelectManga = { newMangaId ->
-                navigator.replace(MangaRoute(newMangaId, fromSearch = fromSearch))
+                navigator.replace(MangaRoute(newMangaId, fromSearch = fromSearch, categoryName = categoryName))
             },
         )
     } else {

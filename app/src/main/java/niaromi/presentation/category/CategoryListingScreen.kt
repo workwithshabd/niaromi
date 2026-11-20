@@ -131,7 +131,7 @@ fun CategoryListingScreen(
                 ) { item ->
                     CategoryMangaGridItem(
                         item = item,
-                        onClick = { navigator.push(MangaRoute(item.id)) },
+                        onClick = { navigator.push(MangaRoute(item.id, categoryName = categoryName)) },
                     )
                 }
 
