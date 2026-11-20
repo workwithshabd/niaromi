@@ -111,7 +111,6 @@ fun buildDiscoverySections(
 
     val result = mutableListOf<DiscoveryCategorySection>()
     val seenSectionNames = mutableSetOf<String>()
-    val assignedMangaIds = mutableSetOf<Long>()
 
     // 0. Latest Chapters collection: titles that just got updated and their new chapters arrived
     val latestChaptersItems = filteredFavorites.filter { it.hasLatestChapters }
@@ -139,7 +138,6 @@ fun buildDiscoverySections(
         customCategories.forEach { category ->
             val items = getItemsForCategory(category)
                 .filter(filterItem)
-                .filter { it.id !in assignedMangaIds }
             if (items.isNotEmpty()) {
                 result.add(
                     DiscoveryCategorySection(
@@ -149,16 +147,15 @@ fun buildDiscoverySections(
                     ),
                 )
                 seenSectionNames.add(category.name.lowercase())
-                items.forEach { assignedMangaIds.add(it.id) }
             }
         }
     }
 
-    // 2. Unassigned titles grouped by their primary genre only (strictly one category/genre per title)
-    val unassignedTitles = filteredFavorites.filter { it.id !in assignedMangaIds }
+    // 2. Group titles strictly by their primary genre (one genre per title)
     val genreMap = linkedMapOf<String, MutableList<LibraryItem>>()
+    val titlesWithoutGenre = mutableListOf<LibraryItem>()
 
-    unassignedTitles.forEach { item ->
+    filteredFavorites.forEach { item ->
         val genres = item.libraryManga.manga.genre
         val primaryGenre = genres?.firstOrNull { it.isNotBlank() }
             ?.trim()
@@ -166,6 +163,8 @@ fun buildDiscoverySections(
 
         if (!primaryGenre.isNullOrBlank()) {
             genreMap.getOrPut(primaryGenre) { mutableListOf() }.add(item)
+        } else {
+            titlesWithoutGenre.add(item)
         }
     }
 
@@ -188,18 +187,16 @@ fun buildDiscoverySections(
                 ),
             )
             seenSectionNames.add(genreName.lowercase())
-            items.forEach { assignedMangaIds.add(it.id) }
         }
     }
 
-    // 3. Any titles that don't have genres or didn't fall into the above sections
-    val remainingTitles = filteredFavorites.filter { it.id !in assignedMangaIds }
-    if (remainingTitles.isNotEmpty()) {
+    // 3. Any titles that don't have genres
+    if (titlesWithoutGenre.isNotEmpty()) {
         result.add(
             DiscoveryCategorySection(
                 id = 9999L,
                 name = if (result.isEmpty()) "All Titles" else "More Favourites",
-                items = sortByLastRead(remainingTitles),
+                items = sortByLastRead(titlesWithoutGenre),
             ),
         )
     }
@@ -547,7 +544,14 @@ fun DiscoveryCategoryRow(
             ) { item ->
                 EditorialMangaCard(
                     item = item,
-                    onClick = { onClickManga(item.libraryManga.manga.id, section.name) },
+                    onClick = {
+                        val targetGenre = if (section.name.equals(LATEST_CHAPTERS_NAME, ignoreCase = true)) {
+                            item.libraryManga.manga.genre?.firstOrNull { it.isNotBlank() }?.trim() ?: ""
+                        } else {
+                            section.name
+                        }
+                        onClickManga(item.libraryManga.manga.id, targetGenre)
+                    },
                 )
             }
         }

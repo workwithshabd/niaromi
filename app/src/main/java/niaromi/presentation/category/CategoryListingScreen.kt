@@ -189,7 +189,14 @@ fun CategoryListingScreen(
                     ) { item ->
                         CategoryMangaGridItem(
                             item = item,
-                            onClick = { navigator.push(MangaRoute(item.id, categoryName = categoryName)) },
+                            onClick = {
+                                val targetGenre = if (categoryName.equals("Latest Chapters", ignoreCase = true)) {
+                                    item.genre?.firstOrNull { it.isNotBlank() }?.trim() ?: ""
+                                } else {
+                                    categoryName
+                                }
+                                navigator.push(MangaRoute(item.id, categoryName = targetGenre))
+                            },
                         )
                     }
 

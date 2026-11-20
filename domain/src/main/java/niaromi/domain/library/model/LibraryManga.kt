@@ -29,14 +29,15 @@ data class LibraryManga(
             val favAt = manga.favoriteAt ?: return false
 
             if (lastRead != null) {
-                if (chapterFetchedAt != null && chapterFetchedAt > lastRead) return true
-                if (manga.lastUpdate != null && manga.lastUpdate > lastRead) return true
-                if (latestUpload != null && latestUpload > lastRead) return true
+                return chapterFetchedAt != null && chapterFetchedAt > lastRead
             }
 
-            if (chapterFetchedAt != null && chapterFetchedAt > favAt) return true
-            if (manga.lastUpdate != null && manga.lastUpdate > favAt) return true
-            if (latestUpload != null && latestUpload > favAt) return true
+            if (favAt > niaromi.domain.manga.model.Manga.UNKNOWN_FAVORITE_AT &&
+                chapterFetchedAt != null &&
+                chapterFetchedAt > favAt
+            ) {
+                return true
+            }
 
             return false
         }

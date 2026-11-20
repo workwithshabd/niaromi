@@ -148,7 +148,7 @@ fun MangaEditorialDetailScreen(
     val initialManga = remember { state.manga }
 
     val resolvedCategoryName = remember(initialManga, categoryName) {
-        if (!categoryName.isNullOrBlank()) {
+        if (!categoryName.isNullOrBlank() && !categoryName.equals("Latest Chapters", ignoreCase = true)) {
             categoryName.trim()
         } else {
             initialManga.genre?.firstOrNull { it.isNotBlank() }
@@ -169,38 +169,20 @@ fun MangaEditorialDetailScreen(
             listOf(initialManga) to 0
         } else {
             val sameGenreFavorites = if (resolvedCategoryName.isNotBlank()) {
-                if (resolvedCategoryName.equals("Latest Chapters", ignoreCase = true)) {
-                    libraryMangaList.filter { it.hasLatestChapters }
-                        .sortedWith(
-                            compareByDescending<niaromi.domain.library.model.LibraryManga> {
-                                it.chapterFetchedAt?.toEpochMilliseconds()
-                                    ?: 0L
-                            }
-                                .thenByDescending { it.manga.lastUpdate?.toEpochMilliseconds() ?: 0L }
-                                .thenByDescending { it.latestUpload?.toEpochMilliseconds() ?: 0L }
-                                .thenByDescending { it.manga.favoriteAt?.toEpochMilliseconds() ?: 0L },
-                        )
-                        .map { it.manga }
-                } else {
-                    allFavorites.filter { fav ->
-                        val favPrimary = fav.genre?.firstOrNull { it.isNotBlank() }?.trim()
-                        favPrimary?.equals(resolvedCategoryName, ignoreCase = true) == true ||
-                            fav.genre?.any { it.trim().equals(resolvedCategoryName, ignoreCase = true) } == true
-                    }
+                allFavorites.filter { fav ->
+                    val favPrimary = fav.genre?.firstOrNull { it.isNotBlank() }?.trim()
+                    favPrimary?.equals(resolvedCategoryName, ignoreCase = true) == true ||
+                        fav.genre?.any { it.trim().equals(resolvedCategoryName, ignoreCase = true) } == true
                 }
             } else {
                 emptyList()
             }
 
             val sortedList = if (sameGenreFavorites.isNotEmpty()) {
-                if (resolvedCategoryName.equals("Latest Chapters", ignoreCase = true)) {
-                    sameGenreFavorites
-                } else {
-                    sameGenreFavorites.sortedWith(
-                        compareByDescending<Manga> { it.favoriteAt?.toEpochMilliseconds() ?: 0L }
-                            .thenByDescending { it.lastUpdate?.toEpochMilliseconds() ?: 0L },
-                    )
-                }
+                sameGenreFavorites.sortedWith(
+                    compareByDescending<Manga> { it.favoriteAt?.toEpochMilliseconds() ?: 0L }
+                        .thenByDescending { it.lastUpdate?.toEpochMilliseconds() ?: 0L },
+                )
             } else {
                 listOf(initialManga)
             }
@@ -249,8 +231,11 @@ fun MangaEditorialDetailScreen(
 
     val currentManga = carouselMangaList.getOrNull(pagerState.currentPage) ?: state.manga
     val activeManga = carouselMangaList.getOrNull(pagerState.settledPage) ?: state.manga
-    val categoryHeading = resolvedCategoryName.ifBlank {
-        currentManga.genre?.firstOrNull() ?: "MANGA DETAILS"
+    val categoryHeading = remember(currentManga, resolvedCategoryName) {
+        val currentGenre = currentManga.genre?.firstOrNull { it.isNotBlank() }
+            ?.trim()
+            ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        currentGenre ?: resolvedCategoryName.ifBlank { "MANGA DETAILS" }
     }
 
     val activeChapters by produceState(
