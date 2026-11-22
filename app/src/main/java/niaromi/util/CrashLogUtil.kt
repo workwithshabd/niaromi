@@ -34,10 +34,18 @@ class CrashLogUtil(
 
             file.appendText(getDebugInfo() + "\n\n")
             getExtensionsInfo()?.let { file.appendText("$it\n\n") }
-            exception?.let { file.appendText("$it\n\n") }
+            exception?.let { file.appendText(it.stackTraceToString() + "\n\n") }
 
             val logPriority = if (networkPreferences.verboseLogging.get()) "V" else "E"
-            Runtime.getRuntime().exec("logcat *:$logPriority -d -v year -v zone -f ${file.absolutePath}").waitFor()
+            try {
+                ProcessBuilder("logcat", "*:$logPriority", "-d", "-v", "year", "-v", "zone")
+                    .redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.appendTo(file))
+                    .start()
+                    .waitFor()
+            } catch (_: java.io.IOException) {
+                file.appendText("System log unavailable.\n")
+            }
 
             val uri = file.getUriCompat(context)
             withContext(Dispatchers.Main) { context.startActivity(uri.toShareIntent(context, "text/plain")) }
