@@ -13,7 +13,6 @@ import niaromi.domain.category.interactor.GetCategories
 import niaromi.domain.category.interactor.SetMangaCategories
 import niaromi.domain.chapter.interactor.GetChaptersByMangaId
 import niaromi.domain.chapter.interactor.UpdateChapter
-import niaromi.domain.chapter.model.ChapterUpdate
 import niaromi.domain.manga.interactor.UpdateManga
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.manga.model.MangaUpdate
@@ -68,28 +67,7 @@ class MigrateMangaUseCase(
                 val prevMangaChapters = getChaptersByMangaId.await(current.id)
                 val mangaChapters = getChaptersByMangaId.await(target.id)
 
-                val maxChapterRead = prevMangaChapters
-                    .filter { it.read }
-                    .maxOfOrNull { it.chapterNumber }
-
-                val chapterUpdates = mangaChapters
-                    .filter { it.isRecognizedNumber }
-                    .map { mangaChapter ->
-                        val prevChapter = prevMangaChapters
-                            .find { it.isRecognizedNumber && it.chapterNumber == mangaChapter.chapterNumber }
-
-                        ChapterUpdate(mangaChapter.id) {
-                            if (prevChapter != null) {
-                                dateFetch = prevChapter.dateFetch
-                                bookmark = prevChapter.bookmark
-                            }
-
-                            if (maxChapterRead != null && mangaChapter.chapterNumber <= maxChapterRead) {
-                                read = true
-                            }
-                        }
-                    }
-                updateChapter.awaitAll(chapterUpdates)
+                updateChapter.awaitAll(migrateChapterProgress(prevMangaChapters, mangaChapters))
             }
 
             // Update categories
