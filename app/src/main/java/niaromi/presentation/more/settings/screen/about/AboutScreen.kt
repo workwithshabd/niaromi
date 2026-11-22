@@ -95,7 +95,7 @@ fun AboutScreen() {
         ) {
             item {
                 LogoHeader(
-                    iconPadding = PaddingValues(vertical = 56.dp),
+                    iconPadding = PaddingValues(vertical = 24.dp),
                 )
             }
 
