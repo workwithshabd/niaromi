@@ -58,6 +58,21 @@ jobs:
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Verify APK versions match the tag
+        env:
+          RELEASE_TAG: ${{ needs.get_tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          aapt2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -n 1)"
+          expected="${RELEASE_TAG#v}"
+          for apk in app/build/outputs/apk/release/app-*-release.apk; do
+            badging="$("$aapt2" dump badging "$apk")"
+            if [[ "$badging" != *"versionName='$expected'"* ]]; then
+              echo "::error::APK $apk does not match release tag $RELEASE_TAG"
+              exit 1
+            fi
+          done
+
       - name: Rename APK
         run: |
           set -e
