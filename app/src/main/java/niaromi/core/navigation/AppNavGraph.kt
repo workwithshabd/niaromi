@@ -108,8 +108,10 @@ fun EntryProviderScope<NavKey>.appEntries() {
     entry<ExtensionFilterRoute> {
         ExtensionFilterScreen()
     }
-    entry<ExtensionMigrationRoute> {
-        niaromi.presentation.more.settings.screen.browse.ExtensionMigrationScreen()
+    entry<ExtensionMigrationRoute> { route ->
+        niaromi.presentation.more.settings.screen.browse.ExtensionMigrationScreen(
+            initialTab = if (route.showMigration) 1 else 0,
+        )
     }
     entry<MigrateMangaRoute> { route ->
         MigrateMangaScreen(route.sourceId)

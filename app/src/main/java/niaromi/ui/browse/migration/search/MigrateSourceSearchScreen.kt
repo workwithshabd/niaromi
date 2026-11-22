@@ -18,6 +18,7 @@ import androidx.navigation3.runtime.result.LocalResultEventBus
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.tachiyomi.source.online.HttpSource
 import niaromi.core.common.Constants
+import niaromi.core.navigation.ExtensionMigrationRoute
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
 import niaromi.core.navigation.MigrationListRoute
@@ -36,7 +37,6 @@ import niaromi.presentation.core.util.collectAsLazyPagingItems
 import niaromi.source.local.LocalSource
 import niaromi.ui.browse.source.browse.BrowseSourceViewModel
 import niaromi.ui.browse.source.browse.SourceFilterDialog
-import niaromi.ui.home.TabEvent
 import tachiyomi.i18n.MR
 @Composable
 fun MigrateSourceSearchScreen(
@@ -143,7 +143,7 @@ fun MigrateSourceSearchScreen(
                 onDismissRequest = onDismissRequest,
                 onComplete = {
                     navigator.popToRoot()
-                    resultEventBus.sendResult<TabEvent>(TabEvent.Browse())
+                    navigator.push(ExtensionMigrationRoute(showMigration = true))
                     navigator.push(MangaRoute(dialog.target.id))
                 },
             )

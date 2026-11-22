@@ -12,7 +12,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,16 +26,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -45,10 +40,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.ResultEffect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.Serializable
 import niaromi.R
-import niaromi.app.di.appGraph
 import niaromi.core.navigation.DownloadQueueRoute
 import niaromi.core.navigation.LatestChaptersRoute
 import niaromi.core.navigation.LocalNavigator
@@ -57,12 +50,9 @@ import niaromi.core.navigation.Navigator
 import niaromi.core.navigation.NavigatorDisplay
 import niaromi.core.navigation.rememberNavigator
 import niaromi.presentation.components.MainNavigationBar
-import niaromi.presentation.core.i18n.pluralStringResource
 import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.util.isTabletUi
 import niaromi.presentation.util.rememberAnimatedVectorPainter
-import niaromi.ui.browse.BrowseShowExtensionsEvent
-import niaromi.ui.browse.BrowseTab
 import niaromi.ui.explore.ExploreTab
 import niaromi.ui.library.LibrarySearchEvent
 import niaromi.ui.library.LibraryTab
@@ -103,19 +93,6 @@ sealed interface TopLevelRoute : NavKey {
     }
 
     @Serializable
-    data object Browse : TopLevelRoute {
-        @Composable
-        override fun options(isSelected: Boolean): TabOptions {
-            val enter = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_enter)
-            val exit = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_exit)
-            return TabOptions(
-                title = stringResource(MR.strings.browse),
-                icon = rememberAnimatedVectorPainter(enter, exit, isSelected),
-            )
-        }
-    }
-
-    @Serializable
     data object More : TopLevelRoute {
         @Composable
         override fun options(isSelected: Boolean): TabOptions {
@@ -131,7 +108,7 @@ sealed interface TopLevelRoute : NavKey {
 
 @Composable
 fun HomeScreen() {
-    val tabNavigator = key("home-with-latest-chapters") { rememberNavigator(TopLevelRoute.Library) }
+    val tabNavigator = key("niaromi-main-tabs") { rememberNavigator(TopLevelRoute.Library) }
     val navigator = LocalNavigator.current
     val resultEventBus = LocalResultEventBus.current
     val tabletUi = isTabletUi()
@@ -188,10 +165,6 @@ fun HomeScreen() {
                         ExploreTab()
                     }
 
-                    entry<TopLevelRoute.Browse> {
-                        BrowseTab()
-                    }
-
                     entry<TopLevelRoute.More> {
                         niaromi.presentation.more.settings.screen.SettingsMainScreen.Content()
                     }
@@ -224,10 +197,6 @@ fun HomeScreen() {
                 TopLevelRoute.Library
             }
             TabEvent.Explore -> TopLevelRoute.Explore
-            is TabEvent.Browse -> {
-                if (it.toExtensions) resultEventBus.sendResult(BrowseShowExtensionsEvent)
-                TopLevelRoute.Browse
-            }
             is TabEvent.More -> TopLevelRoute.More
         }
         tabNavigator.replaceAll(route)
@@ -279,44 +248,7 @@ private fun NavigationSuiteItem(
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        badge = tabBadge(tab),
     )
-}
-
-@Composable
-private fun tabBadge(tab: TopLevelRoute): (@Composable () -> Unit)? {
-    val context = LocalContext.current
-    val count by produceState(initialValue = 0, tab) {
-        val graph = context.appGraph
-        when (tab) {
-            is TopLevelRoute.Browse -> {
-                graph.sourcePreferences.extensionUpdatesCount.changes()
-                    .collectLatest { value = it }
-            }
-
-            else -> value = 0
-        }
-    }
-    if (count <= 0) return null
-    return {
-        Badge {
-            val desc = when (tab) {
-                is TopLevelRoute.Browse -> pluralStringResource(
-                    MR.plurals.update_check_notification_ext_updates,
-                    count = count,
-                    count,
-                )
-
-                else -> null
-            }
-            Text(
-                text = count.toString(),
-                modifier = Modifier.semantics {
-                    if (desc != null) contentDescription = desc
-                },
-            )
-        }
-    }
 }
 
 sealed interface TabEvent {
@@ -326,7 +258,6 @@ sealed interface TabEvent {
         val openLatestChapters: Boolean = false,
     ) : TabEvent
     data object Explore : TabEvent
-    data class Browse(val toExtensions: Boolean = false) : TabEvent
     data class More(val toDownloads: Boolean) : TabEvent
 }
 

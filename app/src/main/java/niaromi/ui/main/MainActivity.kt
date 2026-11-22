@@ -97,6 +97,7 @@ import niaromi.core.migration.Migrator
 import niaromi.core.navigation.AssistContentManager
 import niaromi.core.navigation.BrowseSourceRoute
 import niaromi.core.navigation.DeepLinkRoute
+import niaromi.core.navigation.ExtensionMigrationRoute
 import niaromi.core.navigation.ExtensionStoresRoute
 import niaromi.core.navigation.GlobalSearchRoute
 import niaromi.core.navigation.HomeRoute
@@ -690,8 +691,15 @@ class MainActivity : BaseActivity() {
                 TabEvent.Library(openLatestChapters = true)
             }
             Constants.SHORTCUT_HISTORY -> TabEvent.Explore
-            Constants.SHORTCUT_SOURCES -> TabEvent.Browse(false)
-            Constants.SHORTCUT_EXTENSIONS -> TabEvent.Browse(true)
+            Constants.SHORTCUT_SOURCES -> {
+                navigator.popToRoot()
+                TabEvent.Explore
+            }
+            Constants.SHORTCUT_EXTENSIONS -> {
+                navigator.popToRoot()
+                navigator.push(ExtensionMigrationRoute())
+                null
+            }
             Constants.SHORTCUT_DOWNLOADS -> {
                 navigator.popToRoot()
                 TabEvent.More(toDownloads = true)

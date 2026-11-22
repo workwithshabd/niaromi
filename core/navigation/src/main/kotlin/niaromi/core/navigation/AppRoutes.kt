@@ -67,7 +67,7 @@ data class ExtensionDetailsRoute(val pkgName: String) : NavKey
 data object ExtensionFilterRoute : NavKey
 
 @Serializable
-data object ExtensionMigrationRoute : NavKey
+data class ExtensionMigrationRoute(val showMigration: Boolean = false) : NavKey
 
 @Serializable
 data class MigrateMangaRoute(val sourceId: Long) : NavKey

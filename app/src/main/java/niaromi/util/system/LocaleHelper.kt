@@ -3,7 +3,6 @@ package niaromi.util.system
 import android.content.Context
 import androidx.core.os.LocaleListCompat
 import niaromi.core.common.i18n.stringResource
-import niaromi.ui.browse.source.SourcesViewModel
 import tachiyomi.i18n.MR
 import java.util.Locale
 
@@ -30,8 +29,6 @@ object LocaleHelper {
      */
     fun getSourceDisplayName(lang: String?, context: Context): String {
         return when (lang) {
-            SourcesViewModel.LAST_USED_KEY -> context.stringResource(MR.strings.last_used_source)
-            SourcesViewModel.PINNED_KEY -> context.stringResource(MR.strings.pinned_sources)
             "other" -> context.stringResource(MR.strings.other_source)
             "all" -> context.stringResource(MR.strings.multi_lang)
             else -> getLocalizedDisplayName(lang)

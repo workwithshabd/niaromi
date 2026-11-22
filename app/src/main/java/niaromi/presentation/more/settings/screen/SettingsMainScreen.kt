@@ -398,7 +398,7 @@ data object SettingsMainScreen : NavKey {
             titleRes = MR.strings.label_extensions,
             formatSubtitle = { "Manage installed extensions and migrate sources" },
             icon = MaterialSymbols.Rounded.Explore,
-            screen = ExtensionMigrationRoute,
+            screen = ExtensionMigrationRoute(),
         ),
         Item(
             titleRes = MR.strings.browse,

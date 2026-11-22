@@ -255,7 +255,6 @@ fun CategoryListingScreen(
                     TopLevelRoute.Library -> resultEventBus.sendResult(LibrarySearchEvent(""))
                     TopLevelRoute.Explore -> resultEventBus.sendResult<TabEvent>(TabEvent.Explore)
                     TopLevelRoute.More -> resultEventBus.sendResult<TabEvent>(TabEvent.More(toDownloads = false))
-                    TopLevelRoute.Browse -> resultEventBus.sendResult<TabEvent>(TabEvent.Browse())
                 }
                 navigator.pop()
             },
