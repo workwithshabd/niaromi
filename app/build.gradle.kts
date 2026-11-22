@@ -29,8 +29,8 @@ android {
     defaultConfig {
         applicationId = "app.niaromi"
 
-        versionCode = 42
-        versionName = "0.21.6"
+        versionCode = 43
+        versionName = "0.21.7"
 
         buildConfigField("boolean", "UPDATER_ENABLED", "true")
 
