@@ -122,6 +122,7 @@ class MangaCoverFetcher(
                 val snapshotCoverCache = moveSnapshotToCoverCache(snapshot, libraryCoverCacheFile)
                 if (snapshotCoverCache != null) {
                     // Read from cover cache after added to library
+                    snapshot.close()
                     return fileLoader(snapshotCoverCache)
                 }
 
@@ -140,6 +141,7 @@ class MangaCoverFetcher(
                 // Read from cover cache after library manga cover updated
                 val responseCoverCache = writeResponseToCoverCache(response, libraryCoverCacheFile)
                 if (responseCoverCache != null) {
+                    response.close()
                     return fileLoader(responseCoverCache)
                 }
 
@@ -240,14 +242,14 @@ class MangaCoverFetcher(
 
     private fun writeSourceToCoverCache(input: Source, cacheFile: File) {
         cacheFile.parentFile?.mkdirs()
-        cacheFile.delete()
+        val pendingFile = File.createTempFile("cover-", ".tmp", cacheFile.parentFile)
         try {
-            cacheFile.sink().buffer().use { output ->
+            pendingFile.sink().buffer().use { output ->
                 output.writeAll(input)
             }
-        } catch (e: Exception) {
-            cacheFile.delete()
-            throw e
+            FileSystem.SYSTEM.atomicMove(pendingFile.toOkioPath(), cacheFile.toOkioPath())
+        } finally {
+            pendingFile.delete()
         }
     }
 

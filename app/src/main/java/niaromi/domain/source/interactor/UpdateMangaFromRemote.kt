@@ -59,6 +59,7 @@ class UpdateMangaFromRemote(
         fetchChapters: Boolean = false,
         manualFetch: Boolean = false,
         fetchWindow: ClosedRange<Instant>? = null,
+        refreshCover: Boolean = false,
     ): Result<RemoteMangaUpdate> = withContext(Dispatchers.IO) {
         try {
             val chapters = chapterRepository.getChapterByMangaId(manga.id)
@@ -69,7 +70,7 @@ class UpdateMangaFromRemote(
                 fetchDetails = fetchDetails,
                 fetchChapters = fetchChapters,
             )
-            awaitUpdateFromSource(manga, update.manga, manualFetch)
+            awaitUpdateFromSource(manga, update.manga, manualFetch, refreshCover)
             val newChapters = syncChaptersWithSource.await(
                 rawSourceChapters = update.chapters,
                 manga = manga,
@@ -90,6 +91,7 @@ class UpdateMangaFromRemote(
         localManga: Manga,
         remoteManga: SManga,
         manualFetch: Boolean,
+        refreshCover: Boolean,
     ): Boolean {
         val remoteTitle = try {
             remoteManga.title
@@ -105,22 +107,19 @@ class UpdateMangaFromRemote(
                 null
             }
 
+        val keepLibraryCover = localManga.favorite && !refreshCover &&
+            coverCache.hasCachedCover(localManga.thumbnailUrl)
+        val thumbnailUrl = remoteManga.thumbnail_url?.takeIf { it.isNotEmpty() && !keepLibraryCover }
+
         val coverLastModified = when {
-            // Never refresh covers if the url is empty to avoid "losing" existing covers
-            remoteManga.thumbnail_url.isNullOrEmpty() -> null
-            !manualFetch && localManga.thumbnailUrl == remoteManga.thumbnail_url -> null
+            thumbnailUrl == null -> null
+            !refreshCover && !manualFetch && localManga.thumbnailUrl == thumbnailUrl -> null
             localManga.isLocal() -> Clock.System.now()
-            localManga.hasCustomCover(coverCache) -> {
-                coverCache.deleteFromCache(localManga, false)
-                null
-            }
             else -> {
-                coverCache.deleteFromCache(localManga, false)
-                Clock.System.now()
+                if (refreshCover) coverCache.deleteFromCache(localManga)
+                Clock.System.now().takeUnless { localManga.hasCustomCover(coverCache) }
             }
         }
-
-        val thumbnailUrl = remoteManga.thumbnail_url?.takeIf { it.isNotEmpty() }
 
         val success = mangaRepository.updateRemote(
             MangaRemoteUpdate(

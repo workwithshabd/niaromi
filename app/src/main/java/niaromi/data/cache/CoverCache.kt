@@ -71,6 +71,10 @@ class CoverCache(
         }
     }
 
+    fun hasCachedCover(thumbnailUrl: String?): Boolean {
+        return (getCoverFile(thumbnailUrl)?.length() ?: 0L) > 0L
+    }
+
     /**
      * Returns the custom cover from cache.
      *
