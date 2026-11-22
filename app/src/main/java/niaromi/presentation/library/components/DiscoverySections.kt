@@ -1,6 +1,7 @@
 package niaromi.presentation.library.components
 
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import niaromi.domain.category.model.Category
@@ -95,6 +96,7 @@ fun DiscoverySortMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     onSort: (DiscoverySort) -> Unit,
+    onDisplay: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         DiscoverySort.entries.forEach { sort ->
@@ -106,5 +108,13 @@ fun DiscoverySortMenu(
                 },
             )
         }
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text("Display") },
+            onClick = {
+                onDismiss()
+                onDisplay()
+            },
+        )
     }
 }

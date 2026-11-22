@@ -57,7 +57,6 @@ fun LibrarySettingsDialog(
     val tabs = listOf(
         stringResource(MR.strings.action_filter),
         stringResource(MR.strings.action_sort),
-        stringResource(MR.strings.action_display),
     )
     val pager = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
@@ -91,7 +90,6 @@ fun LibrarySettingsDialog(
                         when (page) {
                             0 -> FilterPage(viewModel)
                             1 -> SortPage(viewModel)
-                            2 -> DisplayPage(viewModel)
                         }
                     }
                 }
@@ -192,84 +190,4 @@ private fun ColumnScope.SortPage(
     DiscoverySort.entries.forEach { sort ->
         RadioMenuItem(text = { Text(sort.label) }, isChecked = sort == selected, onClick = { preference.set(sort) })
     }
-}
-
-private val displayModes = listOf(
-    MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
-    MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
-    MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
-    MR.strings.action_display_list to LibraryDisplayMode.List,
-)
-
-@Composable
-private fun ColumnScope.DisplayPage(
-    viewModel: LibrarySettingsViewModel,
-) {
-    val displayMode by viewModel.libraryPreferences.displayMode.collectAsState()
-    SettingsChipRow(MR.strings.action_display_mode) {
-        displayModes.map { (titleRes, mode) ->
-            FilterChip(
-                selected = displayMode == mode,
-                onClick = { viewModel.setDisplayMode(mode) },
-                label = { Text(stringResource(titleRes)) },
-            )
-        }
-    }
-
-    if (displayMode != LibraryDisplayMode.List) {
-        val configuration = LocalConfiguration.current
-        val columnPreference = remember {
-            if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                viewModel.libraryPreferences.landscapeColumns
-            } else {
-                viewModel.libraryPreferences.portraitColumns
-            }
-        }
-
-        val columns by columnPreference.collectAsState()
-        SliderItem(
-            value = columns,
-            valueRange = 0..10,
-            label = stringResource(MR.strings.pref_library_columns),
-            valueString = if (columns > 0) {
-                columns.toString()
-            } else {
-                stringResource(MR.strings.label_auto)
-            },
-            onChange = columnPreference::set,
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        )
-    }
-
-    HeadingItem(MR.strings.overlay_header)
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_download_badge),
-        pref = viewModel.libraryPreferences.downloadBadge,
-    )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_unread_badge),
-        pref = viewModel.libraryPreferences.unreadBadge,
-    )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_local_badge),
-        pref = viewModel.libraryPreferences.localBadge,
-    )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_language_badge),
-        pref = viewModel.libraryPreferences.languageBadge,
-    )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_show_continue_reading_button),
-        pref = viewModel.libraryPreferences.showContinueReadingButton,
-    )
-
-    HeadingItem(MR.strings.tabs_header)
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_show_tabs),
-        pref = viewModel.libraryPreferences.categoryTabs,
-    )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_show_number_of_items),
-        pref = viewModel.libraryPreferences.categoryNumberOfItems,
-    )
 }

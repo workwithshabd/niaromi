@@ -1,5 +1,6 @@
 package niaromi.presentation.category
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,12 +20,17 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -50,12 +57,17 @@ import androidx.navigation3.runtime.result.LocalResultEventBus
 import niaromi.app.di.appGraph
 import niaromi.core.navigation.LocalNavigator
 import niaromi.core.navigation.MangaRoute
+import niaromi.domain.library.model.LibraryDisplayMode
 import niaromi.domain.manga.model.Manga
 import niaromi.domain.manga.model.asMangaCover
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.automirroredrounded.ArrowBack
 import niaromi.presentation.components.MainNavigationBar
+import niaromi.presentation.core.components.SettingsChipRow
+import niaromi.presentation.core.components.SliderItem
+import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.screens.LoadingScreen
+import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.library.components.DiscoverySortMenu
 import niaromi.presentation.library.components.EditorialSearchBar
 import niaromi.presentation.library.components.LATEST_CHAPTERS_SECTION_ID
@@ -66,6 +78,7 @@ import niaromi.presentation.manga.components.MangaCover
 import niaromi.ui.home.TabEvent
 import niaromi.ui.home.TopLevelRoute
 import niaromi.ui.library.LibrarySearchEvent
+import tachiyomi.i18n.MR
 
 private val ListingBg: Color
     @Composable get() = MaterialTheme.colorScheme.background
@@ -88,7 +101,8 @@ fun CategoryListingScreen(
     val library = context.appGraph.getLibraryManga
     val libraryFlow = remember(library) { library.subscribe() }
     val libraryMangaList by libraryFlow.collectAsStateWithLifecycle(initialValue = library.cached)
-    val sortPreference = context.appGraph.libraryPreferences.discoverySort
+    val preferences = context.appGraph.libraryPreferences
+    val sortPreference = preferences.discoverySort
     val sort by sortPreference.changes().collectAsStateWithLifecycle(sortPreference.get())
     var query by rememberSaveable { mutableStateOf("") }
     val titles = remember(libraryMangaList, sort, categoryId, categoryName) {
@@ -109,6 +123,25 @@ fun CategoryListingScreen(
     }
 
     var showMenu by remember { mutableStateOf(false) }
+    var showDisplay by remember { mutableStateOf(false) }
+    val savedDisplayMode by preferences.displayMode.collectAsState()
+    val displayMode = savedDisplayMode.takeUnless { it == LibraryDisplayMode.List } ?: LibraryDisplayMode.CompactGrid
+    val columnPreference = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        preferences.landscapeColumns
+    } else {
+        preferences.portraitColumns
+    }
+    val columns by columnPreference.collectAsState()
+
+    if (showDisplay) {
+        CollectionDisplayDialog(
+            displayMode = displayMode,
+            columns = columns,
+            onSelectDisplayMode = preferences.displayMode::set,
+            onColumnsChange = columnPreference::set,
+            onDismiss = { showDisplay = false },
+        )
+    }
 
     Box(
         modifier = modifier
@@ -129,7 +162,14 @@ fun CategoryListingScreen(
                 onFilterClick = { showMenu = true },
                 placeholder = "Search this collection",
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                filterMenu = { DiscoverySortMenu(showMenu, { showMenu = false }, sortPreference::set) },
+                filterMenu = {
+                    DiscoverySortMenu(
+                        expanded = showMenu,
+                        onDismiss = { showMenu = false },
+                        onSort = sortPreference::set,
+                        onDisplay = { showDisplay = true },
+                    )
+                },
             )
 
             if (libraryMangaList == null) {
@@ -176,7 +216,11 @@ fun CategoryListingScreen(
                 }
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                    columns = if (columns > 0) {
+                        GridCells.Fixed(columns.coerceIn(1, 10))
+                    } else {
+                        GridCells.Adaptive(if (displayMode == LibraryDisplayMode.ComfortableGrid) 140.dp else 96.dp)
+                    },
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -190,6 +234,7 @@ fun CategoryListingScreen(
                     ) { item ->
                         CategoryMangaGridItem(
                             item = item,
+                            displayMode = displayMode,
                             onClick = {
                                 navigator.push(MangaRoute(item.id, categoryName = categoryName, sectionId = categoryId))
                             },
@@ -243,7 +288,7 @@ fun CategoryMangaGridItem(
     item: Manga,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    subtitle: String? = item.author?.ifBlank { null } ?: item.artist,
+    displayMode: LibraryDisplayMode = LibraryDisplayMode.CompactGrid,
 ) {
     Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         MangaCover.Book(
@@ -252,7 +297,10 @@ fun CategoryMangaGridItem(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(0.dp),
         )
-        Column(Modifier.padding(12.dp)) {
+        if (displayMode == LibraryDisplayMode.CoverOnlyGrid) return@Card
+        val comfortable = displayMode == LibraryDisplayMode.ComfortableGrid
+        val subtitle = item.author?.ifBlank { null } ?: item.artist
+        Column(Modifier.padding(if (comfortable) 12.dp else 8.dp)) {
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.titleSmall,
@@ -261,7 +309,7 @@ fun CategoryMangaGridItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (!subtitle.isNullOrBlank()) {
+            if (comfortable && !subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -272,4 +320,44 @@ fun CategoryMangaGridItem(
             }
         }
     }
+}
+
+@Composable
+private fun CollectionDisplayDialog(
+    displayMode: LibraryDisplayMode,
+    columns: Int,
+    onSelectDisplayMode: (LibraryDisplayMode) -> Unit,
+    onColumnsChange: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(MR.strings.action_display)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                SettingsChipRow(MR.strings.action_display_mode) {
+                    listOf(
+                        MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
+                        MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
+                        MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
+                    ).forEach { (label, mode) ->
+                        FilterChip(
+                            selected = displayMode == mode,
+                            label = { Text(stringResource(label)) },
+                            onClick = { onSelectDisplayMode(mode) },
+                        )
+                    }
+                }
+                SliderItem(
+                    value = columns.coerceIn(0, 10),
+                    valueRange = 0..10,
+                    label = stringResource(MR.strings.pref_library_columns),
+                    valueString = if (columns > 0) columns.toString() else stringResource(MR.strings.label_auto),
+                    onChange = onColumnsChange,
+                    pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+    )
 }
