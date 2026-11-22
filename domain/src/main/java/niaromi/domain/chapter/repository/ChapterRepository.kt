@@ -1,0 +1,47 @@
+package niaromi.domain.chapter.repository
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.JsonObject
+import niaromi.domain.chapter.model.Chapter
+import niaromi.domain.chapter.model.ChapterRemoteUpdate
+import niaromi.domain.chapter.model.ChapterSummary
+import niaromi.domain.chapter.model.ChapterUpdate
+
+interface ChapterRepository {
+
+    suspend fun update(chapterUpdate: ChapterUpdate)
+
+    suspend fun updateAll(chapterUpdates: List<ChapterUpdate>)
+
+    suspend fun updateFromRemote(
+        removedIds: List<Long>,
+        added: List<Chapter>,
+        updated: List<ChapterRemoteUpdate>,
+    ): List<Chapter>
+
+    suspend fun getChapterByMangaId(mangaId: Long, applyScanlatorFilter: Boolean = false): List<Chapter>
+
+    suspend fun getChaptersByMangaIds(mangaIds: List<Long>): Map<Long, List<Chapter>>
+
+    suspend fun getChapterSummaryByMangaId(mangaId: Long): ChapterSummary
+
+    suspend fun getScanlatorsByMangaId(mangaId: Long): List<String>
+
+    fun getScanlatorsByMangaIdAsFlow(mangaId: Long): Flow<List<String>>
+
+    suspend fun getBookmarkedChaptersByMangaId(mangaId: Long): List<Chapter>
+
+    suspend fun getChapterById(id: Long): Chapter?
+
+    suspend fun getChapterByMangaIdAsFlow(mangaId: Long, applyScanlatorFilter: Boolean = false): Flow<List<Chapter>>
+
+    suspend fun getChapterByUrlAndMangaId(url: String, mangaId: Long): Chapter?
+
+    suspend fun migrateChapter(
+        chapterId: Long,
+        newUrl: String,
+        newName: String,
+        newScanlator: String?,
+        newMemo: JsonObject,
+    )
+}

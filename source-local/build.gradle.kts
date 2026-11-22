@@ -1,0 +1,35 @@
+plugins {
+    alias(niaromix.plugins.android.library)
+    alias(niaromix.plugins.spotless)
+
+    alias(libs.plugins.metro)
+}
+
+android {
+    namespace = "niaromi.source.local"
+}
+
+kotlin {
+    compilerOptions {
+        optIn.add("kotlinx.serialization.ExperimentalSerializationApi")
+    }
+}
+
+dependencies {
+    implementation(projects.sourceApi)
+    implementation(projects.i18n)
+
+    implementation(projects.core.archive)
+    implementation(projects.core.common)
+    implementation(projects.coreMetadata)
+    implementation(projects.domain)
+
+    implementation(libs.metro.runtime)
+
+    implementation(libs.unifile)
+    implementation(libs.bundles.serialization)
+
+    implementation(libs.jsoup)
+
+    implementation(libs.kotlinx.datetime)
+}

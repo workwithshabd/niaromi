@@ -1,0 +1,758 @@
+package niaromi.presentation.browse
+
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import dev.icerock.moko.resources.StringResource
+import niaromi.core.common.i18n.stringResource
+import niaromi.core.navigation.ExtensionStoresRoute
+import niaromi.core.navigation.LocalNavigator
+import niaromi.domain.extension.model.ExtensionStore
+import niaromi.extension.model.Extension
+import niaromi.extension.model.InstallStep
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.rounded.Close
+import niaromi.icons.materialsymbols.rounded.Download
+import niaromi.icons.materialsymbols.rounded.Info
+import niaromi.icons.materialsymbols.rounded.Keep
+import niaromi.icons.materialsymbols.rounded.Public
+import niaromi.icons.materialsymbols.rounded.Refresh
+import niaromi.icons.materialsymbols.rounded.Settings
+import niaromi.icons.materialsymbols.rounded.VerifiedUser
+import niaromi.icons.materialsymbols.roundedfilled.Keep
+import niaromi.presentation.browse.components.BaseBrowseItem
+import niaromi.presentation.browse.components.ExtensionIcon
+import niaromi.presentation.browse.components.ExtensionPill
+import niaromi.presentation.browse.components.label
+import niaromi.presentation.components.WarningBanner
+import niaromi.presentation.core.components.FastScrollLazyColumn
+import niaromi.presentation.core.components.material.PullRefresh
+import niaromi.presentation.core.components.material.padding
+import niaromi.presentation.core.components.material.topSmallPaddingValues
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.screens.EmptyScreen
+import niaromi.presentation.core.screens.EmptyScreenAction
+import niaromi.presentation.core.screens.LoadingScreen
+import niaromi.presentation.core.theme.header
+import niaromi.presentation.core.util.plus
+import niaromi.presentation.util.rememberRequestPackageInstallsPermissionState
+import niaromi.ui.browse.extension.ExtensionUiModel
+import niaromi.ui.browse.extension.ExtensionsViewModel
+import niaromi.util.system.LocaleHelper
+import niaromi.util.system.copyToClipboard
+import niaromi.util.system.launchRequestPackageInstallsPermission
+import tachiyomi.i18n.MR
+
+@Composable
+fun ExtensionScreen(
+    state: ExtensionsViewModel.State,
+    contentPadding: PaddingValues,
+    searchQuery: String?,
+    onLongClickItem: (Extension) -> Unit,
+    onClickItemCancel: (Extension) -> Unit,
+    onOpenWebView: (Extension.Available) -> Unit,
+    onInstallExtension: (Extension.Available) -> Unit,
+    onUninstallExtension: (Extension.Installed) -> Unit,
+    onUpdateExtension: (Extension.Installed) -> Unit,
+    onTrustExtension: (Extension.NotLoaded) -> Unit,
+    onOpenExtension: (Extension.Loaded) -> Unit,
+    onClickUpdateAll: () -> Unit,
+    onRefresh: () -> Unit,
+    onTogglePreferred: (Extension) -> Unit = {},
+) {
+    val navigator = LocalNavigator.current
+
+    PullRefresh(
+        refreshing = state.isRefreshing,
+        onRefresh = onRefresh,
+        enabled = !state.isLoading,
+    ) {
+        when {
+            state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+            state.isEmpty -> {
+                val msg = if (!searchQuery.isNullOrEmpty()) {
+                    MR.strings.no_results_found
+                } else {
+                    MR.strings.empty_screen
+                }
+                EmptyScreen(
+                    stringRes = msg,
+                    modifier = Modifier.padding(contentPadding),
+                    actions = listOf(
+                        EmptyScreenAction(
+                            stringRes = MR.strings.extensionStores,
+                            icon = MaterialSymbols.Rounded.Settings,
+                            onClick = { navigator.push(ExtensionStoresRoute) },
+                        ),
+                    ),
+                )
+            }
+            else -> {
+                ExtensionContent(
+                    state = state,
+                    contentPadding = contentPadding,
+                    onLongClickItem = onLongClickItem,
+                    onClickItemCancel = onClickItemCancel,
+                    onOpenWebView = onOpenWebView,
+                    onInstallExtension = onInstallExtension,
+                    onUninstallExtension = onUninstallExtension,
+                    onUpdateExtension = onUpdateExtension,
+                    onTrustExtension = onTrustExtension,
+                    onOpenExtension = onOpenExtension,
+                    onClickUpdateAll = onClickUpdateAll,
+                    onTogglePreferred = onTogglePreferred,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExtensionContent(
+    state: ExtensionsViewModel.State,
+    contentPadding: PaddingValues,
+    onLongClickItem: (Extension) -> Unit,
+    onClickItemCancel: (Extension) -> Unit,
+    onOpenWebView: (Extension.Available) -> Unit,
+    onInstallExtension: (Extension.Available) -> Unit,
+    onUninstallExtension: (Extension.Installed) -> Unit,
+    onUpdateExtension: (Extension.Installed) -> Unit,
+    onTrustExtension: (Extension.NotLoaded) -> Unit,
+    onOpenExtension: (Extension.Loaded) -> Unit,
+    onClickUpdateAll: () -> Unit,
+    onTogglePreferred: (Extension) -> Unit = {},
+) {
+    val context = LocalContext.current
+    var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
+    val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
+
+    FastScrollLazyColumn(
+        contentPadding = contentPadding + topSmallPaddingValues,
+    ) {
+        if (!installGranted && state.installer?.requiresSystemPermission == true) {
+            item(key = "extension-permissions-warning") {
+                WarningBanner(
+                    textRes = MR.strings.ext_permission_install_apps_warning,
+                    modifier = Modifier.clickable {
+                        context.launchRequestPackageInstallsPermission()
+                    },
+                )
+            }
+        }
+
+        state.items.forEach { (header, items) ->
+            item(
+                contentType = "header",
+                key = "extensionHeader-${header.hashCode()}",
+            ) {
+                when (header) {
+                    is ExtensionUiModel.Header.Resource -> {
+                        val action: @Composable RowScope.() -> Unit =
+                            if (header.textRes == MR.strings.ext_updates_pending) {
+                                {
+                                    Button(onClick = { onClickUpdateAll() }) {
+                                        Text(
+                                            text = stringResource(MR.strings.ext_update_all),
+                                            style = LocalTextStyle.current.copy(
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                            ),
+                                        )
+                                    }
+                                }
+                            } else {
+                                {}
+                            }
+                        ExtensionHeader(
+                            textRes = header.textRes,
+                            modifier = Modifier.animateItem(),
+                            action = action,
+                        )
+                    }
+                    is ExtensionUiModel.Header.Text -> {
+                        ExtensionHeader(
+                            text = header.text,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                }
+            }
+
+            items(
+                items = items,
+                contentType = { "item" },
+                key = { item ->
+                    when (item.extension) {
+                        is Extension.NotLoaded -> "extension-not-loaded-${item.hashCode()}"
+                        is Extension.Loaded -> "extension-loaded-${item.hashCode()}"
+                        is Extension.Available -> "extension-available-${item.hashCode()}"
+                    }
+                },
+            ) { item ->
+                val isPreferred = item.extension.pkgName in state.preferredExtensions
+                ExtensionItem(
+                    modifier = Modifier.animateItem(),
+                    item = item,
+                    isPreferred = isPreferred,
+                    onTogglePreferred = onTogglePreferred,
+                    onClickItem = {
+                        when (it) {
+                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Loaded -> onOpenExtension(it)
+                            is Extension.NotLoaded -> {
+                                notLoadedState = it
+                            }
+                        }
+                    },
+                    onLongClickItem = onLongClickItem,
+                    onClickItemSecondaryAction = {
+                        when (it) {
+                            is Extension.Available -> onOpenWebView(it)
+                            is Extension.Loaded -> onOpenExtension(it)
+                            is Extension.NotLoaded -> {
+                                notLoadedState = it
+                            }
+                        }
+                    },
+                    onClickItemCancel = onClickItemCancel,
+                    onClickItemAction = {
+                        when (it) {
+                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Loaded -> {
+                                if (it.hasUpdate) {
+                                    onUpdateExtension(it)
+                                } else {
+                                    onOpenExtension(it)
+                                }
+                            }
+                            is Extension.NotLoaded -> {
+                                if (it.hasUpdate) {
+                                    onUpdateExtension(it)
+                                } else {
+                                    notLoadedState = it
+                                }
+                            }
+                        }
+                    },
+                )
+            }
+        }
+    }
+    notLoadedState?.let { extension ->
+        val dismiss = { notLoadedState = null }
+        if (extension.reason is Extension.NotLoaded.Reason.Untrusted) {
+            ExtensionTrustDialog(
+                onClickConfirm = {
+                    onTrustExtension(extension)
+                    dismiss()
+                },
+                onClickDismiss = {
+                    onUninstallExtension(extension)
+                    dismiss()
+                },
+                onDismissRequest = dismiss,
+            )
+        } else {
+            ExtensionNotLoadedDialog(
+                reason = extension.reason,
+                onClickUninstall = {
+                    onUninstallExtension(extension)
+                    dismiss()
+                },
+                onDismissRequest = dismiss,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExtensionItem(
+    item: ExtensionUiModel.Item,
+    isPreferred: Boolean,
+    onTogglePreferred: (Extension) -> Unit,
+    onClickItem: (Extension) -> Unit,
+    onLongClickItem: (Extension) -> Unit,
+    onClickItemCancel: (Extension) -> Unit,
+    onClickItemAction: (Extension) -> Unit,
+    onClickItemSecondaryAction: (Extension) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val (extension, installStep) = item
+    val store = when (extension) {
+        is Extension.Available -> extension.store
+        is Extension.Installed -> extension.store
+    }
+
+    BaseBrowseItem(
+        modifier = modifier,
+        onClickItem = { onClickItem(extension) },
+        onLongClickItem = { onLongClickItem(extension) },
+        icon = {
+            ExtensionItemIcon(extension = extension, installStep = installStep)
+        },
+        action = {
+            ExtensionItemActions(
+                extension = extension,
+                installStep = installStep,
+                isPreferred = isPreferred,
+                onTogglePreferred = onTogglePreferred,
+                onClickItemCancel = onClickItemCancel,
+                onClickItemAction = onClickItemAction,
+                onClickItemSecondaryAction = onClickItemSecondaryAction,
+            )
+        },
+    ) {
+        ExtensionItemContent(
+            extension = extension,
+            installStep = installStep,
+            store = store,
+            isPreferred = isPreferred,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ExtensionItemContent(
+    extension: Extension,
+    installStep: InstallStep,
+    store: ExtensionStore?,
+    isPreferred: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(start = MaterialTheme.padding.medium),
+    ) {
+        Text(
+            text = extension.name,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+
+        if (store != null) {
+            Text(
+                text = store.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        ExtensionItemMetadata(
+            extension = extension,
+            installStep = installStep,
+            isPreferred = isPreferred,
+        )
+    }
+}
+
+@Composable
+private fun ExtensionItemIcon(
+    extension: Extension,
+    installStep: InstallStep,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        val idle = installStep.isCompleted()
+        if (!idle) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                strokeWidth = 2.dp,
+            )
+        }
+
+        val padding by animateDpAsState(
+            targetValue = if (idle) 0.dp else 8.dp,
+            label = "iconPadding",
+        )
+        ExtensionIcon(
+            extension = extension,
+            modifier = Modifier
+                .matchParentSize()
+                .padding(padding),
+        )
+    }
+}
+
+/**
+ * Plain text for what an extension simply is, pills for the few things worth noticing about it.
+ * Won't look good when it wraps, but it's not like overflowing content can be ellipsized.
+ */
+@Composable
+private fun ExtensionItemMetadata(
+    extension: Extension,
+    installStep: InstallStep,
+    isPreferred: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall / 2),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (isPreferred) {
+            ExtensionPill(
+                text = stringResource(MR.strings.ext_preferred),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+
+        val facts = listOfNotNull(
+            (extension as? Extension.Loaded)
+                ?.lang
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { LocaleHelper.getSourceDisplayName(it, LocalContext.current) },
+            extension.versionName.takeIf { it.isNotEmpty() },
+        )
+        if (facts.isNotEmpty()) {
+            Text(
+                text = facts.joinToString(" \u2022 "),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        val notable = listOfNotNull(
+            when (installStep) {
+                InstallStep.Pending -> MR.strings.ext_pending
+                InstallStep.Downloading -> MR.strings.ext_downloading
+                InstallStep.Installing -> MR.strings.ext_installing
+                else -> null
+            }?.let { it to MaterialTheme.colorScheme.primary },
+            when {
+                extension is Extension.NotLoaded ->
+                    extension.reason.labelRes?.let { it to MaterialTheme.colorScheme.error }
+                extension is Extension.Loaded && extension.isObsolete ->
+                    MR.strings.ext_obsolete to MaterialTheme.colorScheme.error
+                else -> null
+            },
+            extension.contentWarning.label?.let { it.title to it.color },
+            (extension as? Extension.Loaded)
+                ?.takeIf { !it.isShared }
+                ?.let { MR.strings.ext_installer_private to MaterialTheme.colorScheme.onSurfaceVariant },
+        )
+        notable.forEach { (label, color) ->
+            ExtensionPill(text = stringResource(label), color = color)
+        }
+    }
+}
+
+@Composable
+private fun ExtensionItemActions(
+    extension: Extension,
+    installStep: InstallStep,
+    isPreferred: Boolean = false,
+    onTogglePreferred: (Extension) -> Unit = {},
+    modifier: Modifier = Modifier,
+    onClickItemCancel: (Extension) -> Unit = {},
+    onClickItemAction: (Extension) -> Unit = {},
+    onClickItemSecondaryAction: (Extension) -> Unit = {},
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (!installStep.isCompleted()) {
+            IconButton(onClick = { onClickItemCancel(extension) }) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Close,
+                    contentDescription = stringResource(MR.strings.action_cancel),
+                )
+            }
+            return@Row
+        }
+
+        if (extension is Extension.Loaded) {
+            val keepIcon = if (isPreferred) MaterialSymbols.RoundedFilled.Keep else MaterialSymbols.Rounded.Keep
+            val keepTint = if (isPreferred) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val keepDesc = if (isPreferred) {
+                stringResource(MR.strings.action_unpin)
+            } else {
+                stringResource(MR.strings.action_pin)
+            }
+            IconButton(onClick = { onTogglePreferred(extension) }) {
+                Icon(
+                    imageVector = keepIcon,
+                    contentDescription = keepDesc,
+                    tint = keepTint,
+                )
+            }
+        }
+
+        val secondaryAction = when (extension) {
+            is Extension.Available -> {
+                (MaterialSymbols.Rounded.Public to MR.strings.action_open_in_web_view)
+                    .takeIf { extension.sources.isNotEmpty() }
+            }
+            is Extension.Loaded -> MaterialSymbols.Rounded.Settings to MR.strings.action_settings
+            is Extension.NotLoaded -> if (extension.reason is Extension.NotLoaded.Reason.Untrusted) {
+                MaterialSymbols.Rounded.VerifiedUser to MR.strings.ext_trust
+            } else {
+                MaterialSymbols.Rounded.Info to MR.strings.ext_not_loaded_details
+            }
+        }
+        secondaryAction?.let { (icon, label) ->
+            IconButton(onClick = { onClickItemSecondaryAction(extension) }) {
+                Icon(imageVector = icon, contentDescription = stringResource(label))
+            }
+        }
+
+        val action = when {
+            installStep == InstallStep.Error -> MaterialSymbols.Rounded.Refresh to MR.strings.action_retry
+            extension is Extension.Available -> MaterialSymbols.Rounded.Download to MR.strings.ext_install
+            extension is Extension.Installed && extension.hasUpdate -> {
+                MaterialSymbols.Rounded.Download to MR.strings.ext_update
+            }
+            else -> null
+        }
+        action?.let { (icon, label) ->
+            IconButton(onClick = { onClickItemAction(extension) }) {
+                Icon(imageVector = icon, contentDescription = stringResource(label))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExtensionHeader(
+    textRes: StringResource,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    ExtensionHeader(
+        text = stringResource(textRes),
+        modifier = modifier,
+        action = action,
+    )
+}
+
+@Composable
+private fun ExtensionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .weight(1f),
+            style = MaterialTheme.typography.header,
+        )
+        action()
+    }
+}
+
+/**
+ * Only the reasons the user can act on are worth naming in the row; the rest all mean "broken" to
+ * them and are spelled out in [ExtensionNotLoadedDialog] instead.
+ */
+private val Extension.NotLoaded.Reason.labelRes: StringResource?
+    get() = when (this) {
+        is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
+        Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
+        // The section header already says these aren't loaded; the dialog says why
+        Extension.NotLoaded.Reason.Unsigned,
+        Extension.NotLoaded.Reason.UnsupportedLibVersion,
+        Extension.NotLoaded.Reason.Malformed,
+        is Extension.NotLoaded.Reason.Failed,
+        -> null
+    }
+
+private val Extension.NotLoaded.Reason.descriptionRes: StringResource
+    get() = when (this) {
+        is Extension.NotLoaded.Reason.Untrusted -> MR.strings.untrusted_extension_message
+        Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered_message
+        Extension.NotLoaded.Reason.Unsigned -> MR.strings.ext_unsigned_message
+        Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_message
+        Extension.NotLoaded.Reason.Malformed -> MR.strings.ext_malformed_message
+        is Extension.NotLoaded.Reason.Failed -> MR.strings.ext_load_failed_message
+    }
+
+@Composable
+private fun ExtensionNotLoadedDialog(
+    reason: Extension.NotLoaded.Reason,
+    onClickUninstall: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(MR.strings.ext_not_loaded_dialog))
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                Text(text = stringResource(reason.descriptionRes))
+
+                if (reason is Extension.NotLoaded.Reason.Failed) {
+                    Text(
+                        text = reason.message,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    val context = LocalContext.current
+                    TextButton(
+                        onClick = {
+                            context.copyToClipboard(
+                                label = context.stringResource(MR.strings.ext_copy_stacktrace),
+                                content = reason.stackTrace,
+                            )
+                        },
+                        contentPadding = PaddingValues(0.dp),
+                    ) {
+                        Text(text = stringResource(MR.strings.ext_copy_stacktrace))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(MR.strings.action_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickUninstall) {
+                Text(text = stringResource(MR.strings.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
+}
+
+@Composable
+private fun ExtensionTrustDialog(
+    onClickConfirm: () -> Unit,
+    onClickDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(MR.strings.untrusted_extension))
+        },
+        text = {
+            Text(text = stringResource(MR.strings.untrusted_extension_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(MR.strings.ext_trust))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickDismiss) {
+                Text(text = stringResource(MR.strings.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
+}
+
+/**
+ * Confirms uninstalling a privately installed extension, laid out like the system package installer's prompt.
+ */
+@Composable
+fun PrivateExtensionUninstallDialog(
+    extension: Extension,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        modifier = Modifier
+            .padding(horizontal = 32.dp)
+            .fillMaxWidth(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        title = {
+            Text(text = stringResource(MR.strings.ext_confirm_uninstall))
+        },
+        text = {
+            Row(
+                modifier = Modifier.padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ExtensionIcon(
+                    extension = extension,
+                    modifier = Modifier.size(40.dp),
+                )
+                Text(
+                    text = extension.name,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm()
+                    onDismissRequest()
+                },
+            ) {
+                Text(text = stringResource(MR.strings.ext_uninstall))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismissRequest,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text(text = stringResource(MR.strings.action_cancel))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
+}

@@ -1,0 +1,63 @@
+package niaromi.data.backup.restore.restorers
+
+import dev.zacsweers.metro.Inject
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import niaromi.data.backup.models.BackupCategory
+import niaromi.data.backup.models.BackupManga
+import niaromi.domain.backup.model.RestoredHistory
+import niaromi.domain.backup.model.RestoredManga
+import niaromi.domain.backup.repository.RestoreRepository
+import niaromi.domain.category.interactor.GetCategories
+import niaromi.domain.manga.interactor.FetchInterval
+import kotlin.time.Clock
+
+@Inject
+class MangaRestorer(
+    private val restoreRepository: RestoreRepository,
+    private val getCategories: GetCategories,
+    private val fetchInterval: FetchInterval,
+) {
+
+    private val timeZone = TimeZone.currentSystemDefault()
+    private val now = Clock.System.now().toLocalDateTime(timeZone)
+    private val currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
+
+    /**
+     * Restores [backupMangas] all together, so either every one of them is restored or none is.
+     */
+    suspend fun restore(
+        backupMangas: List<BackupManga>,
+        backupCategories: List<BackupCategory>,
+    ) {
+        val dbCategoriesByName = getCategories.await().associateBy { it.name }
+        val backupCategoriesByOrder = backupCategories.associateBy { it.order }
+
+        val entries = backupMangas.map { backupManga ->
+            RestoredManga(
+                manga = backupManga.getMangaImpl(),
+                chapters = backupManga.chapters.map { it.toChapterImpl() },
+                categoryIds = backupManga.categories.mapNotNull { backupCategoryOrder ->
+                    backupCategoriesByOrder[backupCategoryOrder]?.let { backupCategory ->
+                        dbCategoriesByName[backupCategory.name]?.id
+                    }
+                },
+                history = backupManga.history.map {
+                    val history = it.getHistoryImpl()
+                    RestoredHistory(it.url, history.readAt, history.readDuration)
+                },
+                tracks = backupManga.tracking.map { it.getTrackImpl() },
+                excludedScanlators = backupManga.excludedScanlators,
+            )
+        }
+
+        restoreRepository.restoreManga(entries) { manga ->
+            fetchInterval.withFetchInterval(manga, now, timeZone, currentFetchWindow).apply {
+                // A next update still ahead was worked out with the chapters the backup came from
+                manga.nextUpdate
+                    ?.takeIf { it >= currentFetchWindow.start }
+                    ?.let { nextUpdate = it }
+            }
+        }
+    }
+}

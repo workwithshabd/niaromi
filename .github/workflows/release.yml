@@ -1,0 +1,120 @@
+name: Release
+on:
+  push:
+    tags:
+      - v*
+
+env:
+  NIAROMI_GITHUB_RELEASE: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  get_tag:
+    if: github.repository == 'workwithshabd/niaromi'
+    name: Extract tag name
+    runs-on: 'ubuntu-26.04'
+    outputs:
+      tag: ${{ steps.extract.outputs.tag }}
+
+    steps:
+      - name: Get tag name
+        id: extract
+        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+  build:
+    if: github.repository == 'workwithshabd/niaromi'
+    name: Build
+    runs-on: 'ubuntu-26.04'
+    needs: get_tag
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Decode signing keystore
+        run: echo "$SIGNING_KEY" | base64 -d > "${{ runner.temp }}/signing.keystore"
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+
+      - name: Build
+        run: ./gradlew assembleRelease -Pdist=github
+        env:
+          storeFile: ${{ runner.temp }}/signing.keystore
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Rename APK
+        run: |
+          set -e
+
+          mv app/build/outputs/apk/release/app-universal-release.apk niaromi-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-arm64-v8a-release.apk niaromi-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-armeabi-v7a-release.apk niaromi-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-x86-release.apk niaromi-x86-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-x86_64-release.apk niaromi-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: niaromi
+          path: |
+            niaromi-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-x86-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+
+  release:
+    if: github.repository == 'workwithshabd/niaromi'
+    name: Create GitHub Release
+    runs-on: ubuntu-26.04
+    needs: [get_tag, build]
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          merge-multiple: true
+
+      - name: Delete all artifacts
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
+        with:
+          failOnError: false
+          name: |
+            niaromi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: ${{ needs.get_tag.outputs.tag }}
+          name: Niaromi ${{ needs.get_tag.outputs.tag }}
+          body: |
+            Niaromi release ${{ needs.get_tag.outputs.tag }}.
+
+            > [!TIP]
+            >
+            > ### If you are unsure which version to download then go with `niaromi-${{ needs.get_tag.outputs.tag }}.apk`
+          files: |
+            niaromi-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-x86-${{ needs.get_tag.outputs.tag }}.apk
+            niaromi-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+          draft: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}

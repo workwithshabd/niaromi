@@ -1,0 +1,23 @@
+package niaromi.ui.library
+
+import niaromi.domain.library.model.LibraryManga
+
+data class LibraryItem(
+    val libraryManga: LibraryManga,
+    val downloadCount: Int,
+    val unreadCount: Long,
+    val isLocal: Boolean,
+    val sourceName: String,
+    val sourceLanguage: String,
+    val badges: Badges,
+) {
+    val id: Long = libraryManga.id
+    val hasLatestChapters: Boolean get() = libraryManga.hasLatestChapters
+
+    data class Badges(
+        val downloadCount: Int,
+        val unreadCount: Long,
+        val isLocal: Boolean,
+        val sourceLanguage: String,
+    )
+}

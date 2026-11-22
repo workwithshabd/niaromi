@@ -1,0 +1,168 @@
+package niaromi.presentation.browse
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import eu.kanade.tachiyomi.source.Source
+import kotlinx.coroutines.flow.StateFlow
+import niaromi.core.common.i18n.stringResource
+import niaromi.domain.library.model.LibraryDisplayMode
+import niaromi.domain.manga.model.Manga
+import niaromi.domain.source.model.StubSource
+import niaromi.icons.materialsymbols.MaterialSymbols
+import niaromi.icons.materialsymbols.automirroredrounded.Help
+import niaromi.icons.materialsymbols.rounded.Public
+import niaromi.icons.materialsymbols.rounded.Refresh
+import niaromi.presentation.browse.components.BrowseSourceComfortableGrid
+import niaromi.presentation.browse.components.BrowseSourceCompactGrid
+import niaromi.presentation.browse.components.BrowseSourceList
+import niaromi.presentation.components.AppBar
+import niaromi.presentation.core.components.material.Scaffold
+import niaromi.presentation.core.i18n.stringResource
+import niaromi.presentation.core.screens.EmptyScreen
+import niaromi.presentation.core.screens.EmptyScreenAction
+import niaromi.presentation.core.screens.LoadingScreen
+import niaromi.presentation.util.formattedMessage
+import niaromi.source.local.LocalSource
+import tachiyomi.i18n.MR
+
+@Composable
+fun BrowseSourceContent(
+    source: Source?,
+    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    columns: GridCells,
+    displayMode: LibraryDisplayMode,
+    snackbarHostState: SnackbarHostState,
+    contentPadding: PaddingValues,
+    onWebViewClick: () -> Unit,
+    onHelpClick: () -> Unit,
+    onLocalSourceHelpClick: () -> Unit,
+    onMangaClick: (Manga) -> Unit,
+    onMangaLongClick: (Manga) -> Unit,
+) {
+    val context = LocalContext.current
+
+    val errorState = mangaList.loadState.refresh.takeIf { it is LoadState.Error }
+        ?: mangaList.loadState.append.takeIf { it is LoadState.Error }
+
+    val getErrorMessage: (LoadState.Error) -> String = { state ->
+        with(context) { state.error.formattedMessage }
+    }
+
+    LaunchedEffect(errorState) {
+        if (mangaList.itemCount > 0 && errorState != null && errorState is LoadState.Error) {
+            val result = snackbarHostState.showSnackbar(
+                message = getErrorMessage(errorState),
+                actionLabel = context.stringResource(MR.strings.action_retry),
+                duration = SnackbarDuration.Indefinite,
+            )
+            when (result) {
+                SnackbarResult.Dismissed -> snackbarHostState.currentSnackbarData?.dismiss()
+                SnackbarResult.ActionPerformed -> mangaList.retry()
+            }
+        }
+    }
+
+    if (mangaList.itemCount == 0 && mangaList.loadState.refresh is LoadState.Loading) {
+        LoadingScreen(Modifier.padding(contentPadding))
+        return
+    }
+
+    if (mangaList.itemCount == 0) {
+        EmptyScreen(
+            modifier = Modifier.padding(contentPadding),
+            message = when (errorState) {
+                is LoadState.Error -> getErrorMessage(errorState)
+                else -> stringResource(MR.strings.no_results_found)
+            },
+            actions = if (source is LocalSource) {
+                listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.local_source_help_guide,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
+                        onClick = onLocalSourceHelpClick,
+                    ),
+                )
+            } else {
+                listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_retry,
+                        icon = MaterialSymbols.Rounded.Refresh,
+                        onClick = mangaList::refresh,
+                    ),
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_open_in_web_view,
+                        icon = MaterialSymbols.Rounded.Public,
+                        onClick = onWebViewClick,
+                    ),
+                    EmptyScreenAction(
+                        stringRes = MR.strings.label_help,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
+                        onClick = onHelpClick,
+                    ),
+                )
+            },
+        )
+
+        return
+    }
+
+    when (displayMode) {
+        LibraryDisplayMode.ComfortableGrid -> {
+            BrowseSourceComfortableGrid(
+                mangaList = mangaList,
+                columns = columns,
+                contentPadding = contentPadding,
+                onMangaClick = onMangaClick,
+                onMangaLongClick = onMangaLongClick,
+            )
+        }
+        LibraryDisplayMode.List -> {
+            BrowseSourceList(
+                mangaList = mangaList,
+                contentPadding = contentPadding,
+                onMangaClick = onMangaClick,
+                onMangaLongClick = onMangaLongClick,
+            )
+        }
+        LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
+            BrowseSourceCompactGrid(
+                mangaList = mangaList,
+                columns = columns,
+                contentPadding = contentPadding,
+                onMangaClick = onMangaClick,
+                onMangaLongClick = onMangaLongClick,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun MissingSourceScreen(
+    source: StubSource,
+    navigateUp: () -> Unit,
+) {
+    Scaffold(
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = source.name,
+                navigateUp = navigateUp,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { paddingValues ->
+        EmptyScreen(
+            message = stringResource(MR.strings.source_not_installed, source.toString()),
+            modifier = Modifier.padding(paddingValues),
+        )
+    }
+}

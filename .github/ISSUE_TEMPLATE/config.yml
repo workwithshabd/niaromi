@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discord Community
+    url: https://discord.com/users/workwithshabd
+    about: Connect with @workwithshabd on Discord
+  - name: 🌐 GitHub Repository
+    url: https://github.com/workwithshabd/niaromi
+    about: Source code, releases, and documentation
