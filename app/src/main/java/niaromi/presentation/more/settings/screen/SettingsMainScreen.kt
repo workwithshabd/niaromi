@@ -201,16 +201,15 @@ data object SettingsMainScreen : NavKey {
                     state = state,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(containerColor),
-                    contentPadding = PaddingValues(
-                        top = contentPadding.calculateTopPadding(),
-                        bottom = 120.dp,
-                    ),
+                        .background(containerColor)
+                        .padding(top = contentPadding.calculateTopPadding()),
+                    contentPadding = PaddingValues(bottom = 120.dp),
                 ) {
-                    item(key = "search_bar") {
+                    stickyHeader(key = "search_bar") {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(containerColor)
                                 .padding(horizontal = 20.dp, vertical = 10.dp)
                                 .height(56.dp)
                                 .clip(RoundedCornerShape(28.dp))
