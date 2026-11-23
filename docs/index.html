@@ -3,23 +3,86 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Niaromi</title>
+  <meta name="description" content="Niaromi is an open-source Android reader for manga, manhwa, comics, and EPUB books.">
+  <meta name="theme-color" content="#f8f6f0">
+  <title>Niaromi — Manga, comics, and books on Android</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header>
-    <a class="brand" href="./">Niaromi</a>
-    <nav aria-label="Main"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
+<body class="landing">
+  <header class="site-header wrap">
+    <a class="brand" href="./">NIAROMI</a>
+    <nav aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="https://github.com/workwithshabd/niaromi">GitHub</a>
+      <a class="nav-download" href="#download">Download</a>
+    </nav>
   </header>
   <main>
-<h1>Niaromi</h1>
-<p>An Android reader for manga, manhwa, comics, and EPUB books. Organize your library by genre or collection, pick up where you left off, and download chapters for offline reading.</p>
-<p><a class="download" href="https://github.com/workwithshabd/niaromi/releases/latest">Download for Android</a></p>
-<h2>Back up your library</h2>
-<p>Create a local backup or connect Google Drive to save and restore backups in your Google account. Google sign-in is optional and is used for Drive backups.</p>
-<h2>Source and support</h2>
-<p>Niaromi is an open-source variant of Mihon. It does not host reading content. <a href="https://github.com/workwithshabd/niaromi">View the source code</a> or <a href="https://github.com/workwithshabd/niaromi/issues">report a problem</a>.</p>
+    <section class="hero wrap" aria-labelledby="hero-heading">
+      <div class="hero-copy">
+        <h1 id="hero-heading">Your reading.<br><em>Your library.</em></h1>
+        <p>An open-source Android reader for manga, manhwa, comics, and EPUB books. Organize your library and pick up right where you left off.</p>
+        <div class="actions">
+          <a class="download" href="https://github.com/workwithshabd/niaromi/releases/latest">Download for Android <span aria-hidden="true">↗</span></a>
+          <a class="text-link" href="#features">Explore features <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="platform">Android 8.0 or later</p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="cover cover-back"></div><div class="cover cover-middle"></div>
+        <div class="cover cover-front"><div class="cover-window"></div><div class="cover-mark"></div></div>
+        <div class="bookmark"></div>
+      </div>
+    </section>
+
+    <section class="features wrap" id="features" aria-labelledby="features-heading">
+      <h2 id="features-heading">Built around your library.</h2>
+      <div class="feature-grid">
+        <article>
+          <i class="feature-icon shelves" aria-hidden="true"></i>
+          <h3>Make it yours</h3>
+          <p>Organize titles by genre or custom collection, sort by last read, and see recent chapters right on Home.</p>
+        </article>
+        <article>
+          <i class="feature-icon explore" aria-hidden="true"></i>
+          <h3>Find your next read</h3>
+          <p>Search across installed extensions from Explore and prioritize the sources you use most.</p>
+        </article>
+        <article>
+          <i class="feature-icon pages" aria-hidden="true"></i>
+          <h3>Read offline</h3>
+          <p>Download chapters for later, import EPUBs, and come back to the page where you stopped.</p>
+        </article>
+        <article>
+          <i class="feature-icon backup" aria-hidden="true"></i>
+          <h3>Keep a backup</h3>
+          <p>Save your library and reading progress locally or connect Google Drive for optional cloud backups.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="installation wrap" id="download" aria-labelledby="download-heading">
+      <div>
+        <h2 id="download-heading">Get Niaromi</h2>
+        <p>Download the Universal APK if you’re unsure which build your device needs. Open it on Android and follow the installation prompts.</p>
+        <a class="download" href="https://github.com/workwithshabd/niaromi/releases/latest">View latest release <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="install-notes">
+        <h3>Already installed?</h3>
+        <p>Open <strong>Settings → Check for updates</strong> in Niaromi.</p>
+        <h3>Need help?</h3>
+        <p><a href="https://github.com/workwithshabd/niaromi/issues">Report an issue on GitHub</a> with your app and Android versions.</p>
+      </div>
+    </section>
   </main>
-  <footer><a href="https://github.com/workwithshabd/niaromi">Niaromi on GitHub</a></footer>
+  <footer class="site-footer wrap">
+    <p><a class="brand" href="./">NIAROMI</a><br>A library-first Android reader built on <a href="https://github.com/mihonapp/mihon">Mihon</a>.</p>
+    <nav aria-label="Footer navigation">
+      <a href="privacy.html">Privacy policy</a>
+      <a href="terms.html">Terms of use</a>
+      <a href="https://github.com/workwithshabd/niaromi">Source code</a>
+    </nav>
+  </footer>
 </body>
 </html>
