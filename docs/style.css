@@ -1,0 +1,20 @@
+:root {
+  color-scheme: light dark;
+  font: 100%/1.65 system-ui, sans-serif;
+  background: light-dark(#f8f6fb, #17151c);
+  color: light-dark(#211d29, #eee8f6);
+}
+body { max-width: 48rem; margin: auto; padding: 1.5rem; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; }
+nav { display: flex; flex-wrap: wrap; gap: 1rem; }
+a { color: light-dark(#554297, #d3c3ff); }
+.brand { font-weight: 800; text-decoration: none; }
+main { margin-block: 2.5rem; }
+h1, h2 { line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 6vw, 4rem); letter-spacing: -.04em; }
+footer { border-top: 1px solid light-dark(#d9d1e6, #4a4159); padding-top: 1rem; }
+.download {
+  display: inline-block; padding: .65rem 1rem; border-radius: .7rem;
+  background: light-dark(#554297, #d3c3ff); color: light-dark(white, #28174b);
+  font-weight: 700; text-decoration: none;
+}
