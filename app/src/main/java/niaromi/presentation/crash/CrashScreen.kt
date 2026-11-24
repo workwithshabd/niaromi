@@ -20,13 +20,13 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import kotlinx.coroutines.launch
 import niaromi.app.di.appGraph
+import niaromi.core.common.Constants
 import niaromi.icons.materialsymbols.MaterialSymbols
 import niaromi.icons.materialsymbols.rounded.BugReport
 import niaromi.presentation.core.components.material.padding
 import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.screens.InfoScreen
 import niaromi.presentation.theme.TachiyomiPreviewTheme
-import niaromi.util.system.copyToClipboard
 import tachiyomi.i18n.MR
 
 @Composable
@@ -54,15 +54,16 @@ fun CrashScreen(
     ) {
         Column(Modifier.fillMaxWidth().padding(vertical = MaterialTheme.padding.small)) {
             Text(
-                "To report this crash, tag @workwithshabd on X or mention workwithshabd on Discord. Review your crash log before sharing it.",
+                "To report this crash, tag @workwithshabd on X or join Niaromi’s Discord server. " +
+                    "Review your crash log before sharing it.",
                 style = MaterialTheme.typography.bodyMedium,
             )
             Row {
                 TextButton(onClick = { uriHandler.openUri("https://x.com/workwithshabd") }) {
                     Text("Open X")
                 }
-                TextButton(onClick = { context.copyToClipboard("Discord username", "workwithshabd") }) {
-                    Text("Copy Discord username")
+                TextButton(onClick = { uriHandler.openUri(Constants.URL_DISCORD) }) {
+                    Text("Join Discord")
                 }
             }
             if (exception != null) {

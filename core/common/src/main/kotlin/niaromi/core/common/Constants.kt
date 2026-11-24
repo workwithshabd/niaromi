@@ -5,7 +5,7 @@ object Constants {
     const val URL_HELP_UPCOMING = "https://github.com/workwithshabd/niaromi"
     const val URL_DONATE_PATREON = "https://github.com/workwithshabd"
     const val URL_DONATE_OPENCOLLECTIVE = "https://github.com/workwithshabd"
-    const val URL_DISCORD = "https://discord.com/users/workwithshabd"
+    const val URL_DISCORD = "https://discord.gg/uxAkcqYpb"
 
     const val MANGA_EXTRA = "manga"
 

@@ -195,7 +195,7 @@ fun AboutScreen() {
                     LinkIcon(
                         label = "Discord",
                         icon = SimpleIcons.Discord,
-                        url = "https://discord.com/users/workwithshabd",
+                        url = Constants.URL_DISCORD,
                     )
                     LinkIcon(
                         label = "GitHub",
