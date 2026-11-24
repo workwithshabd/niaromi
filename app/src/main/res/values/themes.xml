@@ -584,6 +584,16 @@
     <style name="Base.Theme.Tachiyomi" parent="Base.Theme.Niaromi" />
     <style name="Theme.Tachiyomi" parent="Theme.Niaromi" />
     <style name="ThemeOverlay.Tachiyomi.Amoled" parent="ThemeOverlay.Niaromi.Amoled" />
+    <style name="Theme.Niaromi.SplashScreen.Light">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_light_foreground</item>
+        <item name="windowSplashScreenBackground">@android:color/white</item>
+    </style>
+
+    <style name="Theme.Niaromi.SplashScreen.Dark">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_dark_foreground</item>
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+    </style>
+
     <style name="Theme.Tachiyomi.SplashScreen" parent="Theme.Niaromi.SplashScreen" />
     <style name="Theme.Tachiyomi.Monet" parent="Theme.Niaromi.Monet" />
     <style name="Theme.Tachiyomi.Catppuccin" parent="Theme.Niaromi.Catppuccin" />

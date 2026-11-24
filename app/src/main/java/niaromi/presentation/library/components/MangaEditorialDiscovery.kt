@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +86,7 @@ private val EditorialCardBorder: Color
 fun MangaEditorialDiscovery(
     categories: List<Category>,
     favorites: List<LibraryItem>,
+    latestTitleIds: List<Long>,
     searchQuery: String?,
     contentPadding: PaddingValues,
     getItemsForCategory: (Category) -> List<LibraryItem>,
@@ -106,6 +108,11 @@ fun MangaEditorialDiscovery(
         buildDiscoverySections(categories, favorites.map { it.libraryManga }, sort) { category ->
             getItemsForCategory(category).map { it.libraryManga }
         }
+    }
+
+    val latestTitles = remember(favorites, latestTitleIds) {
+        val byId = favorites.associateBy { it.libraryManga.id }
+        latestTitleIds.mapNotNull { byId[it]?.libraryManga }
     }
 
     val matchingFavorites = remember(favorites, searchQuery) {
@@ -139,13 +146,7 @@ fun MangaEditorialDiscovery(
                 }
             },
         ) {
-            Column(Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
-                EditorialSearchBar(
-                    query = searchQuery.orEmpty(),
-                    onQueryChange = onSearchQueryChange,
-                    onFilterClick = onFilterClick,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                )
+            Box(Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
                 if (searchQuery.isNullOrBlank()) {
                     val allTitles = remember(favorites, sort) {
                         sortDiscoveryTitles(favorites.map { it.libraryManga }, sort, sectionId = 0L)
@@ -155,19 +156,27 @@ fun MangaEditorialDiscovery(
                             sections = sections,
                             refreshState = refreshState,
                             allTitles = allTitles,
+                            latestTitles = latestTitles,
                             onClickManga = onClickManga,
                             onViewAll = onViewAll,
                             onLatestChapters = onLatestChapters,
                             onSearchSources = { onAddTitle("") },
                             onGettingStarted = onGettingStarted,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.padding(top = SearchHeaderHeight),
                         )
                     }
                 } else {
+                    val listState = rememberLazyListState()
+                    val scrolled by remember(listState) {
+                        derivedStateOf {
+                            listState.firstVisibleItemIndex > 0 ||
+                                listState.firstVisibleItemScrollOffset > 0
+                        }
+                    }
                     LazyColumn(
-                        state = rememberLazyListState(),
-                        modifier = Modifier.weight(1f).background(EditorialBg),
-                        contentPadding = PaddingValues(bottom = 96.dp),
+                        state = listState,
+                        modifier = Modifier.fillMaxSize().background(EditorialBg).searchBackdrop(scrolled, EditorialBg),
+                        contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 96.dp),
                     ) {
                         if (matchingFavorites.isNotEmpty()) {
                             item(key = "search_library_header") {
@@ -271,6 +280,12 @@ fun MangaEditorialDiscovery(
                         }
                     }
                 }
+                EditorialSearchBar(
+                    query = searchQuery.orEmpty(),
+                    onQueryChange = onSearchQueryChange,
+                    onFilterClick = onFilterClick,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                )
             }
         }
     }

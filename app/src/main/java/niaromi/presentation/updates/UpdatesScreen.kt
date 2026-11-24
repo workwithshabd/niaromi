@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -194,14 +195,14 @@ fun UpdateScreen(
                             items(groups, key = { it.first().update.mangaId }) { chapters ->
                                 val first = chapters.first()
                                 val selected = chapters.any { it.selected }
-                                val shape = MaterialTheme.shapes.large
+                                val shape = MaterialTheme.shapes.extraSmall
                                 Card(
                                     shape = shape,
                                     colors = CardDefaults.cardColors(
                                         containerColor = if (selected) {
                                             MaterialTheme.colorScheme.secondaryContainer
                                         } else {
-                                            MaterialTheme.colorScheme.surfaceContainer
+                                            Color.Transparent
                                         },
                                     ),
                                     modifier = Modifier

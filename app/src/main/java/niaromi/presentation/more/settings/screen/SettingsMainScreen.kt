@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,6 +95,8 @@ import niaromi.presentation.core.components.material.Scaffold
 import niaromi.presentation.core.i18n.stringResource
 import niaromi.presentation.core.util.collectAsState
 import niaromi.presentation.core.util.isTabletUi
+import niaromi.presentation.library.components.SearchHeaderHeight
+import niaromi.presentation.library.components.searchBackdrop
 import niaromi.presentation.more.settings.screen.about.getVersionName
 import niaromi.ui.home.TopLevelRoute
 import tachiyomi.i18n.MR
@@ -148,11 +151,10 @@ data object SettingsMainScreen : NavKey {
         var showGitHubUpdateDialog by remember { mutableStateOf(false) }
 
         val context = LocalContext.current
-        val scope = rememberCoroutineScope()
         val state = rememberLazyListState()
 
         ResultEffect<Unit>(resultKey = TopLevelRoute.More.reselectEventKey) {
-            scope.launch { state.animateScrollToItem(0) }
+            state.requestScrollToItem(0)
         }
 
         val downloadedOnlyPref = remember { context.appGraph.basePreferences.downloadedOnly }
@@ -197,140 +199,142 @@ data object SettingsMainScreen : NavKey {
                 }
             },
             content = { contentPadding ->
-                LazyColumn(
-                    state = state,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(containerColor)
-                        .padding(top = contentPadding.calculateTopPadding()),
-                    contentPadding = PaddingValues(bottom = 120.dp),
+                Box(
+                    Modifier.fillMaxSize().background(
+                        containerColor,
+                    ).padding(top = contentPadding.calculateTopPadding()),
                 ) {
-                    stickyHeader(key = "search_bar") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(containerColor)
-                                .padding(horizontal = 20.dp, vertical = 10.dp)
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(28.dp))
-                                .background(SettingsSearchBarBg)
-                                .clickable { navigator.navigate(SettingsSearchRoute, twoPane) }
-                                .padding(horizontal = 14.dp),
-                            contentAlignment = Alignment.CenterStart,
+                    val scrolled by remember(state) {
+                        derivedStateOf { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 }
+                    }
+                    LazyColumn(
+                        state = state,
+                        modifier = Modifier.fillMaxSize().searchBackdrop(scrolled, containerColor),
+                        contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 120.dp),
+                    ) {
+                        item(key = "quick_controls_header") {
+                            SettingsGroupHeading("Quick controls & tools")
+                        }
+
+                        item(key = "quick_downloaded_only") {
+                            SettingsGroupRow(first = true, last = false) {
+                                QuickToggleRow(
+                                    title = "Downloaded only",
+                                    subtitle = "Only show titles that are saved locally on device",
+                                    icon = MaterialSymbols.Rounded.CloudOff,
+                                    checked = downloadedOnly,
+                                    onCheckedChange = { downloadedOnlyPref.set(it) },
+                                )
+                            }
+                        }
+
+                        item(key = "quick_incognito") {
+                            SettingsGroupRow(first = false, last = false) {
+                                QuickToggleRow(
+                                    title = "Incognito mode",
+                                    subtitle = "Pauses reading history and download tracking",
+                                    icon = MaterialSymbols.Rounded.Eyeglasses2,
+                                    checked = incognitoMode,
+                                    onCheckedChange = { incognitoModePref.set(it) },
+                                )
+                            }
+                        }
+
+                        item(key = "quick_download_queue") {
+                            SettingsGroupRow(first = false, last = false) {
+                                QuickToolRow(
+                                    title = "Download queue",
+                                    subtitle = "View and manage active and pending downloads",
+                                    icon = MaterialSymbols.Rounded.Download,
+                                    onClick = { navigator.push(DownloadQueueRoute) },
+                                )
+                            }
+                        }
+
+                        item(key = "quick_categories") {
+                            SettingsGroupRow(first = false, last = false) {
+                                QuickToolRow(
+                                    title = "Categories",
+                                    subtitle = "Create, sort and manage custom library categories",
+                                    icon = MaterialSymbols.AutoMirroredRounded.Label,
+                                    onClick = { navigator.push(CategoryRoute) },
+                                )
+                            }
+                        }
+
+                        item(key = "quick_history") {
+                            SettingsGroupRow(first = false, last = false) {
+                                QuickToolRow(
+                                    title = "Reading history",
+                                    subtitle = "View recently read chapters and resume reading",
+                                    icon = MaterialSymbols.Rounded.Schedule,
+                                    onClick = { navigator.push(HistoryRoute) },
+                                )
+                            }
+                        }
+
+                        item(key = "quick_statistics") {
+                            SettingsGroupRow(first = false, last = true) {
+                                QuickToolRow(
+                                    title = "Statistics",
+                                    subtitle = "View total chapters read, time spent and charts",
+                                    icon = MaterialSymbols.Rounded.QueryStats,
+                                    onClick = { navigator.push(StatsRoute) },
+                                )
+                            }
+                        }
+
+                        sections.forEach { section ->
+                            item(key = "section_${section.title}") {
+                                SettingsGroupHeading(section.title)
+                            }
+                            itemsIndexed(section.items, key = { _, item ->
+                                "${section.title}:${item.titleRes}"
+                            }) { index, item ->
+                                SettingsGroupRow(first = index == 0, last = index == section.items.lastIndex) {
+                                    SettingsItemRow(
+                                        item = item,
+                                        isSelected = twoPane && selectedScreen == item.screen,
+                                        onClick = {
+                                            if (item.isUpdateAction) {
+                                                showGitHubUpdateDialog = true
+                                            } else if (item.screen != null) {
+                                                navigator.navigate(item.screen, twoPane)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(28.dp))
+                            .background(SettingsSearchBarBg)
+                            .clickable { navigator.navigate(SettingsSearchRoute, twoPane) }
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.Search,
-                                    contentDescription = stringResource(MR.strings.action_search),
-                                    tint = SettingsMutedText,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = "Search settings...",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = SettingsMutedText,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                    }
-
-                    item(key = "quick_controls_header") {
-                        SettingsGroupHeading("Quick controls & tools")
-                    }
-
-                    item(key = "quick_downloaded_only") {
-                        SettingsGroupRow(first = true, last = false) {
-                            QuickToggleRow(
-                                title = "Downloaded only",
-                                subtitle = "Only show titles that are saved locally on device",
-                                icon = MaterialSymbols.Rounded.CloudOff,
-                                checked = downloadedOnly,
-                                onCheckedChange = { downloadedOnlyPref.set(it) },
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Search,
+                                contentDescription = stringResource(MR.strings.action_search),
+                                tint = SettingsMutedText,
+                                modifier = Modifier.size(18.dp),
                             )
-                        }
-                    }
-
-                    item(key = "quick_incognito") {
-                        SettingsGroupRow(first = false, last = false) {
-                            QuickToggleRow(
-                                title = "Incognito mode",
-                                subtitle = "Pauses reading history and download tracking",
-                                icon = MaterialSymbols.Rounded.Eyeglasses2,
-                                checked = incognitoMode,
-                                onCheckedChange = { incognitoModePref.set(it) },
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Search settings...",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = SettingsMutedText,
+                                modifier = Modifier.weight(1f),
                             )
-                        }
-                    }
-
-                    item(key = "quick_download_queue") {
-                        SettingsGroupRow(first = false, last = false) {
-                            QuickToolRow(
-                                title = "Download queue",
-                                subtitle = "View and manage active and pending downloads",
-                                icon = MaterialSymbols.Rounded.Download,
-                                onClick = { navigator.push(DownloadQueueRoute) },
-                            )
-                        }
-                    }
-
-                    item(key = "quick_categories") {
-                        SettingsGroupRow(first = false, last = false) {
-                            QuickToolRow(
-                                title = "Categories",
-                                subtitle = "Create, sort and manage custom library categories",
-                                icon = MaterialSymbols.AutoMirroredRounded.Label,
-                                onClick = { navigator.push(CategoryRoute) },
-                            )
-                        }
-                    }
-
-                    item(key = "quick_history") {
-                        SettingsGroupRow(first = false, last = false) {
-                            QuickToolRow(
-                                title = "Reading history",
-                                subtitle = "View recently read chapters and resume reading",
-                                icon = MaterialSymbols.Rounded.Schedule,
-                                onClick = { navigator.push(HistoryRoute) },
-                            )
-                        }
-                    }
-
-                    item(key = "quick_statistics") {
-                        SettingsGroupRow(first = false, last = true) {
-                            QuickToolRow(
-                                title = "Statistics",
-                                subtitle = "View total chapters read, time spent and charts",
-                                icon = MaterialSymbols.Rounded.QueryStats,
-                                onClick = { navigator.push(StatsRoute) },
-                            )
-                        }
-                    }
-
-                    sections.forEach { section ->
-                        item(key = "section_${section.title}") {
-                            SettingsGroupHeading(section.title)
-                        }
-                        itemsIndexed(section.items, key = { _, item ->
-                            "${section.title}:${item.titleRes}"
-                        }) { index, item ->
-                            SettingsGroupRow(first = index == 0, last = index == section.items.lastIndex) {
-                                SettingsItemRow(
-                                    item = item,
-                                    isSelected = twoPane && selectedScreen == item.screen,
-                                    onClick = {
-                                        if (item.isUpdateAction) {
-                                            showGitHubUpdateDialog = true
-                                        } else if (item.screen != null) {
-                                            navigator.navigate(item.screen, twoPane)
-                                        }
-                                    },
-                                )
-                            }
                         }
                     }
                 }

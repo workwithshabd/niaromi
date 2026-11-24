@@ -88,6 +88,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import logcat.logcat
+import niaromi.R
 import niaromi.app.di.AppGraph
 import niaromi.app.di.appGraph
 import niaromi.core.common.Constants
@@ -200,7 +201,17 @@ class MainActivity : BaseActivity() {
         val isLaunch = savedInstanceState == null
 
         // Prevent splash screen showing up on configuration changes
-        val splashScreen = if (isLaunch) installSplashScreen() else null
+        val splashScreen = if (isLaunch) {
+            val splashTheme = when (uiPreferences.themeMode.get()) {
+                ThemeMode.LIGHT -> R.style.Theme_Niaromi_SplashScreen_Light
+                ThemeMode.DARK -> R.style.Theme_Niaromi_SplashScreen_Dark
+                ThemeMode.SYSTEM -> R.style.Theme_Niaromi_SplashScreen
+            }
+            setTheme(splashTheme)
+            installSplashScreen()
+        } else {
+            null
+        }
 
         super.onCreate(savedInstanceState)
 
@@ -630,11 +641,24 @@ class MainActivity : BaseActivity() {
     @Suppress("Deprecation")
     private fun setSplashScreenExitAnimation(splashScreen: SplashScreen?) {
         val root = findViewById<View>(android.R.id.content)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && splashScreen != null) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
+        if (splashScreen != null) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                window.statusBarColor = Color.TRANSPARENT
+                window.navigationBarColor = Color.TRANSPARENT
+            }
 
             splashScreen.setOnExitAnimationListener { splashProvider ->
+                val mode = uiPreferences.themeMode.get()
+                if (mode != ThemeMode.SYSTEM) {
+                    val dark = mode == ThemeMode.DARK
+                    val icon = if (dark) {
+                        R.drawable.ic_launcher_dark_foreground
+                    } else {
+                        R.drawable.ic_launcher_light_foreground
+                    }
+                    splashProvider.view.setBackgroundColor(if (dark) Color.BLACK else Color.WHITE)
+                    (splashProvider.iconView as? android.widget.ImageView)?.setImageResource(icon)
+                }
                 // For some reason the SplashScreen applies (incorrect) Y translation to the iconView
                 splashProvider.iconView.translationY = 0F
 

@@ -72,6 +72,8 @@ import niaromi.presentation.core.components.material.refreshStretch
 import niaromi.presentation.core.components.material.rememberRefreshPull
 import niaromi.presentation.core.components.material.rememberSpringRefreshState
 import niaromi.presentation.library.components.EditorialSearchBar
+import niaromi.presentation.library.components.SearchHeaderHeight
+import niaromi.presentation.library.components.searchBackdrop
 import niaromi.presentation.manga.components.MangaCover
 import niaromi.ui.browse.source.globalsearch.SearchItemResult
 import niaromi.ui.browse.source.globalsearch.SearchViewModel
@@ -168,139 +170,141 @@ fun ExploreScreen(
             onRefresh = { if (query.isEmpty()) onRefresh() else onSearchExtensions(query) },
             modifier = Modifier.fillMaxSize(),
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize().statusBarsPadding().refreshStretch(pull),
-                contentPadding = PaddingValues(bottom = 100.dp),
-            ) {
-                stickyHeader(key = "explore_search") {
-                    EditorialSearchBar(
-                        query = state.searchQuery,
-                        onQueryChange = onSearchQueryChange,
-                        onSearch = { onSearchExtensions(query) },
-                        placeholder = "Search installed extensions",
-                        modifier = Modifier.background(ExploreBg).padding(horizontal = 20.dp, vertical = 10.dp),
-                    )
+            Box(Modifier.fillMaxSize().statusBarsPadding().refreshStretch(pull)) {
+                val scrolled by remember(listState) {
+                    derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0 }
                 }
-
-                if (query.isNotEmpty()) {
-                    items(searchResults, key = { "search_${it.first().manga.id}" }) { row ->
-                        ExploreGridRow(
-                            items = row,
-                            onMangaClick = onMangaClick,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        )
-                    }
-                    if (searchState.resultsQuery != query || searchState.progress < searchState.total) {
-                        item(key = "search_loading") { ExploreLoadingIndicator("Searching extensions…") }
-                    } else if (searchResults.isEmpty()) {
-                        item(key = "search_empty") {
-                            val failed = searchState.items.values.any { it is SearchItemResult.Error }
-                            Text(
-                                text = when {
-                                    searchState.total == 0 -> "No enabled sources"
-                                    failed -> "No titles found. Some sources could not be searched."
-                                    else -> "No titles found"
-                                },
-                                color = ExploreMuted,
-                                modifier = Modifier.fillMaxWidth().padding(24.dp),
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                    return@LazyColumn
-                }
-
-                if (state.isLoading) {
-                    item(key = "explore_loading") {
-                        ExploreLoadingIndicator()
-                    }
-                } else if (state.errorMessage != null && state.allItems.isEmpty()) {
-                    item(key = "explore_error") {
-                        ExploreEmptyState(
-                            message = state.errorMessage,
-                            onRetry = onRefresh,
-                        )
-                    }
-                } else {
-                    if (state.preferredItems.isNotEmpty()) {
-                        item(key = "preferred_shelf_heading") {
-                            ExploreSectionHeading(
-                                title = "Preferred highlights",
-                                badgeText = "${state.preferredItems.size} TITLES",
-                                isPreferred = true,
-                                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 8.dp),
-                            )
-                        }
-
-                        item(key = "preferred_shelf_content") {
-                            ExploreHorizontalShelf(
-                                items = state.preferredItems,
-                                onMangaClick = onMangaClick,
-                                modifier = Modifier.padding(bottom = 20.dp),
-                            )
-                        }
-                    }
-
-                    // Section Heading for main grid
-                    item(key = "all_releases_heading") {
-                        ExploreSectionHeading(
-                            title = "Fresh releases",
-                            badgeText = "${state.allItems.size} TITLES",
-                            isPreferred = false,
-                            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 12.dp),
-                        )
-                    }
-
-                    if (state.allItems.isEmpty()) {
-                        item(key = "no_filtered_results") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 48.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = "No matching manga found.",
-                                    style = TextStyle(
-                                        fontFamily = FontFamily.SansSerif,
-                                        fontSize = 14.sp,
-                                        color = ExploreMuted,
-                                    ),
-                                )
-                            }
-                        }
-                    } else {
-                        val chunked = state.allItems.chunked(3)
-                        items(
-                            items = chunked,
-                            key = { row -> row.first().manga.id },
-                        ) { rowItems ->
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize().searchBackdrop(scrolled, ExploreBg),
+                    contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 100.dp),
+                ) {
+                    if (query.isNotEmpty()) {
+                        items(searchResults, key = { "search_${it.first().manga.id}" }) { row ->
                             ExploreGridRow(
-                                items = rowItems,
+                                items = row,
                                 onMangaClick = onMangaClick,
                                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                             )
                         }
+                        if (searchState.resultsQuery != query || searchState.progress < searchState.total) {
+                            item(key = "search_loading") { ExploreLoadingIndicator("Searching extensions…") }
+                        } else if (searchResults.isEmpty()) {
+                            item(key = "search_empty") {
+                                val failed = searchState.items.values.any { it is SearchItemResult.Error }
+                                Text(
+                                    text = when {
+                                        searchState.total == 0 -> "No enabled sources"
+                                        failed -> "No titles found. Some sources could not be searched."
+                                        else -> "No titles found"
+                                    },
+                                    color = ExploreMuted,
+                                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                        return@LazyColumn
                     }
 
-                    if (state.isLoadingMore) {
-                        item(key = "explore_loading_more_spinner") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 24.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.5.dp,
-                                    color = ExploreText,
+                    if (state.isLoading) {
+                        item(key = "explore_loading") {
+                            ExploreLoadingIndicator()
+                        }
+                    } else if (state.errorMessage != null && state.allItems.isEmpty()) {
+                        item(key = "explore_error") {
+                            ExploreEmptyState(
+                                message = state.errorMessage,
+                                onRetry = onRefresh,
+                            )
+                        }
+                    } else {
+                        if (state.preferredItems.isNotEmpty()) {
+                            item(key = "preferred_shelf_heading") {
+                                ExploreSectionHeading(
+                                    title = "Preferred highlights",
+                                    badgeText = "${state.preferredItems.size} TITLES",
+                                    isPreferred = true,
+                                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 8.dp),
                                 )
+                            }
+
+                            item(key = "preferred_shelf_content") {
+                                ExploreHorizontalShelf(
+                                    items = state.preferredItems,
+                                    onMangaClick = onMangaClick,
+                                    modifier = Modifier.padding(bottom = 20.dp),
+                                )
+                            }
+                        }
+
+                        // Section Heading for main grid
+                        item(key = "all_releases_heading") {
+                            ExploreSectionHeading(
+                                title = "Fresh releases",
+                                badgeText = "${state.allItems.size} TITLES",
+                                isPreferred = false,
+                                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 12.dp),
+                            )
+                        }
+
+                        if (state.allItems.isEmpty()) {
+                            item(key = "no_filtered_results") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 48.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "No matching manga found.",
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.SansSerif,
+                                            fontSize = 14.sp,
+                                            color = ExploreMuted,
+                                        ),
+                                    )
+                                }
+                            }
+                        } else {
+                            val chunked = state.allItems.chunked(3)
+                            items(
+                                items = chunked,
+                                key = { row -> row.first().manga.id },
+                            ) { rowItems ->
+                                ExploreGridRow(
+                                    items = rowItems,
+                                    onMangaClick = onMangaClick,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                                )
+                            }
+                        }
+
+                        if (state.isLoadingMore) {
+                            item(key = "explore_loading_more_spinner") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 24.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.5.dp,
+                                        color = ExploreText,
+                                    )
+                                }
                             }
                         }
                     }
                 }
+                EditorialSearchBar(
+                    query = state.searchQuery,
+                    onQueryChange = onSearchQueryChange,
+                    onSearch = { onSearchExtensions(query) },
+                    placeholder = "Search installed extensions",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                )
             }
         }
     }

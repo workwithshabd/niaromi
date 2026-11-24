@@ -76,6 +76,7 @@ fun DiscoveryHomePager(
     sections: List<DiscoveryCategorySection>,
     refreshState: SpringRefreshState,
     allTitles: List<LibraryManga>,
+    latestTitles: List<LibraryManga>,
     onClickManga: (Long, Long?, String?) -> Unit,
     onViewAll: (Long, String) -> Unit,
     onLatestChapters: () -> Unit,
@@ -96,8 +97,8 @@ fun DiscoveryHomePager(
     val panel = MaterialTheme.colorScheme.surface
     val pull by rememberRefreshPull(refreshState)
     val selectedPage = pages[pager.currentPage.coerceIn(pages.indices)]
-    val heroSection = sections.firstOrNull { it.id == LATEST_CHAPTERS_SECTION_ID }
-        ?: DiscoveryCategorySection(LATEST_CHAPTERS_SECTION_ID, "Latest Chapters", emptyList())
+    val heroSection =
+        remember(latestTitles) { DiscoveryCategorySection(LATEST_CHAPTERS_SECTION_ID, "Latest Chapters", latestTitles) }
     var sectionMenuOpen by remember { mutableStateOf(false) }
     var collapsed by remember { mutableFloatStateOf(0f) }
     var collapseAnimation by remember { mutableStateOf<Job?>(null) }
@@ -324,6 +325,9 @@ private fun LatestChaptersSummary(
     val buttonColors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current)
     val covers = rememberLazyListState()
     val preview = remember(section.items) { section.items.take(HOME_PREVIEW_SIZE) }
+    LaunchedEffect(preview.firstOrNull()?.id) {
+        covers.scrollToItem(0)
+    }
     Column(
         modifier = modifier.fillMaxWidth().padding(top = 20.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.Top,

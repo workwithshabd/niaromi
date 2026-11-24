@@ -30,7 +30,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.ResultEffect
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import niaromi.app.di.appGraph
 import niaromi.core.common.i18n.stringResource
 import niaromi.core.navigation.CategoryListingRoute
@@ -64,6 +68,7 @@ import niaromi.ui.main.MainActivity
 import niaromi.ui.reader.ReaderActivity
 import niaromi.util.system.workManager
 import tachiyomi.i18n.MR
+import kotlin.time.Clock
 
 @Composable
 fun LibraryTab() {
@@ -80,6 +85,17 @@ fun LibraryTab() {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val extensionSearchState by viewModel.extensionSearchState.collectAsStateWithLifecycle()
 
+    val latestTitleIds by remember(context) {
+        context.appGraph.getUpdates.subscribe(
+            Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()),
+            unread = null,
+            started = null,
+            bookmarked = null,
+            hideExcludedScanlators = false,
+            includedCategories = emptyList(),
+            excludedCategories = emptyList(),
+        ).map { chapters -> chapters.map { it.mangaId }.distinct() }
+    }.collectAsStateWithLifecycle(emptyList())
     val snackbarHostState = remember { SnackbarHostState() }
     val statusBarColor = MaterialTheme.colorScheme.primaryContainer
     val view = LocalView.current
@@ -176,6 +192,7 @@ fun LibraryTab() {
                 MangaEditorialDiscovery(
                     categories = state.displayedCategories,
                     favorites = state.libraryData.favorites,
+                    latestTitleIds = latestTitleIds,
                     searchQuery = state.searchQuery,
                     extensionSearchState = extensionSearchState,
                     contentPadding = contentPadding,

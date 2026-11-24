@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -289,14 +288,16 @@ fun CategoryMangaGridItem(
     modifier: Modifier = Modifier,
     displayMode: LibraryDisplayMode = LibraryDisplayMode.CompactGrid,
 ) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
+    Column(
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
+    ) {
         MangaCover.Book(
             data = item.asMangaCover(),
             contentDescription = item.title,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(0.dp),
+            shape = RoundedCornerShape(6.dp),
         )
-        if (displayMode == LibraryDisplayMode.CoverOnlyGrid) return@Card
+        if (displayMode == LibraryDisplayMode.CoverOnlyGrid) return@Column
         val comfortable = displayMode == LibraryDisplayMode.ComfortableGrid
         val subtitle = item.author?.ifBlank { null } ?: item.artist
         Column(Modifier.padding(if (comfortable) 12.dp else 8.dp)) {

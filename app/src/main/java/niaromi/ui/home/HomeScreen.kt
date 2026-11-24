@@ -179,7 +179,9 @@ fun HomeScreen() {
                             resultEventBus.sendResult(LibrarySearchEvent(""))
                         }
                         tabNavigator.replaceAll(route)
-                        if (route == TopLevelRoute.Explore) resultEventBus.sendResult(route.reselectEventKey, Unit)
+                        if (route == TopLevelRoute.Explore || route == TopLevelRoute.More) {
+                            resultEventBus.sendResult(route.reselectEventKey, Unit)
+                        }
                     },
                     onReselectRoute = { route ->
                         resultEventBus.sendResult(route.reselectEventKey, Unit)
@@ -227,7 +229,8 @@ private fun NavigationSuiteItem(
         onClick = {
             if (!selected) {
                 tabNavigator.replaceAll(tab)
-            } else {
+            }
+            if (selected || tab == TopLevelRoute.More) {
                 resultEventBus.sendResult(
                     resultKey = tab.reselectEventKey,
                     result = Unit,
