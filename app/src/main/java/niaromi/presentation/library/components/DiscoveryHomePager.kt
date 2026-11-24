@@ -52,6 +52,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -109,14 +110,14 @@ fun DiscoveryHomePager(
         }
     }
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize().clipToBounds()) {
-        val heroHeight = if (heroSection.items.isEmpty()) {
-            124.dp.coerceAtMost(
-                maxHeight,
-            )
-        } else {
-            (maxHeight * 0.46f).coerceAtMost(350.dp)
-        }
+    val heroColor = MaterialTheme.colorScheme.primaryContainer
+    val backdropColor = lerp(heroColor, panel, collapsed)
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize().clipToBounds().background(backdropColor)
+            .searchBackdrop(collapsed > 0f),
+    ) {
+        val availableHeight = (maxHeight - SearchHeaderHeight).coerceAtLeast(0.dp)
+        val heroHeight = (availableHeight * 0.46f).coerceAtMost(350.dp)
         val heroPixels = with(LocalDensity.current) { heroHeight.toPx().coerceAtLeast(1f) }
         val movePanel = remember(heroPixels) {
             { pixels: Float ->
@@ -129,23 +130,22 @@ fun DiscoveryHomePager(
         val scroll = remember(movePanel) {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
-                    if (available.y < 0f && collapsed < 1f) Offset(0f, movePanel(available.y)) else Offset.Zero
-
-                override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
-                    if (available.y > 0f && collapsed > 0f) Offset(0f, movePanel(available.y)) else Offset.Zero
+                    Offset(0f, movePanel(available.y))
             }
         }
 
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
+                .offset(y = SearchHeaderHeight)
                 .height(heroHeight)
+                .nestedScroll(scroll)
                 .scrollable(
-                    state = rememberScrollableState(movePanel),
+                    state = rememberScrollableState { 0f },
                     orientation = Orientation.Vertical,
                 )
                 .graphicsLayer {
-                    translationY = -heroPixels * collapsed * 0.15f + 22.dp.toPx() * pull
+                    translationY = -(heroPixels * 0.15f + SearchHeaderHeight.toPx()) * collapsed + 22.dp.toPx() * pull
                     alpha = 1f - collapsed
                     transformOrigin = TransformOrigin(0.5f, 0f)
                     scaleX = 1f - 0.025f * pull
@@ -163,14 +163,20 @@ fun DiscoveryHomePager(
 
         Column(
             Modifier
-                .fillMaxSize()
-                .offset { IntOffset(0, (heroPixels * (1f - collapsed) + 28.dp.toPx() * pull).roundToInt()) }
+                .fillMaxWidth()
+                .height(availableHeight)
+                .offset {
+                    val panelTop = SearchHeaderHeight.toPx() + heroPixels * (1f - collapsed) + 28.dp.toPx() * pull
+                    IntOffset(0, panelTop.roundToInt())
+                }
                 .nestedScroll(scroll)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(panel),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 4.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .scrollable(rememberScrollableState { 0f }, Orientation.Vertical)
+                    .padding(start = 12.dp, end = 12.dp, top = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) {

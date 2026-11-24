@@ -277,7 +277,6 @@ fun LibraryTab() {
 
     ResultEffect<LibrarySearchEvent> {
         viewModel.search(it.query.ifBlank { null })
-        if (it.query.isBlank()) homeReset++
     }
 
     ResultEffect<Unit>(resultKey = TopLevelRoute.Library.reselectEventKey) {

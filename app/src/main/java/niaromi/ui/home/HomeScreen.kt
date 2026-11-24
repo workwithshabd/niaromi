@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.result.LocalResultEventBus
@@ -146,13 +145,6 @@ fun HomeScreen() {
             NavigatorDisplay(
                 navigator = tabNavigator,
                 modifier = Modifier.fillMaxSize(),
-                entryDecorators = listOf(
-                    remember(tabStateHolder) {
-                        NavEntryDecorator { entry ->
-                            tabStateHolder.SaveableStateProvider(entry.contentKey) { entry.Content() }
-                        }
-                    },
-                ),
                 transitionSpec = { spec },
                 popTransitionSpec = { spec },
                 predictivePopTransitionSpec = { spec },
@@ -162,11 +154,13 @@ fun HomeScreen() {
                     }
 
                     entry<TopLevelRoute.Explore> {
-                        ExploreTab()
+                        tabStateHolder.SaveableStateProvider("explore") { ExploreTab() }
                     }
 
                     entry<TopLevelRoute.More> {
-                        niaromi.presentation.more.settings.screen.SettingsMainScreen.Content()
+                        tabStateHolder.SaveableStateProvider("settings") {
+                            niaromi.presentation.more.settings.screen.SettingsMainScreen.Content()
+                        }
                     }
                 },
             )

@@ -162,7 +162,6 @@ fun MangaEditorialDiscovery(
                             onLatestChapters = onLatestChapters,
                             onSearchSources = { onAddTitle("") },
                             onGettingStarted = onGettingStarted,
-                            modifier = Modifier.padding(top = SearchHeaderHeight),
                         )
                     }
                 } else {
@@ -175,7 +174,7 @@ fun MangaEditorialDiscovery(
                     }
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize().background(EditorialBg).searchBackdrop(scrolled, EditorialBg),
+                        modifier = Modifier.fillMaxSize().background(EditorialBg).searchBackdrop(scrolled),
                         contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 96.dp),
                     ) {
                         if (matchingFavorites.isNotEmpty()) {

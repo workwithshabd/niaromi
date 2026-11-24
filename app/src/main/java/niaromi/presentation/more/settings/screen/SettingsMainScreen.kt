@@ -209,7 +209,7 @@ data object SettingsMainScreen : NavKey {
                     }
                     LazyColumn(
                         state = state,
-                        modifier = Modifier.fillMaxSize().searchBackdrop(scrolled, containerColor),
+                        modifier = Modifier.fillMaxSize().searchBackdrop(scrolled),
                         contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 120.dp),
                     ) {
                         item(key = "quick_controls_header") {

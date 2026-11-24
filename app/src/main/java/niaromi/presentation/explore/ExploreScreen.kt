@@ -176,7 +176,7 @@ fun ExploreScreen(
                 }
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxSize().searchBackdrop(scrolled, ExploreBg),
+                    modifier = Modifier.fillMaxSize().searchBackdrop(scrolled),
                     contentPadding = PaddingValues(top = SearchHeaderHeight, bottom = 100.dp),
                 ) {
                     if (query.isNotEmpty()) {
@@ -360,72 +360,19 @@ private fun ExploreHorizontalShelf(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp),
+            .height(190.dp),
     ) {
         LazyRow(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            items(
-                items = items,
-                key = { it.manga.id },
-            ) { item ->
-                Column(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .clickable { onMangaClick(item.manga) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(142.dp),
-                    ) {
-                        MangaCover.Book(
-                            data = item.manga.asMangaCover(),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .shadow(5.dp, RoundedCornerShape(6.dp))
-                                .clip(RoundedCornerShape(6.dp)),
-                        )
-
-                        // Translucent shelf accent overlapping lower part of cover
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .height(26.dp)
-                                .clip(
-                                    RoundedCornerShape(
-                                        topStart = 0.dp,
-                                        topEnd = 0.dp,
-                                        bottomStart = 6.dp,
-                                        bottomEnd = 6.dp,
-                                    ),
-                                )
-                                .background(Color(0x38F5A13B))
-                                .border(
-                                    0.5.dp,
-                                    Color(0x60FFFFFF),
-                                    RoundedCornerShape(bottomStart = 6.dp, bottomEnd = 6.dp),
-                                ),
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = item.manga.title,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = TextStyle(
-                            fontFamily = FontFamily.SansSerif,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = ExploreText,
-                        ),
-                    )
-                }
+            items(items, key = { it.manga.id }) { item ->
+                ExploreGridCard(
+                    item = item,
+                    onClick = { onMangaClick(item.manga) },
+                    modifier = Modifier.width(92.dp),
+                )
             }
         }
     }
@@ -462,16 +409,13 @@ private fun ExploreGridCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(2f / 3f),
-        ) {
+    Column(modifier = modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Box(Modifier.fillMaxWidth()) {
             MangaCover.Book(
                 data = item.manga.asMangaCover(),
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(0.dp),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(6.dp),
+                contentDescription = item.manga.title,
             )
 
             // Source Badge overlay
@@ -508,8 +452,7 @@ private fun ExploreGridCard(
             minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = ExploreText,
         )
     }
